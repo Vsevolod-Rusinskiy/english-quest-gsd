@@ -47,6 +47,8 @@ describe("StateStore.reduce — enriched exercise_attempt (Pitfall 3)", () => {
       reviewQueueAdditions: ["eq-1a-ex002"],
       rewardEvents,
       nextCorrectStreak: 1,
+      source: "core",
+      agentFailed: false,
     });
 
     const state = store.getState();
@@ -54,6 +56,8 @@ describe("StateStore.reduce — enriched exercise_attempt (Pitfall 3)", () => {
       attempts: 1,
       correct: 1,
       lastAttemptCorrect: true,
+      lastAttemptSource: "core",
+      lastAttemptAgentFailed: false,
     });
     expect(state.topicStats["present_continuous_now"]).toEqual(topicUpdates["present_continuous_now"]);
     expect(state.reviewQueue).toEqual(["eq-1a-ex002"]);
@@ -75,6 +79,8 @@ describe("StateStore.reduce — enriched exercise_attempt (Pitfall 3)", () => {
       reviewQueueAdditions: [],
       rewardEvents: [],
       nextCorrectStreak: 0,
+      source: "core",
+      agentFailed: false,
     });
 
     expect(setItemSpy).toHaveBeenCalledTimes(1);
@@ -92,8 +98,50 @@ describe("StateStore.reduce — enriched exercise_attempt (Pitfall 3)", () => {
       reviewQueueAdditions: ["eq-1a-ex002", "eq-1a-ex003"],
       rewardEvents: [],
       nextCorrectStreak: 0,
+      source: "core",
+      agentFailed: false,
     });
 
     expect(store.getState().reviewQueue).toEqual(["eq-1a-ex002", "eq-1a-ex003"]);
+  });
+
+  // Phase 3 (RELY-03, D-08): every exercise_attempt records source and
+  // agentFailed — a source:"agent" dispatch records both fields on the
+  // resulting exerciseStats trace; a source:"core" dispatch records
+  // source:"core", agentFailed:false.
+  it("RELY-03: dispatching exercise_attempt with source:'agent' and agentFailed:true records both on exerciseStats; source:'core' records source:'core', agentFailed:false", () => {
+    const agentStore = new StateStore(initialState());
+    agentStore.dispatch({
+      type: "exercise_attempt",
+      exerciseId: "eq-1a-ex001",
+      isCorrect: false,
+      topicUpdates: {},
+      reviewQueueAdditions: [],
+      rewardEvents: [],
+      nextCorrectStreak: 0,
+      source: "agent",
+      agentFailed: true,
+    });
+    expect(agentStore.getState().exerciseStats["eq-1a-ex001"]).toMatchObject({
+      lastAttemptSource: "agent",
+      lastAttemptAgentFailed: true,
+    });
+
+    const coreStore = new StateStore(initialState());
+    coreStore.dispatch({
+      type: "exercise_attempt",
+      exerciseId: "eq-1a-ex001",
+      isCorrect: true,
+      topicUpdates: {},
+      reviewQueueAdditions: [],
+      rewardEvents: [],
+      nextCorrectStreak: 1,
+      source: "core",
+      agentFailed: false,
+    });
+    expect(coreStore.getState().exerciseStats["eq-1a-ex001"]).toMatchObject({
+      lastAttemptSource: "core",
+      lastAttemptAgentFailed: false,
+    });
   });
 });

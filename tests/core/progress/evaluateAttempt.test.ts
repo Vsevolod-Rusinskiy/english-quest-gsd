@@ -79,7 +79,7 @@ describe("evaluateAttempt", () => {
       ...state,
       exerciseStats: {
         ...state.exerciseStats,
-        "ex-single": { attempts: 1, correct: 0, lastAttemptCorrect: false },
+        "ex-single": { attempts: 1, correct: 0, lastAttemptCorrect: false, lastAttemptSource: "core", lastAttemptAgentFailed: false },
       },
       topicStats: { ...state.topicStats, ...delta1.topicUpdates },
       reviewQueue: [...state.reviewQueue, ...delta1.reviewQueueAdditions],
@@ -131,7 +131,7 @@ describe("evaluateAttempt", () => {
         ...state,
         exerciseStats: {
           ...state.exerciseStats,
-          "ex-single": { attempts: i + 1, correct: i + 1, lastAttemptCorrect: true },
+          "ex-single": { attempts: i + 1, correct: i + 1, lastAttemptCorrect: true, lastAttemptSource: "core", lastAttemptAgentFailed: false },
         },
         topicStats: { ...state.topicStats, ...delta.topicUpdates },
         rewardHistory: [...state.rewardHistory, ...delta.rewardEvents],
@@ -174,7 +174,7 @@ describe("evaluateAttempt", () => {
         ...state,
         exerciseStats: {
           ...state.exerciseStats,
-          "fixture-multi-topic-01": { attempts: i + 1, correct: i + 1, lastAttemptCorrect: true },
+          "fixture-multi-topic-01": { attempts: i + 1, correct: i + 1, lastAttemptCorrect: true, lastAttemptSource: "core", lastAttemptAgentFailed: false },
         },
         topicStats: { ...state.topicStats, ...lastDelta.topicUpdates },
         rewardHistory: [...state.rewardHistory, ...lastDelta.rewardEvents],

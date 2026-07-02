@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from "vitest";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { LessonSchema } from "../../src/core/lesson/lessonSchema";
@@ -6,6 +6,7 @@ import { LessonEngine } from "../../src/core/lessonEngine";
 import { StateStore } from "../../src/core/state/store";
 import { initialState } from "../../src/core/state/initialState";
 import { load, save } from "../../src/core/state/persistence";
+import * as answerCheckerModule from "../../src/core/agents/answerChecker";
 
 // Review-pass end-to-end traversal (Task 3, PROGRESS-04 headline proof): drives a
 // real LessonEngine + StateStore against the real public/Lesson-1A.json so a topic
@@ -47,7 +48,7 @@ function correctAnswerFor(exerciseId: string): string {
  * ex011-ex018 are then answered correctly during the main pass too (also
  * does not dequeue them), and ex019 (matching) completes the main sequence.
  */
-function driveMainSequenceToReviewPass(engine: LessonEngine): void {
+async function driveMainSequenceToReviewPass(engine: LessonEngine): Promise<void> {
   // ex001-ex009: grammar topics, answered correctly (no review trigger).
   for (const id of [
     "eq-1a-ex001",
@@ -60,7 +61,7 @@ function driveMainSequenceToReviewPass(engine: LessonEngine): void {
     "eq-1a-ex008",
     "eq-1a-ex009",
   ]) {
-    const result = engine.handleAnswer(id, correctAnswerFor(id));
+    const result = await engine.handleAnswer(id, correctAnswerFor(id));
     expect(result.isCorrect).toBe(true);
   }
 
@@ -68,16 +69,16 @@ function driveMainSequenceToReviewPass(engine: LessonEngine): void {
   // enqueue scan fires while ex010-ex018 are all still uncorrected -> all
   // become eligible), then correct (advances the main-pass index past it,
   // but does NOT dequeue it from reviewQueue).
-  engine.handleAnswer("eq-1a-ex010", "definitely-wrong-answer");
-  engine.handleAnswer("eq-1a-ex010", "definitely-wrong-answer");
-  const ex010Result = engine.handleAnswer("eq-1a-ex010", correctAnswerFor("eq-1a-ex010"));
+  await engine.handleAnswer("eq-1a-ex010", "definitely-wrong-answer");
+  await engine.handleAnswer("eq-1a-ex010", "definitely-wrong-answer");
+  const ex010Result = await engine.handleAnswer("eq-1a-ex010", correctAnswerFor("eq-1a-ex010"));
   expect(ex010Result.isCorrect).toBe(true);
 
   // ex011-ex018 (food_vocabulary): answered correctly in order so the main
   // sequence advances to ex019 — this does NOT dequeue them from
   // reviewQueue either (only consuming the review pass does).
   for (const id of ["eq-1a-ex011", "eq-1a-ex012", "eq-1a-ex013", "eq-1a-ex014", "eq-1a-ex015", "eq-1a-ex016", "eq-1a-ex017", "eq-1a-ex018"]) {
-    const result = engine.handleAnswer(id, correctAnswerFor(id));
+    const result = await engine.handleAnswer(id, correctAnswerFor(id));
     expect(result.isCorrect).toBe(true);
   }
 
@@ -86,21 +87,36 @@ function driveMainSequenceToReviewPass(engine: LessonEngine): void {
   if (!matchingExercise || matchingExercise.type !== "matching") {
     throw new Error("Test setup error: eq-1a-ex019 not found or not type matching");
   }
-  const result = engine.handleAnswer("eq-1a-ex019", matchingExercise.answerCheck.pairs);
+  const result = await engine.handleAnswer("eq-1a-ex019", matchingExercise.answerCheck.pairs);
   expect(result.isCorrect).toBe(true);
 }
 
 describe("review-pass traversal (e2e)", () => {
+  // Plan 03: this suite intentionally submits wrong text-input answers
+  // (driveMainSequenceToReviewPass, dequeue-on-incorrect tests) — mock
+  // callAnswerChecker to a fast, deterministic fallback so this pre-existing
+  // Phase 2 review-pass suite stays offline/fast; Answer Checker's own
+  // behavior is covered by tests/core/agents/answerChecker.test.ts and
+  // tests/core/lessonEngine.test.ts's dedicated wiring tests.
+  let answerCheckerSpy: ReturnType<typeof vi.spyOn>;
+
   beforeEach(() => {
     localStorage.clear();
+    answerCheckerSpy = vi
+      .spyOn(answerCheckerModule, "callAnswerChecker")
+      .mockResolvedValue({ isCorrect: false, source: "core", errorType: "unknown" });
   });
 
-  it("queue populated then consumed: reviewQueue is non-empty at main-pass end, then every queued item is consumed and the lesson completes", () => {
+  afterEach(() => {
+    answerCheckerSpy.mockRestore();
+  });
+
+  it("queue populated then consumed: reviewQueue is non-empty at main-pass end, then every queued item is consumed and the lesson completes", async () => {
     const store = new StateStore(initialState(lesson.lessonId));
     const engine = new LessonEngine(lesson, store);
-    engine.handleTheoryStep(true);
+    await engine.handleTheoryStep(true);
 
-    driveMainSequenceToReviewPass(engine);
+    await driveMainSequenceToReviewPass(engine);
 
     let state = store.getState();
     expect(state.currentPosition.currentExerciseIndex).toBe(19);
@@ -117,7 +133,7 @@ describe("review-pass traversal (e2e)", () => {
       const exercise = engine.getCurrentExercise();
       if (!exercise) break;
       const answer = correctAnswerFor(exercise.exerciseId);
-      const result = engine.handleAnswer(exercise.exerciseId, answer);
+      const result = await engine.handleAnswer(exercise.exerciseId, answer);
       expect(result.isCorrect).toBe(true);
     }
 
@@ -127,19 +143,19 @@ describe("review-pass traversal (e2e)", () => {
     expect(engine.isReviewPass()).toBe(false);
   });
 
-  it("dequeue regardless of correctness: answering a review item incorrectly still removes it and is NOT immediately re-added", () => {
+  it("dequeue regardless of correctness: answering a review item incorrectly still removes it and is NOT immediately re-added", async () => {
     const store = new StateStore(initialState(lesson.lessonId));
     const engine = new LessonEngine(lesson, store);
-    engine.handleTheoryStep(true);
+    await engine.handleTheoryStep(true);
 
-    driveMainSequenceToReviewPass(engine);
+    await driveMainSequenceToReviewPass(engine);
 
     const queueBefore = [...store.getState().reviewQueue];
     expect(queueBefore.length).toBeGreaterThan(0);
     const currentReviewId = engine.getCurrentExerciseId();
     expect(currentReviewId).toBe(queueBefore[0]);
 
-    const result = engine.handleAnswer(currentReviewId as string, "definitely-wrong-answer");
+    const result = await engine.handleAnswer(currentReviewId as string, "definitely-wrong-answer");
 
     expect(result.isCorrect).toBe(false);
     const queueAfter = store.getState().reviewQueue;
@@ -147,12 +163,12 @@ describe("review-pass traversal (e2e)", () => {
     expect(queueAfter.length).toBe(queueBefore.length - 1);
   });
 
-  it("review reward reuses same dedup path: a review-pass re-answer of an exercise already granted correct_after_hint in the main pass does NOT double-grant it (D-03, Pitfall 5, same exerciseId)", () => {
+  it("review reward reuses same dedup path: a review-pass re-answer of an exercise already granted correct_after_hint in the main pass does NOT double-grant it (D-03, Pitfall 5, same exerciseId)", async () => {
     const store = new StateStore(initialState(lesson.lessonId));
     const engine = new LessonEngine(lesson, store);
-    engine.handleTheoryStep(true);
+    await engine.handleTheoryStep(true);
 
-    driveMainSequenceToReviewPass(engine);
+    await driveMainSequenceToReviewPass(engine);
 
     // ex010 was answered wrong, wrong, then correct during the MAIN pass
     // (driveMainSequenceToReviewPass) — its correct answer was NOT the first
@@ -179,7 +195,7 @@ describe("review-pass traversal (e2e)", () => {
       if (guard > 50) throw new Error("Test runaway: review pass never emptied");
       const exercise = engine.getCurrentExercise();
       if (!exercise) break;
-      engine.handleAnswer(exercise.exerciseId, correctAnswerFor(exercise.exerciseId));
+      await engine.handleAnswer(exercise.exerciseId, correctAnswerFor(exercise.exerciseId));
     }
 
     // Re-answering ex010 correctly in the review pass must NOT grant a
@@ -204,18 +220,18 @@ describe("review-pass traversal (e2e)", () => {
     ).toHaveLength(1);
   });
 
-  it("persist/resume mid-review (PERSIST-02): save() after one review item, load() into a fresh engine/store, resumes with the remaining queue", () => {
+  it("persist/resume mid-review (PERSIST-02): save() after one review item, load() into a fresh engine/store, resumes with the remaining queue", async () => {
     const store = new StateStore(initialState(lesson.lessonId));
     const engine = new LessonEngine(lesson, store);
-    engine.handleTheoryStep(true);
+    await engine.handleTheoryStep(true);
 
-    driveMainSequenceToReviewPass(engine);
+    await driveMainSequenceToReviewPass(engine);
 
     const queueBefore = [...store.getState().reviewQueue];
     expect(queueBefore.length).toBeGreaterThan(0);
 
     const firstReviewId = engine.getCurrentExerciseId();
-    engine.handleAnswer(firstReviewId as string, correctAnswerFor(firstReviewId as string));
+    await engine.handleAnswer(firstReviewId as string, correctAnswerFor(firstReviewId as string));
     save(store.getState()); // explicit save (dispatch already saves synchronously, D-03)
 
     const reloaded = load(lesson.lessonId);
@@ -234,12 +250,12 @@ describe("review-pass traversal (e2e)", () => {
       if (guard > 50) throw new Error("Test runaway: resumed review pass never emptied");
       const exercise = resumedEngine.getCurrentExercise();
       if (!exercise) break;
-      resumedEngine.handleAnswer(exercise.exerciseId, correctAnswerFor(exercise.exerciseId));
+      await resumedEngine.handleAnswer(exercise.exerciseId, correctAnswerFor(exercise.exerciseId));
     }
     expect(resumedStore.getState().reviewQueue).toEqual([]);
   });
 
-  it("topic status closes via the review path (isolated): a topic still needs_review entering the review pass transitions to mastered purely from review-pass correct answers (D-06)", () => {
+  it("topic status closes via the review path (isolated): a topic still needs_review entering the review pass transitions to mastered purely from review-pass correct answers (D-06)", async () => {
     // Constructs the review-pass entry point directly (mirrors
     // lessonEngine.test.ts's review-pass unit-test style) rather than
     // fighting the full main-pass streak math to keep food_vocabulary at
@@ -257,11 +273,11 @@ describe("review-pass traversal (e2e)", () => {
     const engine = new LessonEngine(lesson, store);
     expect(engine.isReviewPass()).toBe(true);
 
-    engine.handleAnswer("eq-1a-ex010", correctAnswerFor("eq-1a-ex010")); // streak 1, needs_review -> in_progress
+    await engine.handleAnswer("eq-1a-ex010", correctAnswerFor("eq-1a-ex010")); // streak 1, needs_review -> in_progress
     expect(store.getState().topicStats["food_vocabulary"].status).toBe("in_progress");
-    engine.handleAnswer("eq-1a-ex011", correctAnswerFor("eq-1a-ex011")); // streak 2
+    await engine.handleAnswer("eq-1a-ex011", correctAnswerFor("eq-1a-ex011")); // streak 2
     expect(store.getState().topicStats["food_vocabulary"].status).toBe("in_progress");
-    engine.handleAnswer("eq-1a-ex012", correctAnswerFor("eq-1a-ex012")); // streak 3 -> mastered
+    await engine.handleAnswer("eq-1a-ex012", correctAnswerFor("eq-1a-ex012")); // streak 3 -> mastered
 
     const finalState = store.getState();
     expect(finalState.topicStats["food_vocabulary"].status).toBe("mastered");
@@ -273,12 +289,12 @@ describe("review-pass traversal (e2e)", () => {
     expect(weakTopicClosed).toHaveLength(1);
   });
 
-  it("topic status closes via the review path: the food_vocabulary topic reaches mastered, driven partly through reviewQueue answers (D-06 FSM through reviewQueue)", () => {
+  it("topic status closes via the review path: the food_vocabulary topic reaches mastered, driven partly through reviewQueue answers (D-06 FSM through reviewQueue)", async () => {
     const store = new StateStore(initialState(lesson.lessonId));
     const engine = new LessonEngine(lesson, store);
-    engine.handleTheoryStep(true);
+    await engine.handleTheoryStep(true);
 
-    driveMainSequenceToReviewPass(engine);
+    await driveMainSequenceToReviewPass(engine);
 
     // food_vocabulary hit needs_review at ex010's 2nd error, then recovered
     // via ex010's correct 3rd attempt + ex011-ex018 all correct in the main
@@ -304,7 +320,7 @@ describe("review-pass traversal (e2e)", () => {
       if (guard > 50) throw new Error("Test runaway: review pass never emptied");
       const exercise = engine.getCurrentExercise();
       if (!exercise) break;
-      engine.handleAnswer(exercise.exerciseId, correctAnswerFor(exercise.exerciseId));
+      await engine.handleAnswer(exercise.exerciseId, correctAnswerFor(exercise.exerciseId));
     }
 
     const afterReview = store.getState().topicStats["food_vocabulary"];

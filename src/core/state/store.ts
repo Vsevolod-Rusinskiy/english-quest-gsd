@@ -23,6 +23,14 @@ export type Action =
       // or not, folded into the single exercise_attempt reduce, not a new
       // action type).
       reviewDequeueId?: string;
+      // Phase 3 (RELY-03, D-08): every exercise_attempt records whether the
+      // verdict came from the deterministic core or an agent, and whether an
+      // agent call was attempted and failed (fell back to core) — folds into
+      // this SAME dispatch, no new action type, per the single-dispatch
+      // invariant. Deterministic exact-match / non-text-input answers always
+      // record source:"core", agentFailed:false (D-10 — no agent call at all).
+      source: "core" | "agent";
+      agentFailed: boolean;
     }
   | { type: "advance_position" };
 
@@ -65,6 +73,8 @@ export class StateStore {
           attempts: 0,
           correct: 0,
           lastAttemptCorrect: false,
+          lastAttemptSource: "core" as const,
+          lastAttemptAgentFailed: false,
         };
         const addedRewardTotal = action.rewardEvents.reduce((sum, e) => sum + e.amount, 0);
         return {
@@ -78,6 +88,10 @@ export class StateStore {
               // enqueueReviewItems can distinguish "resolved in the current
               // needs_review episode" from a lifetime correct count.
               lastAttemptCorrect: action.isCorrect,
+              // Phase 3 (RELY-03, D-08): overwritten every attempt, same
+              // "most recent" convention as lastAttemptCorrect above.
+              lastAttemptSource: action.source,
+              lastAttemptAgentFailed: action.agentFailed,
             },
           },
           topicStats: { ...state.topicStats, ...action.topicUpdates },

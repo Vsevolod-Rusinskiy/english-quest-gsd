@@ -5,11 +5,8 @@
 // free-text answer is passed as DATA in userContent, never as instruction
 // (V5 input-validation/prompt-hygiene separation, T-03-02).
 import { callAgent, type AgentClient } from "./callAgent";
-import {
-  AnswerCheckerResponseSchema,
-  type AnswerCheckerErrorType,
-  type AnswerCheckerResponse,
-} from "./answerCheckerSchema";
+import { AnswerCheckerResponseSchema, type AnswerCheckerResponse } from "./answerCheckerSchema";
+import type { CheckResult } from "../answer-checking/checkTextInput";
 
 export interface AnswerCheckerInput {
   prompt: string;
@@ -18,21 +15,6 @@ export interface AnswerCheckerInput {
   childAnswer: string;
   // DI (mirrors callAgent's client param) — tests inject a stub.
   client?: AgentClient;
-}
-
-// Mirrors the extended CheckResult shape (checkTextInput.ts, Task 3) without
-// importing it directly — answerChecker.ts has no dependency on the
-// exercise-checking module, keeping the agent layer decoupled from core
-// checkers per the architecture boundary. errorType is always present here
-// (both the agent-success path and the fixed fallback set it) — confidence/
-// hintRu remain optional since the fallback intentionally omits them
-// (SPEC.md §8.1: nothing genuine to report when the agent never spoke).
-export interface AnswerCheckerCheckResult {
-  isCorrect: boolean;
-  source: "core" | "agent";
-  errorType: AnswerCheckerErrorType;
-  confidence?: number;
-  hintRu?: string;
 }
 
 const SYSTEM_PROMPT = [
@@ -47,8 +29,8 @@ const SYSTEM_PROMPT = [
 // schema's inferred shape) — confidence/hintRu are synthesized here (0 and
 // "") purely to satisfy the schema shape internally; callAnswerChecker
 // deliberately drops them below when mapping the fallback branch to the
-// PUBLIC AnswerCheckerCheckResult shape, per SPEC.md §8.1's documented
-// fallback (no confidence/hintRu — the agent never spoke).
+// public CheckResult shape, per SPEC.md §8.1's documented fallback
+// (no confidence/hintRu — the agent never spoke).
 const AGENT_FALLBACK: AnswerCheckerResponse = {
   isCorrect: false,
   errorType: "unknown",
@@ -56,7 +38,7 @@ const AGENT_FALLBACK: AnswerCheckerResponse = {
   hintRu: "",
 };
 
-export async function callAnswerChecker(input: AnswerCheckerInput): Promise<AnswerCheckerCheckResult> {
+export async function callAnswerChecker(input: AnswerCheckerInput): Promise<CheckResult> {
   const userContent = JSON.stringify({
     prompt: input.prompt,
     correctAnswers: input.correctAnswers,

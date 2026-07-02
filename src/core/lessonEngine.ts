@@ -1,6 +1,6 @@
-// Theory -> exercise orchestrator (Phase 1 slice + Phase 2 progress/reward wiring).
-// Cites THEORY-01, THEORY-02, EXERCISE-01..05, CHECK-01, CHECK-02,
-// PROGRESS-01/02/03, REWARD-01/02.
+// Theory -> exercise orchestrator (Phase 1 slice + Phase 2 progress/reward wiring
+// + Phase 3 Answer Checker wiring). Cites THEORY-01, THEORY-02, EXERCISE-01..05,
+// CHECK-01, CHECK-02, CHECK-03, CHECK-04, PROGRESS-01/02/03, REWARD-01/02, RELY-03.
 import type { Lesson, Exercise } from "./lesson/lessonSchema";
 import type { StateStore } from "./state/store";
 import { checkTextInput, type CheckResult } from "./answer-checking/checkTextInput";
@@ -9,6 +9,7 @@ import { checkMatching } from "./answer-checking/checkMatching";
 import { checkOrderBuilder } from "./answer-checking/checkOrderBuilder";
 import type { MatchingPair } from "../ui/exercise-renderers/matching";
 import { evaluateAttempt } from "./progress/evaluateAttempt";
+import { callAnswerChecker } from "./agents/answerChecker";
 
 export type AnswerPayload = string | MatchingPair[] | string[];
 
@@ -64,29 +65,53 @@ export class LessonEngine {
   }
 
   // Phase 1 has no Theory Tutor branch — both "понятно" and "не понятно" advance
-  // to the first exercise (THEORY-02 literal).
-  handleTheoryStep(_understood: boolean): void {
+  // to the first exercise (THEORY-02 literal). Theory Tutor's real "не понятно"
+  // branch (D-11) is Plan 02's concern, not this plan's.
+  async handleTheoryStep(_understood: boolean): Promise<void> {
     this.store.dispatch({ type: "theory_step", understood: true });
   }
 
-  handleAnswer(exerciseId: string, answer: AnswerPayload): CheckResult {
+  async handleAnswer(exerciseId: string, answer: AnswerPayload): Promise<CheckResult> {
     const exercise = this.exercises.find((e) => e.exerciseId === exerciseId);
     if (!exercise) {
       throw new Error(`Unknown exerciseId: ${exerciseId}`);
     }
 
-    // NO agent call in any branch (CHECK-02) — every type routes to a Plan 02
-    // deterministic core checker. Each branch validates the payload shape at
-    // runtime before forwarding it, so a mismatched caller gets a clear Error
-    // instead of a silent, nonsensical undefined-based comparison (WR-01).
+    // Every type routes to a Plan 02 deterministic core checker first. Each
+    // branch validates the payload shape at runtime before forwarding it, so
+    // a mismatched caller gets a clear Error instead of a silent,
+    // nonsensical undefined-based comparison (WR-01).
     let result: CheckResult;
+    // Phase 3 (RELY-03, D-08): true only when the text-input branch actually
+    // invoked callAnswerChecker (an exact-match failure, D-10) — used below
+    // to distinguish "agent attempted and fell back" (agentFailed:true) from
+    // "no agent call at all" (agentFailed:false), since both end up with
+    // result.source:"core" and are otherwise indistinguishable.
+    let agentAttempted = false;
     switch (exercise.type) {
-      case "text-input":
+      case "text-input": {
         if (typeof answer !== "string") {
           throw new Error(`handleAnswer: expected string for exerciseId ${exerciseId}`);
         }
-        result = checkTextInput(exercise, answer);
+        const deterministicResult = checkTextInput(exercise, answer);
+        // CHECK-03, D-09: an exact-match failure is the trigger to call
+        // Answer Checker via the gateway — NOT immediately final. The await
+        // MUST complete before evaluateAttempt runs below (D-10: only
+        // text-input triggers the agent; every other branch stays fully
+        // deterministic, no agent call at all).
+        if (deterministicResult.isCorrect) {
+          result = deterministicResult;
+        } else {
+          agentAttempted = true;
+          result = await callAnswerChecker({
+            prompt: exercise.prompt,
+            correctAnswers: exercise.answerCheck.correctAnswers,
+            acceptedAnswers: exercise.answerCheck.acceptedAnswers,
+            childAnswer: answer,
+          });
+        }
         break;
+      }
       case "single-choice":
         if (typeof answer !== "string") {
           throw new Error(`handleAnswer: expected string for exerciseId ${exerciseId}`);
@@ -128,6 +153,13 @@ export class LessonEngine {
     // dequeue check reads the current (pre-dispatch) reviewQueue head.
     const wasReviewPass = this.isReviewPass() && this.getCurrentExerciseId() === exerciseId;
 
+    // Phase 3 (RELY-03, D-08): source/agentFailed reflect the FINAL result —
+    // agent success -> source:"agent", agentFailed:false; agent fallback ->
+    // source:"core", agentFailed:true (the agent was attempted and failed);
+    // no agent call at all (deterministic path) -> source:"core",
+    // agentFailed:false.
+    const agentFailed = agentAttempted && result.source === "core";
+
     this.store.dispatch({
       type: "exercise_attempt",
       exerciseId,
@@ -137,6 +169,8 @@ export class LessonEngine {
       rewardEvents: delta.rewardEvents,
       nextCorrectStreak: delta.nextCorrectStreak,
       reviewDequeueId: wasReviewPass ? exerciseId : undefined,
+      source: result.source,
+      agentFailed,
     });
     // Main-pass correct answer: advance currentExerciseIndex (unchanged Phase 1
     // behavior). Review-pass answers never advance_position — the review cursor

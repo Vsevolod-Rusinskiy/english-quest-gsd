@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, vi } from "vitest";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { mountApp } from "../../src/main";
+import * as answerCheckerModule from "../../src/core/agents/answerChecker";
 
 // WR-02 regression (e2e): drives the real app through the DOM to reach the
 // review pass, then answers a review item INCORRECTLY and proves the child
@@ -49,6 +50,14 @@ describe("review-pass feedback banner visibility (e2e, WR-02)", () => {
   });
 
   it("an incorrect review-pass answer shows the incorrect banner and only advances after Продолжить is tapped", async () => {
+    // Plan 03: every wrong text-input answer below now triggers
+    // callAnswerChecker via the gateway — mock it to a fast, deterministic
+    // fallback-shaped result so this WR-02 DOM test stays fast and offline,
+    // independent of the real network/agent content (out of scope here).
+    const spy = vi
+      .spyOn(answerCheckerModule, "callAnswerChecker")
+      .mockResolvedValue({ isCorrect: false, source: "core", errorType: "unknown" });
+
     await mountApp(root);
 
     const understoodButton = Array.from(root.querySelectorAll("button")).find(
@@ -59,21 +68,23 @@ describe("review-pass feedback banner visibility (e2e, WR-02)", () => {
     // ex001-ex009: correct, no review trigger.
     for (let i = 1; i <= 9; i++) {
       submitTextAnswer(root, correctAnswerFor(`eq-1a-ex00${i}`));
-      expect(root.textContent).toContain("Верно!");
+      await vi.waitFor(() => expect(root.textContent).toContain("Верно!"));
     }
 
     // ex010 (food_vocabulary): wrong twice -> 2nd error flips topic to
     // needs_review and enqueues the whole food_vocabulary set, including
     // ex010 itself. Then answer it correctly a 3rd time to advance past it.
     submitTextAnswer(root, "definitely-wrong-answer");
+    await vi.waitFor(() => expect(root.textContent).toContain("Не совсем"));
     submitTextAnswer(root, "definitely-wrong-answer");
+    await vi.waitFor(() => expect(root.textContent).toContain("Не совсем"));
     submitTextAnswer(root, correctAnswerFor("eq-1a-ex010"));
-    expect(root.textContent).toContain("Верно!");
+    await vi.waitFor(() => expect(root.textContent).toContain("Верно!"));
 
     // ex011-ex018: correct, advances main sequence.
     for (let i = 11; i <= 18; i++) {
       submitTextAnswer(root, correctAnswerFor(`eq-1a-ex0${i}`));
-      expect(root.textContent).toContain("Верно!");
+      await vi.waitFor(() => expect(root.textContent).toContain("Верно!"));
     }
 
     // ex019 (matching): complete the main sequence.
@@ -90,7 +101,7 @@ describe("review-pass feedback banner visibility (e2e, WR-02)", () => {
       (btn) => btn.textContent === "Проверить",
     ) as HTMLButtonElement;
     matchSubmit.click();
-    expect(root.textContent).toContain("Верно!");
+    await vi.waitFor(() => expect(root.textContent).toContain("Верно!"));
 
     // Now in the review pass — answer the FIRST review item incorrectly.
     expect(root.textContent).toContain("Повторение");
@@ -100,7 +111,7 @@ describe("review-pass feedback banner visibility (e2e, WR-02)", () => {
     submitTextAnswer(root, "definitely-wrong-answer");
 
     // The incorrect banner must be visible NOW, before any advance.
-    expect(root.textContent).toContain("Не совсем");
+    await vi.waitFor(() => expect(root.textContent).toContain("Не совсем"));
 
     // The exercise must still be the SAME review item's input (DOM not yet
     // torn down to the next item) plus an explicit continue affordance.
@@ -112,5 +123,6 @@ describe("review-pass feedback banner visibility (e2e, WR-02)", () => {
     // Tapping Продолжить advances to the next review item.
     continueButton.click();
     expect(root.textContent).not.toContain("Не совсем");
+    spy.mockRestore();
   });
 });

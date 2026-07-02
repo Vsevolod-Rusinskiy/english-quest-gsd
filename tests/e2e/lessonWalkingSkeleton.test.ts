@@ -66,7 +66,9 @@ describe("lesson walking skeleton (e2e)", () => {
     ) as HTMLButtonElement;
     submitButton.click();
 
-    expect(root.textContent).toContain("Верно!");
+    // Plan 03 (RESEARCH.md Pitfall 2): submit is now async — wait for the
+    // post-settle DOM instead of asserting immediately after click().
+    await vi.waitFor(() => expect(root.textContent).toContain("Верно!"));
     expect(root.textContent).toContain("Задание 2 из 19");
 
     // Simulate a fresh mount (new StateStore reading the same localStorage) —

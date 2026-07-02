@@ -68,7 +68,9 @@ export async function mountApp(root: HTMLElement): Promise<void> {
       main.appendChild(
         renderTheoryScreen({
           theory: lesson.theory,
-          onUnderstoodChoice: (understood) => engine.handleTheoryStep(understood),
+          onUnderstoodChoice: (understood) => {
+            void engine.handleTheoryStep(understood);
+          },
         }),
       );
     } else {
@@ -89,17 +91,37 @@ export async function mountApp(root: HTMLElement): Promise<void> {
         const feedbackKey = exercise.exerciseId;
         const exerciseNode = renderExerciseScreen({
           exercise,
-          onSubmit: (answer) => {
-            // handleAnswer's dispatch(es) are synchronous and would trigger the
-            // subscribed render() before `feedback` below is set (dispatch fires
-            // mid-call, before handleAnswer returns). Unsubscribe for the
-            // duration of this call so at most ONE explicit, fully-informed render
-            // happens after `feedback` is captured.
-            unsubscribeRender();
-            const result = engine.handleAnswer(exercise.exerciseId, answer);
-            unsubscribeRender = store.subscribe(render);
+          onSubmit: async (answer) => {
+            // Plan 03 (RESEARCH.md Pitfall 2): handleAnswer is now async (it
+            // may await callAnswerChecker over the network). "Thinking" cue —
+            // disable the submit button THE INSTANT submit begins, before the
+            // await, so the up-to-16s worst case (D-07's 8s timeout x2) never
+            // reads as a frozen/broken UI. Re-enabled in a finally.
+            const submitButton = exerciseNode.querySelector<HTMLButtonElement>(
+              ".submit-row button",
+            );
+            if (submitButton) submitButton.disabled = true;
 
-            const hint = "hint" in exercise ? exercise.hint.firstError : undefined;
+            let result;
+            try {
+              // handleAnswer's dispatch(es) are synchronous and would trigger the
+              // subscribed render() before `feedback` below is set (dispatch fires
+              // mid-call, before handleAnswer returns). Unsubscribe for the
+              // duration of this call so at most ONE explicit, fully-informed render
+              // happens after `feedback` is captured. Now spans an async gap
+              // (the await below) instead of a purely sync one — the same
+              // reasoning still holds: no other dispatch can race in during
+              // this window because nothing else calls store.dispatch outside
+              // theory/submit handlers (Pitfall 3).
+              unsubscribeRender();
+              result = await engine.handleAnswer(exercise.exerciseId, answer);
+            } finally {
+              unsubscribeRender = store.subscribe(render);
+              if (submitButton) submitButton.disabled = false;
+            }
+
+            const hint =
+              result.hintRu ?? ("hint" in exercise ? exercise.hint.firstError : undefined);
             feedback = { atIndex: index, exerciseId: feedbackKey, isCorrect: result.isCorrect, hint };
 
             // WR-02: review-pass answers used to always call render() here

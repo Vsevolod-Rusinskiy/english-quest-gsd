@@ -75,7 +75,11 @@ describe("full lesson traversal (e2e)", () => {
       expect(submitButton.disabled).toBe(false);
       submitButton.click();
 
-      expect(root.textContent).toContain("Верно!");
+      // Plan 03 (RESEARCH.md Pitfall 2): submit is now async — the click
+      // handler returns before handleAnswer's promise settles, so the
+      // assertion must wait for the post-settle DOM (the feedback banner)
+      // instead of asserting immediately after click().
+      await vi.waitFor(() => expect(root.textContent).toContain("Верно!"));
 
       // Every advance persisted: localStorage position matches the current index.
       const raw = localStorage.getItem(PROGRESS_KEY);

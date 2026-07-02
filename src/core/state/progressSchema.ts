@@ -19,6 +19,14 @@ export const ExerciseStatSchema = z.object({
   // needs_review episode" once an exercise has ever been answered correctly
   // even a single time in the past — see enqueueReviewItems in reviewQueue.ts.
   lastAttemptCorrect: z.boolean(),
+  // Phase 3 (RELY-03, D-08): source/failure of the MOST RECENT attempt only
+  // (mirrors lastAttemptCorrect's "most recent, not lifetime" convention) —
+  // lets a developer inspect "was this answer core or agent, did a fallback
+  // fire" per exercise without a separate parallel log. Required (not
+  // optional) so a legacy blob missing them resets via load(), consistent
+  // with this file's established schema-versioning discipline.
+  lastAttemptSource: z.enum(["core", "agent"]),
+  lastAttemptAgentFailed: z.boolean(),
 });
 
 export const CurrentPositionSchema = z.object({

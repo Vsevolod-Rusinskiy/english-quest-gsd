@@ -45,7 +45,7 @@ describe("enqueueReviewItems", () => {
       makeTextInputExercise("ex-2", ["T"]),
     ];
     const stats: Record<string, ExerciseStat> = {
-      "ex-1": { attempts: 1, correct: 1, lastAttemptCorrect: true },
+      "ex-1": { attempts: 1, correct: 1, lastAttemptCorrect: true, lastAttemptSource: "core", lastAttemptAgentFailed: false },
     };
     const result = enqueueReviewItems(exercises, "T", stats, []);
     expect(result).toEqual(["ex-2"]);
@@ -57,7 +57,7 @@ describe("enqueueReviewItems", () => {
       makeTextInputExercise("ex-always-wrong", ["T"]),
     ];
     const stats: Record<string, ExerciseStat> = {
-      "ex-always-wrong": { attempts: 3, correct: 0, lastAttemptCorrect: false },
+      "ex-always-wrong": { attempts: 3, correct: 0, lastAttemptCorrect: false, lastAttemptSource: "core", lastAttemptAgentFailed: false },
       // ex-never-attempted has no entry at all
     };
     const result = enqueueReviewItems(exercises, "T", stats, []);
@@ -67,7 +67,7 @@ describe("enqueueReviewItems", () => {
   it("CR-02: an exercise whose LAST attempt was correct is excluded even with a high lifetime correct count", () => {
     const exercises = [makeTextInputExercise("ex-1", ["T"])];
     const stats: Record<string, ExerciseStat> = {
-      "ex-1": { attempts: 5, correct: 4, lastAttemptCorrect: true },
+      "ex-1": { attempts: 5, correct: 4, lastAttemptCorrect: true, lastAttemptSource: "core", lastAttemptAgentFailed: false },
     };
     const result = enqueueReviewItems(exercises, "T", stats, []);
     expect(result).toEqual([]);
@@ -81,7 +81,7 @@ describe("enqueueReviewItems", () => {
     // a prior recovery. A cumulative `correct` counter would wrongly
     // exclude this exercise forever; lastAttemptCorrect must not.
     const stats: Record<string, ExerciseStat> = {
-      "ex-1": { attempts: 2, correct: 1, lastAttemptCorrect: false },
+      "ex-1": { attempts: 2, correct: 1, lastAttemptCorrect: false, lastAttemptSource: "core", lastAttemptAgentFailed: false },
     };
     const result = enqueueReviewItems(exercises, "T", stats, []);
     expect(result).toEqual(["ex-1"]);
