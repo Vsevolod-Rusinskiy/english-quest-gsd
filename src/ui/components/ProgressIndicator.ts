@@ -6,3 +6,14 @@ export function renderProgressIndicator(current: number, total: number): HTMLEle
   el.textContent = `Задание ${current} из ${total}`;
   return el;
 }
+
+// Review-pass variant (PROGRESS-04, D-02, T-02-05): distinct label + sub-range
+// so the review pass never renders currentExerciseIndex+1 past the main total
+// (would compound Phase 1 UAT Gap 2's overshoot). Zero innerHTML, same
+// createElement/textContent pattern as the main-pass indicator above.
+export function renderReviewProgressIndicator(current: number, total: number): HTMLElement {
+  const el = document.createElement("div");
+  el.className = "label progress-indicator review-progress-indicator";
+  el.textContent = `Повторение: ${current} из ${total}`;
+  return el;
+}
