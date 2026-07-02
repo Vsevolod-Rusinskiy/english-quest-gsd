@@ -165,3 +165,11 @@ None — this plan introduced zero new external-facing surface. All three checke
 ---
 *Phase: 01-deterministic-core-lesson-rendering-persistence*
 *Completed: 2026-07-02*
+
+## Self-Check: PASSED
+
+All 8 created files verified present on disk (checkSingleChoice.ts, checkMatching.ts,
+checkOrderBuilder.ts, single-choice.fixture.json, order-builder.fixture.json,
+checkSingleChoice.test.ts, checkMatching.test.ts, checkOrderBuilder.test.ts, plus this
+SUMMARY.md). All 5 commit hashes (2af0939, 1954cba, 51313af, f751d7c, 0547851) verified
+present in git log.
