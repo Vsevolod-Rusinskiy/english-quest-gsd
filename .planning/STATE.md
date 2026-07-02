@@ -2,36 +2,36 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-current_phase: 1
-current_phase_name: Deterministic Core, Lesson Rendering & Persistence
-status: executing
-stopped_at: Phase 1 UI-SPEC approved
-last_updated: "2026-07-02T09:37:42.814Z"
+current_phase: 2
+current_phase_name: Progress Tracking, Review Queue & Reward Engine
+status: planning
+stopped_at: Phase 1 complete, ready to plan Phase 2
+last_updated: "2026-07-02T14:35:00.000Z"
 last_activity: 2026-07-02
-last_activity_desc: Phase 1 execution started
+last_activity_desc: Phase 1 complete (verified, incl. live-browser UAT), transitioned to Phase 2
 progress:
   total_phases: 5
-  completed_phases: 0
+  completed_phases: 1
   total_plans: 3
-  completed_plans: 0
-  percent: 0
+  completed_plans: 3
+  percent: 20
 ---
 
 # Project State
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-07-01)
+See: .planning/PROJECT.md (updated 2026-07-02)
 
 **Core value:** Проверить механику обучения целиком: детерминированная проверка ответов + LLM-агенты там, где нужна интерпретация, персонализация по прогрессу, повторение слабых тем, начисление бонусов — без единого «сломанного» состояния, даже если агент недоступен.
-**Current focus:** Phase 1 — Deterministic Core, Lesson Rendering & Persistence
+**Current focus:** Phase 2 — Progress Tracking, Review Queue & Reward Engine
 
 ## Current Position
 
-Phase: 1 (Deterministic Core, Lesson Rendering & Persistence) — EXECUTING
-Plan: 1 of 3
-Status: Executing Phase 1
-Last activity: 2026-07-02 — Phase 1 execution started
+Phase: 2 — Progress Tracking, Review Queue & Reward Engine
+Plan: Not started
+Status: Ready to plan
+Last activity: 2026-07-02 — Phase 1 complete (verified, incl. live-browser UAT), transitioned to Phase 2
 
 Progress: [░░░░░░░░░░] 0%
 
@@ -39,7 +39,7 @@ Progress: [░░░░░░░░░░] 0%
 
 **Velocity:**
 
-- Total plans completed: 0
+- Total plans completed: 3
 - Average duration: - min
 - Total execution time: 0 hours
 
@@ -47,7 +47,7 @@ Progress: [░░░░░░░░░░] 0%
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| - | - | - | - |
+| 1 | 3 | - | - |
 
 **Recent Trend:**
 
@@ -76,8 +76,8 @@ None yet.
 
 - Research flagged: Claude structured-output/strict-tool-use API specifics should be verified against the current `@anthropic-ai/sdk` at Phase 3 planning/execution time, not locked in now
 - Research flagged: API-key handling strategy (serverless proxy vs. bring-your-own-key) is an undecided deployment detail that affects Phase 3 and Phase 5 scope
-- Research flagged: `acceptedAnswers` completeness in `Lesson-1A.json` is a content-QA gap that affects Phase 1 (exact-match coverage) and Phase 3 (Answer Checker call volume) — needs explicit review, not just code review
-- REQUIREMENTS.md traceability table states "30 total" v1 requirements but 32 distinct requirement IDs are actually checked off in the document; roadmap mapping covers all 32 IDs found (see traceability table for the full list)
+- [Phase 1] `single-choice`/`order-builder` have no real content in `Lesson-1A.json` (only `text-input`×18 + `matching`×1) — schema/checkers/renderers verified via hand-authored fixtures and live-browser testing, but real lesson content for these 2 types doesn't exist yet; needs content authoring before full end-to-end confidence
+- [Phase 1] Minor UI polish gaps deferred to Phase 5: (a) feedback banner from previous exercise stays visible until next submit instead of clearing on exercise-advance; (b) progress indicator overshoots to "N+1 из N" at lesson-complete instead of clamping/switching to a completion state. Logged in `01-UAT.md` Gaps section, non-blocking.
 
 ## Deferred Items
 
@@ -85,10 +85,11 @@ Items acknowledged and carried forward from previous milestone close:
 
 | Category | Item | Status | Deferred At |
 |----------|------|--------|-------------|
-| *(none — first milestone)* | | | |
+| UI polish | Feedback banner not cleared on exercise-advance (01-UAT.md Gap 1) | Open | Phase 1 → Phase 5 |
+| UI polish | Progress indicator overshoots at lesson-complete (01-UAT.md Gap 2) | Open | Phase 1 → Phase 5 |
 
 ## Session Continuity
 
-Last session: 2026-07-02T09:07:16.675Z
-Stopped at: Phase 1 UI-SPEC approved
-Resume file: .planning/phases/01-deterministic-core-lesson-rendering-persistence/01-UI-SPEC.md
+Last session: 2026-07-02T14:35:00.000Z
+Stopped at: Phase 1 complete, ready to plan Phase 2
+Resume file: None
