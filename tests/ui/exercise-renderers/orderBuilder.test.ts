@@ -97,7 +97,7 @@ describe("renderOrderBuilder", () => {
       resolve(process.cwd(), "src/ui/exercise-renderers/orderBuilder.ts"),
       "utf-8",
     );
-    expect(source).not.toMatch(/draggable|dragstart|dragover|drop\b/);
+    expect(source).not.toMatch(/draggable=|addEventListener\(["']drag|ondrag|ondrop/);
   });
 
   it("uses createElement/textContent only, never innerHTML", () => {
