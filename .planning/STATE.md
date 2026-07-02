@@ -5,8 +5,8 @@ milestone_name: milestone
 current_phase: 1
 current_phase_name: Deterministic Core, Lesson Rendering & Persistence
 status: planning
-stopped_at: Phase 1 context gathered
-last_updated: "2026-07-02T08:46:36.195Z"
+stopped_at: Phase 1 UI-SPEC approved
+last_updated: "2026-07-02T09:07:16.680Z"
 last_activity: 2026-07-02
 last_activity_desc: ROADMAP.md and STATE.md created from REQUIREMENTS.md + research/SUMMARY.md
 progress:
@@ -89,6 +89,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-07-02T08:46:36.191Z
-Stopped at: Phase 1 context gathered
-Resume file: .planning/phases/01-deterministic-core-lesson-rendering-persistence/01-CONTEXT.md
+Last session: 2026-07-02T09:07:16.675Z
+Stopped at: Phase 1 UI-SPEC approved
+Resume file: .planning/phases/01-deterministic-core-lesson-rendering-persistence/01-UI-SPEC.md
