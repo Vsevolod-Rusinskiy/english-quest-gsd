@@ -60,14 +60,14 @@ export async function mountApp(root: HTMLElement): Promise<void> {
         main.appendChild(
           renderExerciseScreen({
             exercise,
-            onSubmit: (rawAnswer) => {
+            onSubmit: (answer) => {
               // handleAnswer's dispatch(es) are synchronous and would trigger the
               // subscribed render() before `feedback` below is set (dispatch fires
               // mid-call, before handleAnswer returns). Unsubscribe for the
               // duration of this call so only ONE explicit, fully-informed render
               // happens after `feedback` is captured.
               unsubscribeRender();
-              const result = engine.handleAnswer(exercise.exerciseId, rawAnswer);
+              const result = engine.handleAnswer(exercise.exerciseId, answer);
               unsubscribeRender = store.subscribe(render);
 
               const hint = "hint" in exercise ? exercise.hint.firstError : undefined;
@@ -88,6 +88,16 @@ export async function mountApp(root: HTMLElement): Promise<void> {
           main.appendChild(renderFeedbackBanner(feedback.isCorrect, feedback.hint));
         }
       } else {
+        // Lesson complete: index has advanced past the last exercise. Still show
+        // the feedback banner for the just-answered final exercise (D-04 semantics:
+        // banner belongs to index - 1 when the last answer was correct) before the
+        // done message, exactly like the in-lesson case above.
+        const feedbackAppliesHere =
+          feedback !== null && feedback.isCorrect && feedback.atIndex === index - 1;
+        if (feedbackAppliesHere && feedback) {
+          main.appendChild(renderFeedbackBanner(feedback.isCorrect, feedback.hint));
+        }
+
         const done = document.createElement("p");
         done.textContent = "Урок завершён!";
         main.appendChild(done);

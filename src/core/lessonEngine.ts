@@ -1,8 +1,14 @@
 // Theory -> exercise orchestrator (Phase 1 slice). Cites THEORY-01, THEORY-02,
-// EXERCISE-01, EXERCISE-05, CHECK-01.
+// EXERCISE-01..05, CHECK-01, CHECK-02.
 import type { Lesson, Exercise } from "./lesson/lessonSchema";
 import type { StateStore } from "./state/store";
 import { checkTextInput, type CheckResult } from "./answer-checking/checkTextInput";
+import { checkSingleChoice } from "./answer-checking/checkSingleChoice";
+import { checkMatching } from "./answer-checking/checkMatching";
+import { checkOrderBuilder } from "./answer-checking/checkOrderBuilder";
+import type { MatchingPair } from "../ui/exercise-renderers/matching";
+
+export type AnswerPayload = string | MatchingPair[] | string[];
 
 export class LessonEngine {
   readonly lesson: Lesson;
@@ -25,22 +31,28 @@ export class LessonEngine {
     this.store.dispatch({ type: "theory_step", understood: true });
   }
 
-  handleAnswer(exerciseId: string, rawAnswer: string): CheckResult {
+  handleAnswer(exerciseId: string, answer: AnswerPayload): CheckResult {
     const exercise = this.exercises.find((e) => e.exerciseId === exerciseId);
     if (!exercise) {
       throw new Error(`Unknown exerciseId: ${exerciseId}`);
     }
 
+    // NO agent call in any branch (CHECK-02) — every type routes to a Plan 02
+    // deterministic core checker.
     let result: CheckResult;
     switch (exercise.type) {
       case "text-input":
-        result = checkTextInput(exercise, rawAnswer);
+        result = checkTextInput(exercise, answer as string);
+        break;
+      case "single-choice":
+        result = checkSingleChoice(exercise, answer as string);
         break;
       case "matching":
-      case "single-choice":
+        result = checkMatching(exercise, answer as MatchingPair[]);
+        break;
       case "order-builder":
-        // Not yet wired (Plan 03) — honest placeholder, no fake behavior.
-        throw new Error(`Answer checking for type "${exercise.type}" not yet wired (Plan 03)`);
+        result = checkOrderBuilder(exercise, answer as string[]);
+        break;
       default: {
         const _exhaustive: never = exercise;
         throw new Error(`Unhandled exercise type: ${JSON.stringify(_exhaustive)}`);
