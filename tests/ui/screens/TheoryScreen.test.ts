@@ -4,7 +4,7 @@ import { resolve } from "node:path";
 import { LessonSchema } from "../../../src/core/lesson/lessonSchema";
 import { renderTheoryScreen } from "../../../src/ui/screens/TheoryScreen";
 
-const lessonPath = resolve(process.cwd(), "Lesson-1A.json");
+const lessonPath = resolve(process.cwd(), "public/Lesson-1A.json");
 const realLesson1A = JSON.parse(readFileSync(lessonPath, "utf-8"));
 const lesson = LessonSchema.parse(realLesson1A);
 

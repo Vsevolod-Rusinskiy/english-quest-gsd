@@ -10,7 +10,7 @@ import { LessonEngine } from "../../src/core/lessonEngine";
 import { StateStore } from "../../src/core/state/store";
 import { initialState } from "../../src/core/state/initialState";
 
-const lessonPath = resolve(process.cwd(), "Lesson-1A.json");
+const lessonPath = resolve(process.cwd(), "public/Lesson-1A.json");
 const realLesson1A = JSON.parse(readFileSync(lessonPath, "utf-8"));
 const lesson = LessonSchema.parse(realLesson1A);
 

@@ -4,7 +4,7 @@ import { resolve } from "node:path";
 import { LessonSchema } from "../../../src/core/lesson/lessonSchema";
 import { checkMatching } from "../../../src/core/answer-checking/checkMatching";
 
-const lessonPath = resolve(process.cwd(), "Lesson-1A.json");
+const lessonPath = resolve(process.cwd(), "public/Lesson-1A.json");
 const realLesson1A = JSON.parse(readFileSync(lessonPath, "utf-8"));
 const lesson = LessonSchema.parse(realLesson1A);
 const ex019 = lesson.sections
