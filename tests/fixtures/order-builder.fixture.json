@@ -1,0 +1,26 @@
+{
+  "exerciseId": "eq-1a-ex-fixture-ob001",
+  "catalogRef": "eq-fixture-order-builder",
+  "catalogItemRef": "1",
+  "sourceRef": {
+    "sourceBook": "Workbook",
+    "unit": "1A",
+    "page": "6",
+    "exerciseNumber": "fixture-1"
+  },
+  "type": "order-builder",
+  "skill": "grammar",
+  "prompt": "Put the words in the correct order.",
+  "targetWords": [],
+  "targetGrammar": ["present_continuous"],
+  "answerCheck": {
+    "mode": "orderedTokens",
+    "correctOrder": ["What", "are", "you", "doing", "tonight"]
+  },
+  "wordBank": ["doing", "What", "tonight", "you", "are"],
+  "hint": {
+    "firstError": "Вопросительное слово обычно стоит первым.",
+    "parentExplanation": "Проверяет порядок слов в вопросе present continuous."
+  },
+  "topicImpact": ["present_continuous_question_order"]
+}

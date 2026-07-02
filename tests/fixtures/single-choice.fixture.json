@@ -1,0 +1,30 @@
+{
+  "exerciseId": "eq-1a-ex-fixture-sc001",
+  "catalogRef": "eq-fixture-single-choice",
+  "catalogItemRef": "1",
+  "sourceRef": {
+    "sourceBook": "Workbook",
+    "unit": "1A",
+    "page": "5",
+    "exerciseNumber": "fixture-1"
+  },
+  "type": "single-choice",
+  "skill": "vocabulary",
+  "prompt": "Choose the correct word: I usually have ___ for breakfast.",
+  "targetWords": ["eggs"],
+  "targetGrammar": [],
+  "answerCheck": {
+    "mode": "choiceId",
+    "correctOptionId": "option-eggs"
+  },
+  "options": [
+    { "id": "option-eggs", "labelEn": "eggs" },
+    { "id": "option-napkin", "labelEn": "a napkin" },
+    { "id": "option-glass", "labelEn": "a glass" }
+  ],
+  "hint": {
+    "firstError": "Подумай, что из этого едят на завтрак.",
+    "parentExplanation": "Проверяет базовую лексику еды из юнита 1A."
+  },
+  "topicImpact": ["food_vocabulary"]
+}
