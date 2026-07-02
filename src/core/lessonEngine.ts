@@ -38,19 +38,36 @@ export class LessonEngine {
     }
 
     // NO agent call in any branch (CHECK-02) — every type routes to a Plan 02
-    // deterministic core checker.
+    // deterministic core checker. Each branch validates the payload shape at
+    // runtime before forwarding it, so a mismatched caller gets a clear Error
+    // instead of a silent, nonsensical undefined-based comparison (WR-01).
     let result: CheckResult;
     switch (exercise.type) {
       case "text-input":
-        result = checkTextInput(exercise, answer as string);
+        if (typeof answer !== "string") {
+          throw new Error(`handleAnswer: expected string for exerciseId ${exerciseId}`);
+        }
+        result = checkTextInput(exercise, answer);
         break;
       case "single-choice":
-        result = checkSingleChoice(exercise, answer as string);
+        if (typeof answer !== "string") {
+          throw new Error(`handleAnswer: expected string for exerciseId ${exerciseId}`);
+        }
+        result = checkSingleChoice(exercise, answer);
         break;
       case "matching":
+        if (
+          !Array.isArray(answer) ||
+          answer.some((p) => typeof p !== "object" || p === null || !("leftId" in p))
+        ) {
+          throw new Error(`handleAnswer: expected MatchingPair[] for exerciseId ${exerciseId}`);
+        }
         result = checkMatching(exercise, answer as MatchingPair[]);
         break;
       case "order-builder":
+        if (!Array.isArray(answer) || answer.some((t) => typeof t !== "string")) {
+          throw new Error(`handleAnswer: expected string[] for exerciseId ${exerciseId}`);
+        }
         result = checkOrderBuilder(exercise, answer as string[]);
         break;
       default: {
