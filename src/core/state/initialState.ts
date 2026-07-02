@@ -10,5 +10,7 @@ export function initialState(lessonId?: string): ProgressState {
     currentRewards: 0,
     rewardHistory: [],
     reviewQueue: [],
+    topicStats: {},
+    currentCorrectStreak: 0,
   };
 }

@@ -1,7 +1,9 @@
-// Zod schema for the Phase 1 slice of ProgressState. Full topic-status FSM,
-// reward engine, and reviewQueue population are Phase 2 scope (PROGRESS-01..04,
-// REWARD-01/02) — only typed empty containers exist here so PERSIST-01's
-// enumerated fields all exist without implementing that logic yet.
+// Zod schema for ProgressState. Phase 1 established exerciseStats/currentPosition/
+// lessonId; Phase 2 now types the per-topic mastery machine and reward ledger
+// (PROGRESS-01/02/03, REWARD-01/02) — topicStats, currentCorrectStreak, and the
+// previously-untyped rewardHistory/reviewQueue placeholders. All new fields are
+// required (no defaults) so a legacy blob missing them resets via load(), rather
+// than silently producing partial state.
 import * as z from "zod";
 
 export const StudentProfileSchema = z.object({
@@ -18,6 +20,35 @@ export const CurrentPositionSchema = z.object({
   currentExerciseIndex: z.number(),
 });
 
+export const TopicStatusSchema = z.enum(["not_started", "in_progress", "needs_review", "mastered"]);
+
+export const TopicStatSchema = z.object({
+  status: TopicStatusSchema,
+  attempts: z.number(),
+  correct: z.number(),
+  errors: z.number(),
+  correctStreak: z.number(), // per-topic streak, distinct from currentCorrectStreak (session-global)
+});
+
+export const RewardReasonSchema = z.enum([
+  "honest_attempt",
+  "first_try_correct",
+  "correct_after_hint",
+  "fixed_mistake",
+  "streak_bonus",
+  "weak_topic_closed",
+]);
+
+export const RewardEventSchema = z.object({
+  rewardEventId: z.string(),
+  exerciseId: z.string().optional(), // absent for weak_topic_closed (topic-scoped, not exercise-scoped)
+  relatedTopic: z.string().optional(),
+  reason: RewardReasonSchema,
+  amount: z.number(),
+  attemptNumber: z.number(),
+  createdAt: z.string(), // ISO timestamp
+});
+
 export const ProgressStateSchema = z.object({
   studentProfile: StudentProfileSchema,
   // Binds this saved blob to the specific lesson it was generated against
@@ -31,11 +62,17 @@ export const ProgressStateSchema = z.object({
   exerciseStats: z.record(z.string(), ExerciseStatSchema),
   currentPosition: CurrentPositionSchema,
   currentRewards: z.number(),
-  rewardHistory: z.array(z.unknown()),
-  reviewQueue: z.array(z.unknown()),
+  rewardHistory: z.array(RewardEventSchema),
+  reviewQueue: z.array(z.string()), // exerciseId strings, not full exercise objects (D-02 discretion)
+  topicStats: z.record(z.string(), TopicStatSchema),
+  currentCorrectStreak: z.number(), // session-global correct-answer streak (D-04)
 });
 
 export type StudentProfile = z.infer<typeof StudentProfileSchema>;
 export type ExerciseStat = z.infer<typeof ExerciseStatSchema>;
 export type CurrentPosition = z.infer<typeof CurrentPositionSchema>;
+export type TopicStatus = z.infer<typeof TopicStatusSchema>;
+export type TopicStat = z.infer<typeof TopicStatSchema>;
+export type RewardReason = z.infer<typeof RewardReasonSchema>;
+export type RewardEvent = z.infer<typeof RewardEventSchema>;
 export type ProgressState = z.infer<typeof ProgressStateSchema>;
