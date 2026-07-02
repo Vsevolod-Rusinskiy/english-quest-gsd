@@ -21,7 +21,10 @@ export interface ComputeRewardEventsInput {
   priorAttempts: number; // count of prior attempts on this exercise (0 = first ever attempt)
   rewardHistory: RewardEvent[];
   currentCorrectStreak: number; // session-global streak value BEFORE this attempt
-  masteredTransition: { topic: string } | null; // set when the FSM signaled entered_mastered
+  // CR-01: plural — a single exercise can carry multiple topicImpact entries
+  // that independently cross the mastery threshold in the same call. One
+  // weak_topic_closed event is emitted per topic in this array.
+  masteredTopics: string[];
 }
 
 export interface ComputeRewardEventsResult {
@@ -58,7 +61,7 @@ function makeEvent(
 }
 
 export function computeRewardEvents(input: ComputeRewardEventsInput): ComputeRewardEventsResult {
-  const { exerciseId, isCorrect, priorAttempts, rewardHistory, currentCorrectStreak, masteredTransition } = input;
+  const { exerciseId, isCorrect, priorAttempts, rewardHistory, currentCorrectStreak, masteredTopics } = input;
   const attemptNumber = priorAttempts + 1;
   const rewardEvents: RewardEvent[] = [];
 
@@ -91,11 +94,12 @@ export function computeRewardEvents(input: ComputeRewardEventsInput): ComputeRew
   }
 
   // weak_topic_closed +15 (D-05) — fired directly off the FSM's entered_mastered
-  // signal, never derived from a rewardHistory scan.
-  if (masteredTransition) {
-    rewardEvents.push(
-      makeEvent("weak_topic_closed", attemptNumber, { relatedTopic: masteredTransition.topic }),
-    );
+  // signal, never derived from a rewardHistory scan. CR-01: loop over ALL
+  // mastered topics from this attempt (a single exercise's topicImpact can
+  // cross the mastery threshold for more than one topic at once) and emit
+  // one event per topic — never collapse to a single value.
+  for (const topic of masteredTopics) {
+    rewardEvents.push(makeEvent("weak_topic_closed", attemptNumber, { relatedTopic: topic }));
   }
 
   return { rewardEvents, nextCorrectStreak };

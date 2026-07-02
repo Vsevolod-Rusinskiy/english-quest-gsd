@@ -35,7 +35,13 @@ export function evaluateAttempt(
   const { isCorrect } = checkResult;
   const topicUpdates: Record<string, TopicStat> = {};
   let reviewQueueAdditions = [...state.reviewQueue];
-  let masteredTransition: { topic: string } | null = null;
+  // CR-01: collect ALL topics that transitioned to mastered in this loop, not
+  // just the last one — a single exercise can carry multiple topicImpact
+  // entries (see multi-topic.fixture.json) that independently cross the
+  // mastery threshold in the same call. A single nullable value here would
+  // silently drop every mastery but the last-processed one, permanently
+  // losing the weak_topic_closed reward for the earlier topic(s).
+  const masteredTopics: string[] = [];
 
   // D-01: loop ALL topicImpact entries, never index [0] (Pitfall 2).
   for (const topic of exercise.topicImpact) {
@@ -58,7 +64,7 @@ export function evaluateAttempt(
     if (fsmResult.transition === "entered_needs_review") {
       reviewQueueAdditions = enqueueReviewItems(allExercises, topic, state.exerciseStats, reviewQueueAdditions);
     } else if (fsmResult.transition === "entered_mastered") {
-      masteredTransition = { topic };
+      masteredTopics.push(topic);
     }
   }
 
@@ -68,7 +74,7 @@ export function evaluateAttempt(
     priorAttempts,
     rewardHistory: state.rewardHistory,
     currentCorrectStreak: state.currentCorrectStreak,
-    masteredTransition,
+    masteredTopics,
   });
 
   // Only the newly-added ids are the "additions" the reduce branch should append.

@@ -130,4 +130,51 @@ describe("evaluateAttempt", () => {
 
     expect(state.rewardHistory.some((e) => e.reason === "weak_topic_closed")).toBe(true);
   });
+
+  it("CR-01: three correct-in-a-row on a 2-topicImpact exercise masters BOTH topics and grants a weak_topic_closed reward for each", () => {
+    let state: ProgressState = initialState();
+
+    let lastDelta = evaluateAttempt(
+      state,
+      multiTopicExercise,
+      { isCorrect: true, source: "core" },
+      0,
+      allExercises,
+    );
+
+    for (let i = 0; i < 3; i++) {
+      lastDelta = evaluateAttempt(
+        state,
+        multiTopicExercise,
+        { isCorrect: true, source: "core" },
+        i,
+        allExercises,
+      );
+      state = {
+        ...state,
+        exerciseStats: {
+          ...state.exerciseStats,
+          "fixture-multi-topic-01": { attempts: i + 1, correct: i + 1 },
+        },
+        topicStats: { ...state.topicStats, ...lastDelta.topicUpdates },
+        rewardHistory: [...state.rewardHistory, ...lastDelta.rewardEvents],
+        currentCorrectStreak: lastDelta.nextCorrectStreak,
+      };
+    }
+
+    // Both topics must independently reach mastered status.
+    expect(state.topicStats["present_continuous_now"].status).toBe("mastered");
+    expect(state.topicStats["present_simple_negative"].status).toBe("mastered");
+
+    // The final attempt's delta must carry a weak_topic_closed reward for
+    // EACH topic that crossed the threshold on that same call — neither one
+    // may be silently dropped in favor of the other.
+    const closedTopics = lastDelta.rewardEvents
+      .filter((e) => e.reason === "weak_topic_closed")
+      .map((e) => e.relatedTopic);
+    expect(closedTopics).toEqual(
+      expect.arrayContaining(["present_continuous_now", "present_simple_negative"]),
+    );
+    expect(closedTopics).toHaveLength(2);
+  });
 });

@@ -10,7 +10,7 @@ describe("computeRewardEvents", () => {
       priorAttempts: 0,
       rewardHistory: [],
       currentCorrectStreak: 0,
-      masteredTransition: null,
+      masteredTopics: [],
     });
 
     const honest = rewardEvents.find((e) => e.reason === "honest_attempt");
@@ -36,7 +36,7 @@ describe("computeRewardEvents", () => {
       priorAttempts: 1,
       rewardHistory: priorHistory,
       currentCorrectStreak: 0,
-      masteredTransition: null,
+      masteredTopics: [],
     });
 
     expect(rewardEvents.find((e) => e.reason === "honest_attempt")).toBeUndefined();
@@ -49,7 +49,7 @@ describe("computeRewardEvents", () => {
       priorAttempts: 0,
       rewardHistory: [],
       currentCorrectStreak: 0,
-      masteredTransition: null,
+      masteredTopics: [],
     });
 
     const firstTry = rewardEvents.find((e) => e.reason === "first_try_correct");
@@ -76,7 +76,7 @@ describe("computeRewardEvents", () => {
       priorAttempts: 1,
       rewardHistory: priorHistory,
       currentCorrectStreak: 0,
-      masteredTransition: null,
+      masteredTopics: [],
     });
 
     const recovery = rewardEvents.find((e) => e.reason === "correct_after_hint");
@@ -104,7 +104,7 @@ describe("computeRewardEvents", () => {
       priorAttempts: 0,
       rewardHistory: priorHistory,
       currentCorrectStreak: 0,
-      masteredTransition: null,
+      masteredTopics: [],
     });
 
     expect(rewardEvents.find((e) => e.reason === "first_try_correct")).toBeUndefined();
@@ -139,7 +139,7 @@ describe("computeRewardEvents", () => {
       priorAttempts: 1,
       rewardHistory: priorHistory,
       currentCorrectStreak: 0,
-      masteredTransition: { topic: "present_continuous_now" },
+      masteredTopics: ["present_continuous_now"],
     });
 
     expect(rewardEvents.find((e) => e.reason === "weak_topic_closed")).toBeDefined();
@@ -156,7 +156,7 @@ describe("computeRewardEvents", () => {
         priorAttempts: 0,
         rewardHistory: [],
         currentCorrectStreak: streak,
-        masteredTransition: null,
+        masteredTopics: [],
       });
       streak = nextCorrectStreak;
       allEvents.push(rewardEvents);
@@ -179,7 +179,7 @@ describe("computeRewardEvents", () => {
         priorAttempts: 0,
         rewardHistory: [],
         currentCorrectStreak: streak,
-        masteredTransition: null,
+        masteredTopics: [],
       });
       streak = nextCorrectStreak;
       allEvents.push(rewardEvents);
@@ -201,7 +201,7 @@ describe("computeRewardEvents", () => {
         priorAttempts: 0,
         rewardHistory: [],
         currentCorrectStreak: streak,
-        masteredTransition: null,
+        masteredTopics: [],
       });
       streak = nextCorrectStreak;
       allEvents.push(rewardEvents);
@@ -218,7 +218,7 @@ describe("computeRewardEvents", () => {
       priorAttempts: 0,
       rewardHistory: [],
       currentCorrectStreak: 0,
-      masteredTransition: { topic: "present_continuous_now" },
+      masteredTopics: ["present_continuous_now"],
     });
 
     const closed = rewardEvents.filter((e) => e.reason === "weak_topic_closed");
@@ -228,6 +228,24 @@ describe("computeRewardEvents", () => {
     expect(closed[0].exerciseId).toBeUndefined();
   });
 
+  it("CR-01: two simultaneously mastered topics from one attempt each emit their own weak_topic_closed event", () => {
+    const { rewardEvents } = computeRewardEvents({
+      exerciseId: "ex-1",
+      isCorrect: true,
+      priorAttempts: 0,
+      rewardHistory: [],
+      currentCorrectStreak: 0,
+      masteredTopics: ["present_continuous_now", "present_simple_negative"],
+    });
+
+    const closed = rewardEvents.filter((e) => e.reason === "weak_topic_closed");
+    expect(closed).toHaveLength(2);
+    expect(closed.map((e) => e.relatedTopic)).toEqual(
+      expect.arrayContaining(["present_continuous_now", "present_simple_negative"]),
+    );
+    expect(closed.every((e) => e.amount === 15)).toBe(true);
+  });
+
   it("weak_topic_closed: an attempt with no entered_mastered transition emits none", () => {
     const { rewardEvents } = computeRewardEvents({
       exerciseId: "ex-1",
@@ -235,7 +253,7 @@ describe("computeRewardEvents", () => {
       priorAttempts: 0,
       rewardHistory: [],
       currentCorrectStreak: 0,
-      masteredTransition: null,
+      masteredTopics: [],
     });
 
     expect(rewardEvents.find((e) => e.reason === "weak_topic_closed")).toBeUndefined();
@@ -249,7 +267,7 @@ describe("computeRewardEvents", () => {
       priorAttempts: 0,
       rewardHistory: [],
       currentCorrectStreak: 0,
-      masteredTransition: null,
+      masteredTopics: [],
     });
     expect(first.rewardEvents.find((e) => e.reason === "honest_attempt")?.amount).toBe(1);
     expect(first.rewardEvents.find((e) => e.reason === "first_try_correct")?.amount).toBe(5);
@@ -261,7 +279,7 @@ describe("computeRewardEvents", () => {
       priorAttempts: 1,
       rewardHistory: [],
       currentCorrectStreak: 0,
-      masteredTransition: null,
+      masteredTopics: [],
     });
     expect(recovery.rewardEvents.find((e) => e.reason === "correct_after_hint")?.amount).toBe(3);
 
@@ -274,7 +292,7 @@ describe("computeRewardEvents", () => {
       priorAttempts: 0,
       rewardHistory: [],
       currentCorrectStreak: streak,
-      masteredTransition: null,
+      masteredTopics: [],
     });
     expect(streakResult.rewardEvents.find((e) => e.reason === "streak_bonus")?.amount).toBe(10);
 
@@ -285,7 +303,7 @@ describe("computeRewardEvents", () => {
       priorAttempts: 0,
       rewardHistory: [],
       currentCorrectStreak: 0,
-      masteredTransition: { topic: "topic-x" },
+      masteredTopics: ["topic-x"],
     });
     expect(mastered.rewardEvents.find((e) => e.reason === "weak_topic_closed")?.amount).toBe(15);
   });
@@ -297,7 +315,7 @@ describe("computeRewardEvents", () => {
       priorAttempts: 2,
       rewardHistory: [],
       currentCorrectStreak: 0,
-      masteredTransition: null,
+      masteredTopics: [],
     });
 
     expect(rewardEvents.length).toBeGreaterThan(0);
