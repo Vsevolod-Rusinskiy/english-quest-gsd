@@ -159,13 +159,17 @@ export async function mountApp(root: HTMLElement): Promise<void> {
         // Show the banner if it belongs to the exercise currently on screen
         // (incorrect main-pass answer: same index+id) OR to the one just
         // answered correctly on the main pass, whose index has already
-        // advanced past by exactly one (D-04's immediate advance semantics)
-        // OR to the one just consumed in the review pass (matched by
-        // exerciseId, since the index no longer moves per review answer).
+        // advanced past by exactly one (D-04's immediate advance semantics —
+        // this also covers the last main exercise transitioning straight into
+        // a non-empty reviewQueue: inReviewPass is now true, but the feedback
+        // still belongs to the main-pass answer that caused the transition,
+        // so this must NOT be gated on !inReviewPass) OR to the one just
+        // consumed in the review pass (matched by exerciseId, since the index
+        // no longer moves per review answer).
         const feedbackAppliesHere =
           feedback !== null &&
           (feedback.exerciseId === feedbackKey ||
-            (feedback.isCorrect && !inReviewPass && feedback.atIndex === index - 1));
+            (feedback.isCorrect && feedback.atIndex === index - 1));
         if (feedbackAppliesHere && feedback) {
           main.appendChild(renderFeedbackBanner(feedback.isCorrect, feedback.hint));
         }
