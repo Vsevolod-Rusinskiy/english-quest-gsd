@@ -30,10 +30,10 @@ Requirements for initial release (single lesson `Lesson-1A.json`). Each maps to 
 
 ### Progress & Weak Topics (PROGRESS)
 
-- [ ] **PROGRESS-01**: Ядро ведёт счётчики попыток/правильных/ошибок/серий по каждому упражнению
-- [ ] **PROGRESS-02**: Ядро ведёт статус каждой темы по машине состояний (Не изучено → В процессе → Повторить → Выучено) на основе пороговых правил ошибок/успехов
-- [ ] **PROGRESS-03**: При 2+ ошибках по теме тема получает статус «Повторить», связанные задания добавляются в `reviewQueue`
-- [ ] **PROGRESS-04**: Ребёнок может пройти задания из `reviewQueue` в той же сессии
+- [x] **PROGRESS-01**: Ядро ведёт счётчики попыток/правильных/ошибок/серий по каждому упражнению
+- [x] **PROGRESS-02**: Ядро ведёт статус каждой темы по машине состояний (Не изучено → В процессе → Повторить → Выучено) на основе пороговых правил ошибок/успехов
+- [x] **PROGRESS-03**: При 2+ ошибках по теме тема получает статус «Повторить», связанные задания добавляются в `reviewQueue`
+- [x] **PROGRESS-04**: Ребёнок может пройти задания из `reviewQueue` в той же сессии
 
 ### Personalization (PERSONAL)
 
@@ -43,8 +43,8 @@ Requirements for initial release (single lesson `Lesson-1A.json`). Each maps to 
 
 ### Rewards (REWARD)
 
-- [ ] **REWARD-01**: Ядро начисляет фиксированные суммы рублей по правилам (`honest_attempt`, `first_try_correct`, `correct_after_hint`, `fixed_mistake`, `streak_bonus`, `weak_topic_closed`) с лимитами на упражнение
-- [ ] **REWARD-02**: Ядро ведёт леджер начислений `rewardHistory` (`rewardEventId`, `reason`, `amount`, `attemptNumber`, `createdAt`)
+- [x] **REWARD-01**: Ядро начисляет фиксированные суммы рублей по правилам (`honest_attempt`, `first_try_correct`, `correct_after_hint`, `fixed_mistake`, `streak_bonus`, `weak_topic_closed`) с лимитами на упражнение
+- [x] **REWARD-02**: Ядро ведёт леджер начислений `rewardHistory` (`rewardEventId`, `reason`, `amount`, `attemptNumber`, `createdAt`)
 - [ ] **REWARD-03**: Агент Reward Advisor предлагает причины начисления и текст похвалы; ядро проверяет предложение и начисляет сумму само
 - [ ] **REWARD-04**: При недоступности Reward Advisor ядро само применяет reward-правила без текста похвалы от агента
 
@@ -122,15 +122,15 @@ Populated during roadmap creation — see `.planning/ROADMAP.md`.
 | CHECK-02 | Phase 1 | Complete |
 | CHECK-03 | Phase 3 | Pending |
 | CHECK-04 | Phase 3 | Pending |
-| PROGRESS-01 | Phase 2 | Pending |
-| PROGRESS-02 | Phase 2 | Pending |
-| PROGRESS-03 | Phase 2 | Pending |
-| PROGRESS-04 | Phase 2 | Pending |
+| PROGRESS-01 | Phase 2 | Complete |
+| PROGRESS-02 | Phase 2 | Complete |
+| PROGRESS-03 | Phase 2 | Complete |
+| PROGRESS-04 | Phase 2 | Complete |
 | PERSONAL-01 | Phase 4 | Pending |
 | PERSONAL-02 | Phase 4 | Pending |
 | PERSONAL-03 | Phase 4 | Pending |
-| REWARD-01 | Phase 2 | Pending |
-| REWARD-02 | Phase 2 | Pending |
+| REWARD-01 | Phase 2 | Complete |
+| REWARD-02 | Phase 2 | Complete |
 | REWARD-03 | Phase 4 | Pending |
 | REWARD-04 | Phase 4 | Pending |
 | REPORT-01 | Phase 4 | Pending |
