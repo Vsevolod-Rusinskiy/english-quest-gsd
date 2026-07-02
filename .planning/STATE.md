@@ -75,10 +75,9 @@ None yet.
 
 ### Blockers/Concerns
 
-- Research flagged: Claude structured-output/strict-tool-use API specifics should be verified against the current `@anthropic-ai/sdk` at Phase 3 planning/execution time, not locked in now
-- Research flagged: API-key handling strategy (serverless proxy vs. bring-your-own-key) is an undecided deployment detail that affects Phase 3 and Phase 5 scope
 - [Phase 1] `single-choice`/`order-builder` have no real content in `Lesson-1A.json` (only `text-input`×18 + `matching`×1) — schema/checkers/renderers verified via hand-authored fixtures and live-browser testing, but real lesson content for these 2 types doesn't exist yet; needs content authoring before full end-to-end confidence
 - [Phase 1] Minor UI polish gaps deferred to Phase 5: (a) feedback banner from previous exercise stays visible until next submit instead of clearing on exercise-advance; (b) progress indicator overshoots to "N+1 из N" at lesson-complete instead of clamping/switching to a completion state. Logged in `01-UAT.md` Gaps section, non-blocking.
+- [Phase 3] App calls a third-party LLM router (`api.llmrouter.ru`), not Anthropic directly — API key lives in `.env` → bundled into the built JS at compile time (browser-direct, no proxy). Safe for local dev / in-person demo only. **Must not deploy `dist/` publicly without first adding a proxy** (Cloudflare Workers or equivalent) — the bundled key would be extractable via devtools. See `03-CONTEXT.md` D-03.
 
 ## Deferred Items
 
