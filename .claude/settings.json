@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(source ~/.nvm/nvm.sh*)",
+      "Bash(nvm use *)",
+      "mcp__Claude_Preview__preview_snapshot",
+      "Bash(node \"$GSD_TOOLS\" query config-get *)",
+      "Bash(npx vitest run*)",
+      "Bash(node \"$GSD_TOOLS\" query init.*)",
+      "Bash(node \"$GSD_TOOLS\" loop render-hooks *)",
+      "mcp__Claude_Preview__preview_screenshot",
+      "Bash(npx tsc --noEmit*)"
+    ]
+  }
+}
