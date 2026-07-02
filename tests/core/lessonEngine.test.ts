@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from "vitest";
+import { describe, it, expect, beforeEach, vi } from "vitest";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import {
@@ -136,5 +136,79 @@ describe("LessonEngine", () => {
     );
 
     expect(result).toEqual({ isCorrect: true, source: "core" });
+  });
+
+  // Phase 2 (PROGRESS-01/02/03, REWARD-01/02): handleAnswer now drives
+  // evaluateAttempt() and folds the result into the same exercise_attempt
+  // dispatch (Pitfall 3).
+  describe("Phase 2: progress/reward wiring", () => {
+    it("integration, topic stats: a correct answer updates topicStats for the exercise's topicImpact topic", () => {
+      const store = new StateStore(initialState());
+      const engine = new LessonEngine(lesson, store);
+
+      engine.handleAnswer("eq-1a-ex001", "He is working");
+
+      const topicStat = store.getState().topicStats["present_continuous_now"];
+      expect(topicStat).toBeDefined();
+      expect(topicStat.attempts).toBe(1);
+      expect(topicStat.correct).toBe(1);
+    });
+
+    it("integration, rewards: a first correct answer appends honest_attempt + first_try_correct and increases currentRewards by 6", () => {
+      const store = new StateStore(initialState());
+      const engine = new LessonEngine(lesson, store);
+
+      engine.handleAnswer("eq-1a-ex001", "He is working");
+
+      const state = store.getState();
+      const reasons = state.rewardHistory.map((e) => e.reason);
+      expect(reasons).toContain("honest_attempt");
+      expect(reasons).toContain("first_try_correct");
+      expect(state.currentRewards).toBe(6);
+    });
+
+    it("integration, review queue: two incorrect answers on the same exercise flip its topic to needs_review and enqueue", () => {
+      const store = new StateStore(initialState());
+      const engine = new LessonEngine(lesson, store);
+
+      engine.handleAnswer("eq-1a-ex001", "is work"); // 1st incorrect
+      engine.handleAnswer("eq-1a-ex001", "is work"); // 2nd incorrect
+
+      const state = store.getState();
+      expect(state.topicStats["present_continuous_now"].status).toBe("needs_review");
+      expect(state.reviewQueue).toContain("eq-1a-ex001");
+    });
+
+    it("Pitfall 3 single-save guard: incorrect answer -> exactly 1 save(); correct answer -> exactly 2 saves()", () => {
+      const setItemSpy = vi.spyOn(Storage.prototype, "setItem");
+
+      const storeIncorrect = new StateStore(initialState());
+      const engineIncorrect = new LessonEngine(lesson, storeIncorrect);
+      setItemSpy.mockClear();
+      engineIncorrect.handleAnswer("eq-1a-ex001", "is work");
+      expect(setItemSpy).toHaveBeenCalledTimes(1);
+
+      const storeCorrect = new StateStore(initialState());
+      const engineCorrect = new LessonEngine(lesson, storeCorrect);
+      setItemSpy.mockClear();
+      engineCorrect.handleAnswer("eq-1a-ex001", "He is working");
+      expect(setItemSpy).toHaveBeenCalledTimes(2);
+
+      setItemSpy.mockRestore();
+    });
+
+    it("attemptNumber: a correct answer after one wrong attempt records attemptNumber 2 and grants correct_after_hint, not first_try_correct", () => {
+      const store = new StateStore(initialState());
+      const engine = new LessonEngine(lesson, store);
+
+      engine.handleAnswer("eq-1a-ex001", "is work"); // wrong, attemptNumber 1
+      engine.handleAnswer("eq-1a-ex001", "He is working"); // correct, attemptNumber 2
+
+      const state = store.getState();
+      const recovery = state.rewardHistory.find((e) => e.reason === "correct_after_hint");
+      expect(recovery).toBeDefined();
+      expect(recovery?.attemptNumber).toBe(2);
+      expect(state.rewardHistory.find((e) => e.reason === "first_try_correct")).toBeUndefined();
+    });
   });
 });

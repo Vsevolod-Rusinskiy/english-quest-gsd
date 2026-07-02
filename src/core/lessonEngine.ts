@@ -1,5 +1,6 @@
-// Theory -> exercise orchestrator (Phase 1 slice). Cites THEORY-01, THEORY-02,
-// EXERCISE-01..05, CHECK-01, CHECK-02.
+// Theory -> exercise orchestrator (Phase 1 slice + Phase 2 progress/reward wiring).
+// Cites THEORY-01, THEORY-02, EXERCISE-01..05, CHECK-01, CHECK-02,
+// PROGRESS-01/02/03, REWARD-01/02.
 import type { Lesson, Exercise } from "./lesson/lessonSchema";
 import type { StateStore } from "./state/store";
 import { checkTextInput, type CheckResult } from "./answer-checking/checkTextInput";
@@ -7,6 +8,7 @@ import { checkSingleChoice } from "./answer-checking/checkSingleChoice";
 import { checkMatching } from "./answer-checking/checkMatching";
 import { checkOrderBuilder } from "./answer-checking/checkOrderBuilder";
 import type { MatchingPair } from "../ui/exercise-renderers/matching";
+import { evaluateAttempt } from "./progress/evaluateAttempt";
 
 export type AnswerPayload = string | MatchingPair[] | string[];
 
@@ -76,7 +78,23 @@ export class LessonEngine {
       }
     }
 
-    this.store.dispatch({ type: "exercise_attempt", exerciseId, isCorrect: result.isCorrect });
+    // Phase 2: compute the ENTIRE per-answer update (topic loop, FSM, review
+    // queue, rewards) as one pure evaluateAttempt() call, then fold it into
+    // this SAME dispatch (Pitfall 3) — the conditional advance_position
+    // dispatch below is Phase 1's existing second call site, unchanged.
+    const state = this.store.getState();
+    const priorAttempts = state.exerciseStats[exerciseId]?.attempts ?? 0;
+    const delta = evaluateAttempt(state, exercise, result, priorAttempts, this.exercises);
+
+    this.store.dispatch({
+      type: "exercise_attempt",
+      exerciseId,
+      isCorrect: result.isCorrect,
+      topicUpdates: delta.topicUpdates,
+      reviewQueueAdditions: delta.reviewQueueAdditions,
+      rewardEvents: delta.rewardEvents,
+      nextCorrectStreak: delta.nextCorrectStreak,
+    });
     if (result.isCorrect) {
       this.store.dispatch({ type: "advance_position" });
     }
