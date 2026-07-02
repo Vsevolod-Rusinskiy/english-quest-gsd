@@ -44,8 +44,14 @@ export function evaluateAttempt(
   const masteredTopics: string[] = [];
 
   // D-01: loop ALL topicImpact entries, never index [0] (Pitfall 2).
+  // WR-01: read from the in-progress topicUpdates accumulator first, falling
+  // back to the pre-dispatch snapshot only on the topic's first iteration.
+  // Nothing in the schema forbids a duplicate topic within a single
+  // exercise's topicImpact — without this, a second occurrence of the same
+  // topic would recompute from the same stale `prev`, discarding the first
+  // iteration's increment and any FSM transition it produced.
   for (const topic of exercise.topicImpact) {
-    const prev = state.topicStats[topic] ?? DEFAULT_TOPIC_STAT;
+    const prev = topicUpdates[topic] ?? state.topicStats[topic] ?? DEFAULT_TOPIC_STAT;
     const newAttempts = prev.attempts + 1;
     const newCorrect = prev.correct + (isCorrect ? 1 : 0);
     const newErrors = prev.errors + (isCorrect ? 0 : 1);

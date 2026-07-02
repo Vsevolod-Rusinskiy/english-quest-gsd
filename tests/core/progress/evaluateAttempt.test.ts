@@ -26,7 +26,24 @@ const singleTopicExercise: Exercise = {
   answerCheck: { mode: "normalizedText", correctAnswers: ["yes"], acceptedAnswers: ["yes"] },
 };
 
-const allExercises: Exercise[] = [multiTopicExercise, singleTopicExercise];
+const duplicateTopicExercise: Exercise = {
+  exerciseId: "ex-dup-topic",
+  catalogRef: "cat-ref-dup",
+  catalogItemRef: "1",
+  sourceRef: { sourceBook: "Workbook", unit: "1A", page: "1", exerciseNumber: "1" },
+  type: "text-input",
+  skill: "grammar",
+  prompt: "test prompt",
+  targetWords: [],
+  targetGrammar: [],
+  hint: { firstError: "hint1", parentExplanation: "explain" },
+  // WR-01: nothing in the schema forbids a duplicate topic within a single
+  // exercise's topicImpact.
+  topicImpact: ["grammar_x", "grammar_x"],
+  answerCheck: { mode: "normalizedText", correctAnswers: ["yes"], acceptedAnswers: ["yes"] },
+};
+
+const allExercises: Exercise[] = [multiTopicExercise, singleTopicExercise, duplicateTopicExercise];
 
 describe("evaluateAttempt", () => {
   it("D-01 topic loop: an incorrect answer on a 2-topicImpact exercise increments errors on BOTH topics", () => {
@@ -179,5 +196,23 @@ describe("evaluateAttempt", () => {
       expect.arrayContaining(["present_continuous_now", "present_simple_negative"]),
     );
     expect(closedTopics).toHaveLength(2);
+  });
+
+  it("WR-01: a duplicate topic within a single exercise's topicImpact accumulates both increments instead of dropping the first", () => {
+    const state: ProgressState = initialState();
+
+    const delta = evaluateAttempt(
+      state,
+      duplicateTopicExercise,
+      { isCorrect: false, source: "core" },
+      0,
+      allExercises,
+    );
+
+    // Two occurrences of "grammar_x" in topicImpact on one incorrect answer
+    // must accumulate to 2 attempts / 2 errors, not collapse to 1 because
+    // the second iteration re-read the same stale pre-dispatch snapshot.
+    expect(delta.topicUpdates["grammar_x"].attempts).toBe(2);
+    expect(delta.topicUpdates["grammar_x"].errors).toBe(2);
   });
 });
