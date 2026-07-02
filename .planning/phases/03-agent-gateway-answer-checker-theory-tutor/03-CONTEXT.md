@@ -17,7 +17,7 @@ This discussion was NOT fully `--auto` — the LLM provider/key-handling decisio
 
 ### LLM Provider & Key Handling
 
-- **D-01:** The user does not have a direct Anthropic API key — they have a key for a third-party OpenAI/Anthropic-compatible router at `https://api.llmrouter.ru` (billed against their existing paid LLM access, not a new Anthropic account). Verified live via curl during this discussion:
+- **D-01 [informational]:** The user does not have a direct Anthropic API key — they have a key for a third-party OpenAI/Anthropic-compatible router at `https://api.llmrouter.ru` (billed against their existing paid LLM access, not a new Anthropic account). Verified live via curl during this discussion:
   - `GET /v1/models` → OpenAI-style `{"object":"list","data":[...]}`, includes `claude-haiku-4-5`.
   - `POST /v1/messages` with `x-api-key` + `anthropic-version: 2023-06-01` → **native Anthropic Messages API response shape**, real model reply confirmed.
   - Forced strict tool use (`tool_choice: {type:"tool", name:...}`) → returned exactly the requested JSON schema shape, confirmed working through this router.
@@ -26,7 +26,7 @@ This discussion was NOT fully `--auto` — the LLM provider/key-handling decisio
 - **D-03:** Key handling: **direct browser call, key injected via Vite env var at build time** (`.env`, gitignored, loaded via `import.meta.env.VITE_LLM_API_KEY` / `VITE_LLM_BASE_URL`). This is the "bring your own key" scoped tradeoff from STACK.md, explicitly chosen over deploying a Cloudflare Workers proxy because:
   - The project has no backend by design (SPEC.md constraint) and the user has no existing Cloudflare setup.
   - **Explicit scope boundary the user confirmed and must remember:** this is safe for **local `npm run dev` use and in-person diploma defense demos only**. The key ends up in the built JS bundle — if `dist/` is ever deployed to a public URL (Netlify/Vercel/GitHub Pages/etc.), anyone can extract the key from devtools/network tab and spend the user's router balance. Do **not** deploy this build publicly without first switching to a proxy (Cloudflare Workers or equivalent) — that swap only changes where the key lives, not the agent-calling logic itself.
-- **D-04:** `.env` (with the real key) already exists locally, is gitignored (`.gitignore` updated this session), and was filled in directly by the user — the key itself never appeared in this conversation in usable form.
+- **D-04 [informational]:** `.env` (with the real key) already exists locally, is gitignored (`.gitignore` updated this session), and was filled in directly by the user — the key itself never appeared in this conversation in usable form.
 
 ### Agent Gateway Design
 
