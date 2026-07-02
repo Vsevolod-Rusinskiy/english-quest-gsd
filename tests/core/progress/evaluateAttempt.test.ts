@@ -60,7 +60,10 @@ describe("evaluateAttempt", () => {
     );
     state = {
       ...state,
-      exerciseStats: { ...state.exerciseStats, "ex-single": { attempts: 1, correct: 0 } },
+      exerciseStats: {
+        ...state.exerciseStats,
+        "ex-single": { attempts: 1, correct: 0, lastAttemptCorrect: false },
+      },
       topicStats: { ...state.topicStats, ...delta1.topicUpdates },
       reviewQueue: [...state.reviewQueue, ...delta1.reviewQueueAdditions],
     };
@@ -111,7 +114,7 @@ describe("evaluateAttempt", () => {
         ...state,
         exerciseStats: {
           ...state.exerciseStats,
-          "ex-single": { attempts: i + 1, correct: i + 1 },
+          "ex-single": { attempts: i + 1, correct: i + 1, lastAttemptCorrect: true },
         },
         topicStats: { ...state.topicStats, ...delta.topicUpdates },
         rewardHistory: [...state.rewardHistory, ...delta.rewardEvents],
@@ -154,7 +157,7 @@ describe("evaluateAttempt", () => {
         ...state,
         exerciseStats: {
           ...state.exerciseStats,
-          "fixture-multi-topic-01": { attempts: i + 1, correct: i + 1 },
+          "fixture-multi-topic-01": { attempts: i + 1, correct: i + 1, lastAttemptCorrect: true },
         },
         topicStats: { ...state.topicStats, ...lastDelta.topicUpdates },
         rewardHistory: [...state.rewardHistory, ...lastDelta.rewardEvents],

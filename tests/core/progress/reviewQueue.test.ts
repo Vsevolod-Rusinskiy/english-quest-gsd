@@ -45,7 +45,7 @@ describe("enqueueReviewItems", () => {
       makeTextInputExercise("ex-2", ["T"]),
     ];
     const stats: Record<string, ExerciseStat> = {
-      "ex-1": { attempts: 1, correct: 1 },
+      "ex-1": { attempts: 1, correct: 1, lastAttemptCorrect: true },
     };
     const result = enqueueReviewItems(exercises, "T", stats, []);
     expect(result).toEqual(["ex-2"]);
@@ -57,11 +57,34 @@ describe("enqueueReviewItems", () => {
       makeTextInputExercise("ex-always-wrong", ["T"]),
     ];
     const stats: Record<string, ExerciseStat> = {
-      "ex-always-wrong": { attempts: 3, correct: 0 },
+      "ex-always-wrong": { attempts: 3, correct: 0, lastAttemptCorrect: false },
       // ex-never-attempted has no entry at all
     };
     const result = enqueueReviewItems(exercises, "T", stats, []);
     expect(result).toEqual(["ex-never-attempted", "ex-always-wrong"]);
+  });
+
+  it("CR-02: an exercise whose LAST attempt was correct is excluded even with a high lifetime correct count", () => {
+    const exercises = [makeTextInputExercise("ex-1", ["T"])];
+    const stats: Record<string, ExerciseStat> = {
+      "ex-1": { attempts: 5, correct: 4, lastAttemptCorrect: true },
+    };
+    const result = enqueueReviewItems(exercises, "T", stats, []);
+    expect(result).toEqual([]);
+  });
+
+  it("CR-02: an exercise that was correct in the past but whose LAST attempt was wrong IS eligible again (regression-after-correct)", () => {
+    const exercises = [makeTextInputExercise("ex-1", ["T"])];
+    // Lifetime correct count is 1 (it WAS answered correctly once), but the
+    // most recent attempt regressed to incorrect — this is the exact
+    // scenario from CR-01/CR-02 where a topic re-enters needs_review after
+    // a prior recovery. A cumulative `correct` counter would wrongly
+    // exclude this exercise forever; lastAttemptCorrect must not.
+    const stats: Record<string, ExerciseStat> = {
+      "ex-1": { attempts: 2, correct: 1, lastAttemptCorrect: false },
+    };
+    const result = enqueueReviewItems(exercises, "T", stats, []);
+    expect(result).toEqual(["ex-1"]);
   });
 
   it("dedups against the current queue, preserving existing order then appending only new ids", () => {

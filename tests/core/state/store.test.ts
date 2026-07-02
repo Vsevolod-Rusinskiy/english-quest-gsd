@@ -50,7 +50,11 @@ describe("StateStore.reduce — enriched exercise_attempt (Pitfall 3)", () => {
     });
 
     const state = store.getState();
-    expect(state.exerciseStats["eq-1a-ex001"]).toEqual({ attempts: 1, correct: 1 });
+    expect(state.exerciseStats["eq-1a-ex001"]).toEqual({
+      attempts: 1,
+      correct: 1,
+      lastAttemptCorrect: true,
+    });
     expect(state.topicStats["present_continuous_now"]).toEqual(topicUpdates["present_continuous_now"]);
     expect(state.reviewQueue).toEqual(["eq-1a-ex002"]);
     expect(state.rewardHistory).toEqual(rewardEvents);

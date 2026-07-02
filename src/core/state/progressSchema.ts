@@ -13,6 +13,12 @@ export const StudentProfileSchema = z.object({
 export const ExerciseStatSchema = z.object({
   attempts: z.number(),
   correct: z.number(),
+  // CR-02: tracks the outcome of only the MOST RECENT attempt on this
+  // exercise, distinct from the lifetime `correct` counter. `correct` never
+  // resets, so it cannot answer "is this exercise unresolved in the CURRENT
+  // needs_review episode" once an exercise has ever been answered correctly
+  // even a single time in the past — see enqueueReviewItems in reviewQueue.ts.
+  lastAttemptCorrect: z.boolean(),
 });
 
 export const CurrentPositionSchema = z.object({

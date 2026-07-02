@@ -61,7 +61,11 @@ export class StateStore {
           currentPosition: { ...state.currentPosition, theoryUnderstood: true },
         };
       case "exercise_attempt": {
-        const prevStat = state.exerciseStats[action.exerciseId] ?? { attempts: 0, correct: 0 };
+        const prevStat = state.exerciseStats[action.exerciseId] ?? {
+          attempts: 0,
+          correct: 0,
+          lastAttemptCorrect: false,
+        };
         const addedRewardTotal = action.rewardEvents.reduce((sum, e) => sum + e.amount, 0);
         return {
           ...state,
@@ -70,6 +74,10 @@ export class StateStore {
             [action.exerciseId]: {
               attempts: prevStat.attempts + 1,
               correct: prevStat.correct + (action.isCorrect ? 1 : 0),
+              // CR-02: overwritten every attempt (not accumulated) so
+              // enqueueReviewItems can distinguish "resolved in the current
+              // needs_review episode" from a lifetime correct count.
+              lastAttemptCorrect: action.isCorrect,
             },
           },
           topicStats: { ...state.topicStats, ...action.topicUpdates },
