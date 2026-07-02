@@ -9,22 +9,22 @@ Requirements for initial release (single lesson `Lesson-1A.json`). Each maps to 
 
 ### Theory (THEORY)
 
-- [ ] **THEORY-01**: Ребёнок видит блок теории (правило + пример) перед началом упражнений урока
-- [ ] **THEORY-02**: Ребёнок может отметить теорию как «понятно» или «не понятно»
+- [x] **THEORY-01**: Ребёнок видит блок теории (правило + пример) перед началом упражнений урока
+- [x] **THEORY-02**: Ребёнок может отметить теорию как «понятно» или «не понятно»
 - [ ] **THEORY-03**: При «не понятно» ребёнок получает более простое объяснение (Theory Tutor или заранее написанный fallback-уровень), максимум `maxSimplifyRounds` раз, затем мягкий переход к практике
 
 ### Exercises (EXERCISE)
 
-- [ ] **EXERCISE-01**: Ребёнок проходит упражнения типа `text-input` с вводом текстового ответа
-- [ ] **EXERCISE-02**: Ребёнок проходит упражнения типа `single-choice`
-- [ ] **EXERCISE-03**: Ребёнок проходит упражнения типа `matching` (картинка → слово)
-- [ ] **EXERCISE-04**: Ребёнок проходит упражнения типа `order-builder`
-- [ ] **EXERCISE-05**: Ребёнок видит индикатор прогресса по уроку («задание N из 19»)
+- [x] **EXERCISE-01**: Ребёнок проходит упражнения типа `text-input` с вводом текстового ответа
+- [x] **EXERCISE-02**: Ребёнок проходит упражнения типа `single-choice`
+- [x] **EXERCISE-03**: Ребёнок проходит упражнения типа `matching` (картинка → слово)
+- [x] **EXERCISE-04**: Ребёнок проходит упражнения типа `order-builder`
+- [x] **EXERCISE-05**: Ребёнок видит индикатор прогресса по уроку («задание N из 19»)
 
 ### Answer Checking (CHECK)
 
-- [ ] **CHECK-01**: Ядро нормализует текстовый ответ (нижний регистр, trim, схлопывание пробелов, удаление финальной пунктуации) и точно сравнивает с `acceptedAnswers`
-- [ ] **CHECK-02**: Для `single-choice`/`matching`/`order-builder` ядро детерминированно сравнивает выбор/сборку с ожидаемым результатом без вызова агента
+- [x] **CHECK-01**: Ядро нормализует текстовый ответ (нижний регистр, trim, схлопывание пробелов, удаление финальной пунктуации) и точно сравнивает с `acceptedAnswers`
+- [x] **CHECK-02**: Для `single-choice`/`matching`/`order-builder` ядро детерминированно сравнивает выбор/сборку с ожидаемым результатом без вызова агента
 - [ ] **CHECK-03**: При неоднозначном `text-input` ответе (нет точного совпадения) вызывается агент Answer Checker и возвращает вердикт и типизированную ошибку (`errorType`)
 - [ ] **CHECK-04**: При недоступности/сбое Answer Checker — один повтор, затем детерминированный fallback (строгое сравнение, `errorType: unknown`)
 
@@ -55,8 +55,8 @@ Requirements for initial release (single lesson `Lesson-1A.json`). Each maps to 
 
 ### Persistence (PERSIST)
 
-- [ ] **PERSIST-01**: Прогресс (`studentProfile`, `lessonHistory`, статистика, `currentRewards`, `rewardHistory`, `reviewQueue`) сохраняется в `localStorage` под ключом `english-quest-progress-v1`
-- [ ] **PERSIST-02**: Прогресс переживает перезагрузку страницы браузера
+- [x] **PERSIST-01**: Прогресс (`studentProfile`, `lessonHistory`, статистика, `currentRewards`, `rewardHistory`, `reviewQueue`) сохраняется в `localStorage` под ключом `english-quest-progress-v1`
+- [x] **PERSIST-02**: Прогресс переживает перезагрузку страницы браузера
 
 ### Agent Reliability (RELY)
 
@@ -110,16 +110,16 @@ Populated during roadmap creation — see `.planning/ROADMAP.md`.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| THEORY-01 | Phase 1 | Pending |
-| THEORY-02 | Phase 1 | Pending |
+| THEORY-01 | Phase 1 | Complete |
+| THEORY-02 | Phase 1 | Complete |
 | THEORY-03 | Phase 3 | Pending |
-| EXERCISE-01 | Phase 1 | Pending |
-| EXERCISE-02 | Phase 1 | Pending |
-| EXERCISE-03 | Phase 1 | Pending |
-| EXERCISE-04 | Phase 1 | Pending |
-| EXERCISE-05 | Phase 1 | Pending |
-| CHECK-01 | Phase 1 | Pending |
-| CHECK-02 | Phase 1 | Pending |
+| EXERCISE-01 | Phase 1 | Complete |
+| EXERCISE-02 | Phase 1 | Complete |
+| EXERCISE-03 | Phase 1 | Complete |
+| EXERCISE-04 | Phase 1 | Complete |
+| EXERCISE-05 | Phase 1 | Complete |
+| CHECK-01 | Phase 1 | Complete |
+| CHECK-02 | Phase 1 | Complete |
 | CHECK-03 | Phase 3 | Pending |
 | CHECK-04 | Phase 3 | Pending |
 | PROGRESS-01 | Phase 2 | Pending |
@@ -135,8 +135,8 @@ Populated during roadmap creation — see `.planning/ROADMAP.md`.
 | REWARD-04 | Phase 4 | Pending |
 | REPORT-01 | Phase 4 | Pending |
 | REPORT-02 | Phase 4 | Pending |
-| PERSIST-01 | Phase 1 | Pending |
-| PERSIST-02 | Phase 1 | Pending |
+| PERSIST-01 | Phase 1 | Complete |
+| PERSIST-02 | Phase 1 | Complete |
 | RELY-01 | Phase 3 | Pending |
 | RELY-02 | Phase 3 | Pending |
 | RELY-03 | Phase 3 | Pending |
@@ -144,6 +144,7 @@ Populated during roadmap creation — see `.planning/ROADMAP.md`.
 | UI-02 | Phase 5 | Pending |
 
 **Coverage:**
+
 - v1 requirements: 32 total (note: this section previously stated "30 total" — recount at roadmap creation found 32 distinct requirement IDs actually listed above; all 32 are mapped below)
 - Mapped to phases: 32/32
 - Unmapped: 0 ✓
