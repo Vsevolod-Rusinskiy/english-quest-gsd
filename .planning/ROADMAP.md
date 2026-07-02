@@ -30,7 +30,11 @@ Decimal phases appear between their surrounding integers in numeric order.
   2. Child can complete all 19 exercises across the 4 types in `Lesson-1A.json` (`text-input`, `single-choice`, `matching`, `order-builder`) and sees "задание N из 19" progress at every step
   3. Text-input answers that exactly match `acceptedAnswers` (after case/whitespace/punctuation normalization) are marked correct without any network call; single-choice/matching/order-builder are graded purely by deterministic comparison
   4. Reloading the browser mid-lesson restores exactly where the child left off, reading from the single `english-quest-progress-v1` localStorage key
-**Plans**: TBD
+**Plans**: 3 plans
+Plans:
+- [ ] 01-01-PLAN.md — Walking Skeleton: scaffold + theory + first text-input exercise + versioned persistence + reload-resume (THEORY-01/02, EXERCISE-01/05, CHECK-01, PERSIST-01/02)
+- [ ] 01-02-PLAN.md — Deterministic checkers for single-choice/matching/order-builder + hand-authored fixtures (EXERCISE-02/03/04, CHECK-02)
+- [ ] 01-03-PLAN.md — Remaining exercise renderers + full 19-exercise lesson traversal (EXERCISE-02/03/04/05, CHECK-02)
 
 ### Phase 2: Progress Tracking, Review Queue & Reward Engine
 **Goal**: Core tracks per-topic mastery, surfaces weak topics for same-session review, and pays out rubles by fixed, ledgered rules — entirely without agent involvement
@@ -88,7 +92,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Deterministic Core, Lesson Rendering & Persistence | 0/TBD | Not started | - |
+| 1. Deterministic Core, Lesson Rendering & Persistence | 0/3 | Not started | - |
 | 2. Progress Tracking, Review Queue & Reward Engine | 0/TBD | Not started | - |
 | 3. Agent Gateway, Answer Checker & Theory Tutor | 0/TBD | Not started | - |
 | 4. Progress Advisor, Reward Advisor & Parent Report | 0/TBD | Not started | - |
