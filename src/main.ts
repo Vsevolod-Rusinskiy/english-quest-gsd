@@ -12,7 +12,7 @@ export async function mountApp(root: HTMLElement): Promise<void> {
   // Halt on failure per D-06 — loadLesson renders the FatalError state itself.
   const lesson = await loadLesson(root);
 
-  const progressState = loadProgress();
+  const progressState = loadProgress(lesson.lessonId);
   const store = new StateStore(progressState);
   const engine = new LessonEngine(lesson, store);
 

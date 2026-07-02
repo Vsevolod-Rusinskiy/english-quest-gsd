@@ -20,6 +20,13 @@ export const CurrentPositionSchema = z.object({
 
 export const ProgressStateSchema = z.object({
   studentProfile: StudentProfileSchema,
+  // Binds this saved blob to the specific lesson it was generated against
+  // (WR-02). Optional so pre-existing stored blobs from before this field
+  // existed still validate; `load()` treats a missing/mismatched lessonId
+  // as stale and resets to initialState() rather than silently reusing a
+  // currentExerciseIndex/exerciseStats that no longer line up with the
+  // currently-loaded lesson content.
+  lessonId: z.string().optional(),
   lessonHistory: z.array(z.unknown()),
   exerciseStats: z.record(z.string(), ExerciseStatSchema),
   currentPosition: CurrentPositionSchema,

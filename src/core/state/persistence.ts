@@ -11,16 +11,16 @@ const StoredBlobSchema = z.object({
   data: ProgressStateSchema,
 });
 
-export function load(): ProgressState {
+export function load(currentLessonId?: string): ProgressState {
   const raw = localStorage.getItem(PROGRESS_KEY);
-  if (!raw) return initialState();
+  if (!raw) return initialState(currentLessonId);
 
   let parsed: unknown;
   try {
     parsed = JSON.parse(raw);
   } catch {
     console.warn("Corrupt progress JSON, resetting to fresh state");
-    return initialState();
+    return initialState(currentLessonId);
   }
 
   const result = StoredBlobSchema.safeParse(parsed);
@@ -29,12 +29,22 @@ export function load(): ProgressState {
       "Progress blob failed validation, resetting to fresh state",
       z.prettifyError(result.error),
     );
-    return initialState();
+    return initialState(currentLessonId);
   }
   if (result.data.schemaVersion !== CURRENT_SCHEMA_VERSION) {
     // Phase 1 ships schemaVersion 1 as the only version — no migration pipeline yet,
     // but the mismatch check must exist from day one.
-    return initialState();
+    return initialState(currentLessonId);
+  }
+  // WR-02: a stored blob with no lessonId (legacy) or a lessonId that doesn't
+  // match the currently-loaded lesson is stale — currentExerciseIndex and
+  // exerciseStats would silently desync against different lesson content.
+  if (
+    currentLessonId !== undefined &&
+    result.data.data.lessonId !== undefined &&
+    result.data.data.lessonId !== currentLessonId
+  ) {
+    return initialState(currentLessonId);
   }
   return result.data.data;
 }

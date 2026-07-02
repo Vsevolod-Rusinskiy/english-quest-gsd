@@ -1,8 +1,9 @@
 import type { ProgressState } from "./progressSchema";
 
-export function initialState(): ProgressState {
+export function initialState(lessonId?: string): ProgressState {
   return {
     studentProfile: { studentId: "primary" },
+    lessonId,
     lessonHistory: [],
     exerciseStats: {},
     currentPosition: { theoryUnderstood: false, currentExerciseIndex: 0 },
