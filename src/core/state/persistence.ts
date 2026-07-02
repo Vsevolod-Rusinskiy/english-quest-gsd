@@ -41,5 +41,11 @@ export function load(): ProgressState {
 
 export function save(state: ProgressState): void {
   const blob = { schemaVersion: CURRENT_SCHEMA_VERSION, data: state };
-  localStorage.setItem(PROGRESS_KEY, JSON.stringify(blob)); // SYNCHRONOUS, no debounce (D-03)
+  try {
+    localStorage.setItem(PROGRESS_KEY, JSON.stringify(blob)); // SYNCHRONOUS, no debounce (D-03)
+  } catch (err) {
+    console.warn("Failed to persist progress (quota/private mode?)", err);
+    // Continue without persistence rather than crashing the dispatch cycle;
+    // the in-memory state and listeners still update normally.
+  }
 }
