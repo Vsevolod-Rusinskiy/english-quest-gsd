@@ -102,12 +102,45 @@ export async function mountApp(root: HTMLElement): Promise<void> {
             const hint = "hint" in exercise ? exercise.hint.firstError : undefined;
             feedback = { atIndex: index, exerciseId: feedbackKey, isCorrect: result.isCorrect, hint };
 
-            // Main-pass correct answer OR any review-pass answer (correct or
-            // not) dequeues/advances to a DIFFERENT exercise on screen — the
-            // DOM must be rebuilt. Only a main-pass incorrect answer keeps
-            // the same exercise (WR-03).
-            if (result.isCorrect || inReviewPass) {
+            // WR-02: review-pass answers used to always call render() here
+            // (result.isCorrect || inReviewPass was always true while
+            // inReviewPass), tearing down to the next review item even on an
+            // incorrect answer. The freshly rendered next item's feedbackKey
+            // never matches the just-answered exercise's id, so the banner
+            // silently never showed for an incorrect review-pass answer. Now
+            // branched three ways: main-pass correct, review-pass correct
+            // (still auto-advances), review-pass incorrect (stays on screen
+            // with the banner + explicit continue step).
+            if (result.isCorrect && !inReviewPass) {
+              // Main-pass correct answer advances currentExerciseIndex — a
+              // DIFFERENT exercise is now current, so the DOM must be rebuilt.
               render(store.getState());
+            } else if (inReviewPass && result.isCorrect) {
+              // Correct review-pass answers still advance automatically — no
+              // extra confirmation step needed, matching prior behavior.
+              // (The banner for a correct review answer is not shown here;
+              // render() below rebuilds the DOM to the next item, and the
+              // feedbackAppliesHere check has no matching screen to attach
+              // a banner to for a review-pass advance, same as before.)
+              render(store.getState());
+            } else if (inReviewPass) {
+              // Incorrect review-pass answer: the item already dequeued
+              // (dispatch above is unconditional per D-02), but the DOM must
+              // NOT tear down yet — otherwise the next review item's
+              // feedbackKey would never match this just-answered exercise's
+              // id and the "incorrect" banner would never render at all.
+              // Keep this exercise's DOM in place, show the banner, and
+              // require an explicit "Продолжить" tap before advancing.
+              const previousBanner = main.querySelector(".feedback-banner");
+              previousBanner?.remove();
+              main.appendChild(renderFeedbackBanner(feedback.isCorrect, feedback.hint));
+
+              const continueButton = document.createElement("button");
+              continueButton.type = "button";
+              continueButton.className = "continue-button";
+              continueButton.textContent = "Продолжить";
+              continueButton.addEventListener("click", () => render(store.getState()));
+              main.appendChild(continueButton);
             } else {
               // WR-03: incorrect main-pass answer keeps the SAME exercise on
               // screen (currentExerciseIndex is unchanged, no dispatch to
