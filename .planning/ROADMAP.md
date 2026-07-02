@@ -88,11 +88,11 @@ Plans:
   3. Killing/timing out/corrupting either agent's response results in exactly one retry, then a deterministic fallback (strict comparison with `errorType: unknown` for Answer Checker; a pre-written simpler explanation for Theory Tutor) — the lesson never stalls or crashes
   4. No agent JSON response is used to update state unless it first passes one shared schema+semantic validation function (same function for both agents), and every such event records whether the data came from `core` or `agent` plus whether a fallback fired
 
-**Plans**: 2 plans
+**Plans**: 1/2 plans executed
 Plans:
 **Wave 1**
 
-- [ ] 03-01-PLAN.md — Agent Gateway + Answer Checker vertical slice: shared callAgent() (validate→retry-once→fallback), Anthropic client, async handleAnswer, source/agentFailed event logging (CHECK-03/04, RELY-01/02/03)
+- [x] 03-01-PLAN.md — Agent Gateway + Answer Checker vertical slice: shared callAgent() (validate→retry-once→fallback), Anthropic client, async handleAnswer, source/agentFailed event logging (CHECK-03/04, RELY-01/02/03)
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
@@ -138,6 +138,6 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 |-------|----------------|--------|-----------|
 | 1. Deterministic Core, Lesson Rendering & Persistence | 3/3 | Complete    | 2026-07-02 |
 | 2. Progress Tracking, Review Queue & Reward Engine | 3/3 | Complete    | 2026-07-02 |
-| 3. Agent Gateway, Answer Checker & Theory Tutor | 0/2 | Not started | - |
+| 3. Agent Gateway, Answer Checker & Theory Tutor | 1/2 | In Progress|  |
 | 4. Progress Advisor, Reward Advisor & Parent Report | 0/TBD | Not started | - |
 | 5. Kid-Friendly Visual Design | 0/TBD | Not started | - |
