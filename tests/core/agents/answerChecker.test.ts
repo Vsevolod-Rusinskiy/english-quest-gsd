@@ -5,15 +5,19 @@
 // NOT throw (CHECK-04's documented fallback).
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { callAnswerChecker } from "../../../src/core/agents/answerChecker";
-import type { AgentClient } from "../../../src/core/agents/callAgent";
+import type { AgentClient, AgentResponse } from "../../../src/core/agents/callAgent";
 
-function toolUseMessage(input: unknown) {
+function toolUseMessage(input: unknown): AgentResponse {
   return {
     content: [{ type: "tool_use", id: "toolu_1", name: "report_answer_check", input }],
   };
 }
 
-function fakeClient(create: ReturnType<typeof vi.fn>): AgentClient {
+function createMock() {
+  return vi.fn<(params: unknown, options?: unknown) => Promise<AgentResponse>>();
+}
+
+function fakeClient(create: ReturnType<typeof createMock>): AgentClient {
   return { messages: { create } };
 }
 
@@ -23,7 +27,7 @@ describe("callAnswerChecker (CHECK-03, CHECK-04)", () => {
   });
 
   it("ambiguous answer + agent success -> resolves to a validated CheckResult with errorType in the 11-value enum, confidence in [0,1], and a hintRu string", async () => {
-    const create = vi.fn().mockResolvedValueOnce(
+    const create = createMock().mockResolvedValueOnce(
       toolUseMessage({
         isCorrect: false,
         errorType: "missed_article",
@@ -49,7 +53,7 @@ describe("callAnswerChecker (CHECK-03, CHECK-04)", () => {
   });
 
   it("agent failure (both attempts) -> resolves to the fallback shape { isCorrect: false, errorType: 'unknown', source: 'core' } and does NOT throw", async () => {
-    const create = vi.fn().mockRejectedValue(new Error("network down"));
+    const create = createMock().mockRejectedValue(new Error("network down"));
 
     const result = await callAnswerChecker({
       prompt: "I saw ___ dog.",
