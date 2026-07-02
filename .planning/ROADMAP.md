@@ -13,7 +13,7 @@ English Quest ships as five phases that build strictly bottom-up: a deterministi
 
 Decimal phases appear between their surrounding integers in numeric order.
 
-- [ ] **Phase 1: Deterministic Core, Lesson Rendering & Persistence** - Child can complete the full lesson (theory + all 4 exercise types) with exact-match answer checking, and progress survives a page reload
+- [x] **Phase 1: Deterministic Core, Lesson Rendering & Persistence** - Child can complete the full lesson (theory + all 4 exercise types) with exact-match answer checking, and progress survives a page reload (completed 2026-07-02)
 - [ ] **Phase 2: Progress Tracking, Review Queue & Reward Engine** - Core tracks topic mastery, queues weak topics for same-session review, and awards/ledgers rubles by fixed rules, with no agent involved
 - [ ] **Phase 3: Agent Gateway, Answer Checker & Theory Tutor** - Ambiguous text answers get LLM-assisted checking with typed errors, and confused kids get a simpler explanation, both through one shared trust boundary with automatic fallback
 - [ ] **Phase 4: Progress Advisor, Reward Advisor & Parent Report** - Session-end personalization, reward praise text, and the parent report all work through the same gateway with core-enforced guardrails and template fallback
@@ -34,7 +34,7 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. Text-input answers that exactly match `acceptedAnswers` (after case/whitespace/punctuation normalization) are marked correct without any network call; single-choice/matching/order-builder are graded purely by deterministic comparison
   4. Reloading the browser mid-lesson restores exactly where the child left off, reading from the single `english-quest-progress-v1` localStorage key
 
-**Plans**: 2/3 plans executed
+**Plans**: 3/3 plans complete
 Plans:
 **Wave 1**
 
@@ -46,7 +46,7 @@ Plans:
 
 **Wave 3** *(blocked on Wave 2 completion)*
 
-- [ ] 01-03-PLAN.md — Remaining exercise renderers + full 19-exercise lesson traversal (EXERCISE-02/03/04/05, CHECK-02)
+- [x] 01-03-PLAN.md — Remaining exercise renderers + full 19-exercise lesson traversal (EXERCISE-02/03/04/05, CHECK-02)
 
 ### Phase 2: Progress Tracking, Review Queue & Reward Engine
 
@@ -116,7 +116,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Deterministic Core, Lesson Rendering & Persistence | 2/3 | In Progress|  |
+| 1. Deterministic Core, Lesson Rendering & Persistence | 3/3 | Complete   | 2026-07-02 |
 | 2. Progress Tracking, Review Queue & Reward Engine | 0/TBD | Not started | - |
 | 3. Agent Gateway, Answer Checker & Theory Tutor | 0/TBD | Not started | - |
 | 4. Progress Advisor, Reward Advisor & Parent Report | 0/TBD | Not started | - |
