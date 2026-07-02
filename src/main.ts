@@ -57,30 +57,48 @@ export async function mountApp(root: HTMLElement): Promise<void> {
       const exercise = engine.exercises[index];
 
       if (exercise) {
-        main.appendChild(
-          renderExerciseScreen({
-            exercise,
-            onSubmit: (answer) => {
-              // handleAnswer's dispatch(es) are synchronous and would trigger the
-              // subscribed render() before `feedback` below is set (dispatch fires
-              // mid-call, before handleAnswer returns). Unsubscribe for the
-              // duration of this call so only ONE explicit, fully-informed render
-              // happens after `feedback` is captured.
-              unsubscribeRender();
-              const result = engine.handleAnswer(exercise.exerciseId, answer);
-              unsubscribeRender = store.subscribe(render);
+        const exerciseNode = renderExerciseScreen({
+          exercise,
+          onSubmit: (answer) => {
+            // handleAnswer's dispatch(es) are synchronous and would trigger the
+            // subscribed render() before `feedback` below is set (dispatch fires
+            // mid-call, before handleAnswer returns). Unsubscribe for the
+            // duration of this call so at most ONE explicit, fully-informed render
+            // happens after `feedback` is captured.
+            unsubscribeRender();
+            const result = engine.handleAnswer(exercise.exerciseId, answer);
+            unsubscribeRender = store.subscribe(render);
 
-              const hint = "hint" in exercise ? exercise.hint.firstError : undefined;
-              feedback = { atIndex: index, isCorrect: result.isCorrect, hint };
+            const hint = "hint" in exercise ? exercise.hint.firstError : undefined;
+            feedback = { atIndex: index, isCorrect: result.isCorrect, hint };
+
+            if (result.isCorrect) {
+              // Correct: position advances, so the exercise DOM must be rebuilt
+              // for the new (or completed) index — a full render() is required.
               render(store.getState());
-            },
-          }),
-        );
+            } else {
+              // WR-03: incorrect answer keeps the SAME exercise on screen
+              // (currentExerciseIndex is unchanged, no dispatch to "advance_position").
+              // Calling render() here would tear down and rebuild the exercise DOM
+              // from scratch, wiping any partial input the child already entered
+              // (typed text, tapped matching pairs, built order sequence). Instead,
+              // only swap the feedback banner in place and leave the exercise
+              // subtree — and its in-progress state — untouched.
+              const previousBanner = main.querySelector(".feedback-banner");
+              previousBanner?.remove();
+              main.appendChild(renderFeedbackBanner(feedback.isCorrect, feedback.hint));
+            }
+          },
+        });
+        main.appendChild(exerciseNode);
 
         // Show the banner if it belongs to the exercise currently on screen
         // (incorrect answer: same index) OR to the one just answered correctly,
         // whose index has already advanced past by exactly one (D-04's immediate
         // advance semantics) — the banner still confirms what the child just did.
+        // (This only fires on the initial render of this index / after a full
+        // render() call — the incorrect-answer in-place update above handles the
+        // no-render case directly.)
         const feedbackAppliesHere =
           feedback !== null &&
           (feedback.atIndex === index || (feedback.isCorrect && feedback.atIndex === index - 1));
