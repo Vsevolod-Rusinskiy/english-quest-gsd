@@ -1,0 +1,27 @@
+{
+  "exerciseId": "fixture-multi-topic-01",
+  "catalogRef": "wb-1a-p5-ex2a-fixture",
+  "catalogItemRef": "2",
+  "sourceRef": {
+    "sourceBook": "Workbook",
+    "unit": "1A",
+    "page": "5",
+    "exerciseNumber": "fixture-multi-topic"
+  },
+  "type": "text-input",
+  "skill": "grammar",
+  "prompt": "He ___ at home today, but he doesn't usually work from home. (work)",
+  "targetWords": [],
+  "targetGrammar": ["present_continuous"],
+  "answerCheck": {
+    "mode": "normalizedText",
+    "correctAnswers": ["is working"],
+    "acceptedAnswers": ["is working", "'s working", "he is working", "he's working"]
+  },
+  "hint": {
+    "firstError": "Действие происходит прямо сейчас, сегодня. Какое это время?",
+    "secondError": "Сейчас - это present continuous: be + verb-ing.",
+    "parentExplanation": "Проверяет present continuous для действия в момент речи и противопоставление с present simple."
+  },
+  "topicImpact": ["present_continuous_now", "present_simple_negative"]
+}
