@@ -9,6 +9,7 @@ import {
 import { LessonEngine } from "../../src/core/lessonEngine";
 import { StateStore } from "../../src/core/state/store";
 import { initialState } from "../../src/core/state/initialState";
+import { load } from "../../src/core/state/persistence";
 
 const lessonPath = resolve(process.cwd(), "public/Lesson-1A.json");
 const realLesson1A = JSON.parse(readFileSync(lessonPath, "utf-8"));
@@ -209,6 +210,121 @@ describe("LessonEngine", () => {
       expect(recovery).toBeDefined();
       expect(recovery?.attemptNumber).toBe(2);
       expect(state.rewardHistory.find((e) => e.reason === "first_try_correct")).toBeUndefined();
+    });
+  });
+
+  // Plan 03 (PROGRESS-04, D-02, Pitfall 4): review-pass cursor — getCurrentExerciseId/
+  // getCurrentExercise/isReviewPass, dequeue-on-completion, no array mutation, persist/resume.
+  describe("Phase 2 Plan 03: review-pass cursor", () => {
+    it("getCurrentExerciseId (main pass): with reviewQueue empty and currentExerciseIndex mid-lesson, returns the main-sequence exercise id at that index", () => {
+      const store = new StateStore(initialState());
+      const engine = new LessonEngine(lesson, store);
+
+      // Advance to index 2 via two correct answers.
+      engine.handleAnswer("eq-1a-ex001", "He is working");
+      engine.handleAnswer("eq-1a-ex002", "Do you usually get up");
+
+      expect(store.getState().currentPosition.currentExerciseIndex).toBe(2);
+      expect(store.getState().reviewQueue).toEqual([]);
+      expect(engine.getCurrentExerciseId()).toBe(engine.exercises[2].exerciseId);
+      expect(engine.isReviewPass()).toBe(false);
+    });
+
+    it("getCurrentExerciseId (review pass): with currentExerciseIndex past the last main exercise and reviewQueue non-empty, returns reviewQueue[0]", () => {
+      const store = new StateStore({
+        ...initialState(),
+        currentPosition: { theoryUnderstood: true, currentExerciseIndex: 19, reviewPassIndex: 0 },
+        reviewQueue: ["eq-1a-ex010", "eq-1a-ex011"],
+      });
+      const engine = new LessonEngine(lesson, store);
+
+      expect(engine.getCurrentExerciseId()).toBe("eq-1a-ex010");
+      expect(engine.getCurrentExercise()?.exerciseId).toBe("eq-1a-ex010");
+      expect(engine.isReviewPass()).toBe(true);
+    });
+
+    it("isInReviewPass / complete: true iff currentExerciseIndex >= totalExercises && reviewQueue.length > 0; queue exhausted -> lesson complete", () => {
+      const store = new StateStore({
+        ...initialState(),
+        currentPosition: { theoryUnderstood: true, currentExerciseIndex: 19, reviewPassIndex: 0 },
+        reviewQueue: [],
+      });
+      const engine = new LessonEngine(lesson, store);
+
+      expect(engine.isReviewPass()).toBe(false); // queue empty -> not review pass, lesson complete
+      expect(engine.getCurrentExerciseId()).toBeNull();
+      expect(engine.getCurrentExercise()).toBeNull();
+    });
+
+    it("dequeue on correct: answering the current review exercise correctly removes it from reviewQueue in one dispatch", () => {
+      const store = new StateStore({
+        ...initialState(),
+        currentPosition: { theoryUnderstood: true, currentExerciseIndex: 19, reviewPassIndex: 0 },
+        reviewQueue: ["eq-1a-ex010", "eq-1a-ex011"],
+      });
+      const engine = new LessonEngine(lesson, store);
+
+      const result = engine.handleAnswer("eq-1a-ex010", "meat");
+
+      expect(result.isCorrect).toBe(true);
+      expect(store.getState().reviewQueue).toEqual(["eq-1a-ex011"]);
+      // Review pass never advances currentExerciseIndex (dequeue IS the advance).
+      expect(store.getState().currentPosition.currentExerciseIndex).toBe(19);
+    });
+
+    it("dequeue on incorrect (D-02): answering the current review exercise incorrectly ALSO removes it and is NOT immediately re-added", () => {
+      const store = new StateStore({
+        ...initialState(),
+        currentPosition: { theoryUnderstood: true, currentExerciseIndex: 19, reviewPassIndex: 0 },
+        reviewQueue: ["eq-1a-ex010", "eq-1a-ex011"],
+        // Pre-seed topicStats so this single wrong answer does not itself
+        // re-trigger a fresh entered_needs_review enqueue for food_vocabulary.
+        topicStats: {
+          food_vocabulary: { status: "needs_review", attempts: 2, correct: 0, errors: 2, correctStreak: 0 },
+        },
+      });
+      const engine = new LessonEngine(lesson, store);
+
+      const result = engine.handleAnswer("eq-1a-ex010", "wrong-answer");
+
+      expect(result.isCorrect).toBe(false);
+      expect(store.getState().reviewQueue).toEqual(["eq-1a-ex011"]);
+      expect(store.getState().reviewQueue).not.toContain("eq-1a-ex010");
+    });
+
+    it("persist/resume (PERSIST-02): reviewPassIndex and shrunken reviewQueue survive save()/load()", () => {
+      const store = new StateStore({
+        ...initialState(),
+        currentPosition: { theoryUnderstood: true, currentExerciseIndex: 19, reviewPassIndex: 0 },
+        reviewQueue: ["eq-1a-ex010", "eq-1a-ex011"],
+      });
+      const engine = new LessonEngine(lesson, store);
+
+      engine.handleAnswer("eq-1a-ex010", "meat"); // dequeues ex010, save() fires synchronously
+
+      const reloaded = load(lesson.lessonId);
+      expect(reloaded.reviewQueue).toEqual(["eq-1a-ex011"]);
+      expect(reloaded.currentPosition.reviewPassIndex).toBe(0);
+
+      const resumedStore = new StateStore(reloaded);
+      const resumedEngine = new LessonEngine(lesson, resumedStore);
+      expect(resumedEngine.getCurrentExerciseId()).toBe("eq-1a-ex011");
+    });
+
+    it("no array mutation (Pitfall 4): engine.exercises.length stays === totalExercises throughout a review pass", () => {
+      const store = new StateStore({
+        ...initialState(),
+        currentPosition: { theoryUnderstood: true, currentExerciseIndex: 19, reviewPassIndex: 0 },
+        reviewQueue: ["eq-1a-ex010", "eq-1a-ex011"],
+      });
+      const engine = new LessonEngine(lesson, store);
+      const before = engine.exercises.length;
+
+      engine.handleAnswer("eq-1a-ex010", "meat");
+      engine.handleAnswer("eq-1a-ex011", "raw");
+
+      expect(engine.exercises.length).toBe(before);
+      expect(engine.exercises.length).toBe(19);
     });
   });
 });

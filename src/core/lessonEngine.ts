@@ -27,6 +27,42 @@ export class LessonEngine {
     return this.exercises.length;
   }
 
+  // Review-pass cursor (PROGRESS-04, D-02, Pitfall 4). The main exercises
+  // array is NEVER mutated — the review pass is a second cursor resolved by
+  // looking up reviewQueue ids against this.exercises. Chosen model: since
+  // completing a review item ALWAYS dequeues it (correct or not, D-02), the
+  // head of reviewQueue is always the current review item — reviewPassIndex
+  // stays at 0 and is intentionally left unused (kept in the schema for
+  // forward-compatibility only, per the plan's explicit discretion clause).
+  isReviewPass(): boolean {
+    const state = this.store.getState();
+    return (
+      state.currentPosition.currentExerciseIndex >= this.totalExercises &&
+      state.reviewQueue.length > 0
+    );
+  }
+
+  getCurrentExerciseId(): string | null {
+    const state = this.store.getState();
+    const { currentExerciseIndex } = state.currentPosition;
+    if (currentExerciseIndex < this.totalExercises) {
+      return this.exercises[currentExerciseIndex].exerciseId;
+    }
+    if (state.reviewQueue.length > 0) {
+      // Pitfall 5: reuse the ORIGINAL exerciseId, never a synthetic id, so
+      // reward dedup (exerciseId, reason) correctly recognizes a re-visited
+      // exercise instead of farming a second first_try_correct.
+      return state.reviewQueue[0];
+    }
+    return null;
+  }
+
+  getCurrentExercise(): Exercise | null {
+    const id = this.getCurrentExerciseId();
+    if (id === null) return null;
+    return this.exercises.find((e) => e.exerciseId === id) ?? null;
+  }
+
   // Phase 1 has no Theory Tutor branch — both "понятно" and "не понятно" advance
   // to the first exercise (THEORY-02 literal).
   handleTheoryStep(_understood: boolean): void {
@@ -86,6 +122,12 @@ export class LessonEngine {
     const priorAttempts = state.exerciseStats[exerciseId]?.attempts ?? 0;
     const delta = evaluateAttempt(state, exercise, result, priorAttempts, this.exercises);
 
+    // Plan 03 (PROGRESS-04, D-02): a review-pass answer dequeues the completed
+    // item REGARDLESS of correctness — same single exercise_attempt dispatch,
+    // no separate action type. Determined BEFORE the dispatch since the
+    // dequeue check reads the current (pre-dispatch) reviewQueue head.
+    const wasReviewPass = this.isReviewPass() && this.getCurrentExerciseId() === exerciseId;
+
     this.store.dispatch({
       type: "exercise_attempt",
       exerciseId,
@@ -94,8 +136,12 @@ export class LessonEngine {
       reviewQueueAdditions: delta.reviewQueueAdditions,
       rewardEvents: delta.rewardEvents,
       nextCorrectStreak: delta.nextCorrectStreak,
+      reviewDequeueId: wasReviewPass ? exerciseId : undefined,
     });
-    if (result.isCorrect) {
+    // Main-pass correct answer: advance currentExerciseIndex (unchanged Phase 1
+    // behavior). Review-pass answers never advance_position — the review cursor
+    // is entirely reviewQueue-length-driven (dequeue above IS the advance).
+    if (result.isCorrect && !wasReviewPass) {
       this.store.dispatch({ type: "advance_position" });
     }
     return result;

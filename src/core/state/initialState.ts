@@ -6,7 +6,7 @@ export function initialState(lessonId?: string): ProgressState {
     lessonId,
     lessonHistory: [],
     exerciseStats: {},
-    currentPosition: { theoryUnderstood: false, currentExerciseIndex: 0 },
+    currentPosition: { theoryUnderstood: false, currentExerciseIndex: 0, reviewPassIndex: 0 },
     currentRewards: 0,
     rewardHistory: [],
     reviewQueue: [],

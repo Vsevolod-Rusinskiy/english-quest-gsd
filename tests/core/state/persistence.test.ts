@@ -11,7 +11,7 @@ describe("persistence", () => {
 
   it("round-trips a ProgressState identically via save then load", () => {
     const state = initialState();
-    state.currentPosition = { theoryUnderstood: true, currentExerciseIndex: 3 };
+    state.currentPosition = { theoryUnderstood: true, currentExerciseIndex: 3, reviewPassIndex: 0 };
     save(state);
     const loaded = load();
     expect(loaded).toEqual(state);
@@ -53,13 +53,14 @@ describe("persistence", () => {
   it("reload: a ProgressState carrying currentPosition survives save then fresh load (PERSIST-02, D-04)", () => {
     const state: ProgressState = {
       ...initialState(),
-      currentPosition: { theoryUnderstood: true, currentExerciseIndex: 5 },
+      currentPosition: { theoryUnderstood: true, currentExerciseIndex: 5, reviewPassIndex: 0 },
     };
     save(state);
     const freshlyLoaded = load();
     expect(freshlyLoaded.currentPosition).toEqual({
       theoryUnderstood: true,
       currentExerciseIndex: 5,
+      reviewPassIndex: 0,
     });
   });
 

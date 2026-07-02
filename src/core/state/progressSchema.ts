@@ -18,6 +18,15 @@ export const ExerciseStatSchema = z.object({
 export const CurrentPositionSchema = z.object({
   theoryUnderstood: z.boolean(),
   currentExerciseIndex: z.number(),
+  // Review-pass cursor (PROGRESS-04, D-02, Open Question 1). Required (not
+  // optional/default) so a Phase-1/Plan-02-shaped legacy blob missing it
+  // resets via load() rather than resuming into an undefined cursor
+  // (T-02-05). Seeded to 0 and left unused by the reduce/engine logic in
+  // this plan's chosen model (queue always serves reviewQueue[0], dequeue-
+  // on-completion means the head IS the current item — see 02-03-SUMMARY.md
+  // "Review-pass cursor model" decision) but kept in the schema for
+  // forward-compatibility per the plan's explicit discretion clause.
+  reviewPassIndex: z.number(),
 });
 
 export const TopicStatusSchema = z.enum(["not_started", "in_progress", "needs_review", "mastered"]);

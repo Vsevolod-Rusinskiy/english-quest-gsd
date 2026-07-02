@@ -17,6 +17,12 @@ export type Action =
       reviewQueueAdditions: string[];
       rewardEvents: RewardEvent[];
       nextCorrectStreak: number;
+      // Phase 2 Plan 03 (PROGRESS-04, D-02): set when this answer was for the
+      // CURRENT review-pass item — the reduce branch removes it from
+      // reviewQueue as part of this SAME dispatch (dequeue whether correct
+      // or not, folded into the single exercise_attempt reduce, not a new
+      // action type).
+      reviewDequeueId?: string;
     }
   | { type: "advance_position" };
 
@@ -67,10 +73,14 @@ export class StateStore {
             },
           },
           topicStats: { ...state.topicStats, ...action.topicUpdates },
+          // Apply additions then removal: a review answer can simultaneously
+          // enqueue NEW ids (re-triggered needs_review on a different topic)
+          // and dequeue the just-completed one — the completed item must end
+          // up removed even if it were somehow present in additions too.
           reviewQueue: [
             ...state.reviewQueue,
             ...action.reviewQueueAdditions.filter((id) => !state.reviewQueue.includes(id)),
-          ],
+          ].filter((id) => id !== action.reviewDequeueId),
           rewardHistory: [...state.rewardHistory, ...action.rewardEvents],
           currentRewards: state.currentRewards + addedRewardTotal,
           currentCorrectStreak: action.nextCorrectStreak,
