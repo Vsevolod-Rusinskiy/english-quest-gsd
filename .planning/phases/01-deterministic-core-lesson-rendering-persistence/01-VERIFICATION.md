@@ -1,23 +1,28 @@
 ---
 phase: 01-deterministic-core-lesson-rendering-persistence
 verified: 2026-07-02T10:58:01Z
-status: human_needed
+status: passed
 score: 11/11 must-haves verified
 behavior_unverified: 0
 overrides_applied: 0
 human_verification:
+
   - test: "Run `npm run dev`, complete theory → all 19 real exercises (18 text-input + 1 matching) in a real browser"
     expected: "Theory screen shows rule + example + both buttons; each exercise shows prompt, input UI, 'Задание N из 19'; correct answers show 'Верно!'; lesson-complete state appears at exercise 19"
     why_human: "Visual rendering, real dev-server fetch() against Vite static assets, and full interactive flow were deferred to end-of-phase human verification per workflow.human_verify_mode=end-of-phase (Task 6 of Plan 01, Task 4 of Plan 03 — both auto-approved/deferred, not walked through by a human)"
+
   - test: "Reload the browser (Cmd/Ctrl+R) mid-lesson"
     expected: "App resumes at the exact same exercise index, not back at theory"
     why_human: "Real browser reload behavior against real localStorage; jsdom simulation (fresh mountApp() call) was verified programmatically and passes, but the actual browser round-trip is unconfirmed by a human"
+
   - test: "Open devtools → Local Storage, confirm key `english-quest-progress-v1` with `{schemaVersion:1,data:{...}}`; edit to invalid JSON, reload"
     expected: "App silently resets to a fresh working lesson, no crash, no stack trace"
     why_human: "Tamper-reset logic is unit-tested (persistence.test.ts corrupt-JSON case), but real devtools tampering + real reload is a manual confirmation step"
+
   - test: "Temporarily break public/Lesson-1A.json (delete `theory` field), reload"
     expected: "Clear 'Не удалось загрузить урок.' message appears, lesson does not render"
     why_human: "D-06 schema-rejection logic is unit-tested (lessonSchema.test.ts), but the real-browser FatalError rendering and copy is a manual visual confirmation step"
+
   - test: "Play a single-choice exercise and an order-builder exercise via a dev harness or temporarily-wired fixture (Lesson-1A.json has no real data for these two types)"
     expected: "single-choice: tap exactly one option (accent-marked), submit grades it. order-builder: tap words from 'Слова:' into 'Твой ответ:' in order, tap back out (no dragging), submit grades the assembled order"
     why_human: "Both types are proven correct at the unit/renderer-test level against hand-authored fixtures (schema-valid, checker-graded, no agent calls), but no real lesson content exists for either type, so an end-to-end real-browser play-through requires manual dev-harness wiring, explicitly left to human-verification discretion by 01-03-SUMMARY.md"
