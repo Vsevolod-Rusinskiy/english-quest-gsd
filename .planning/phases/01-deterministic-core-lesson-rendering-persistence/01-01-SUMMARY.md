@@ -254,3 +254,11 @@ None — all Phase 1 threat-model dispositions (T-01-01 through T-01-04, T-01-SC
 ---
 *Phase: 01-deterministic-core-lesson-rendering-persistence*
 *Completed: 2026-07-02*
+
+## Self-Check: PASSED
+
+All 16 created files verified present on disk (package.json, lessonSchema.ts, lessonLoader.ts,
+normalize.ts, checkTextInput.ts, persistence.ts, store.ts, lessonEngine.ts, TheoryScreen.ts,
+ProgressIndicator.ts, FeedbackBanner.ts, FatalError.ts, main.ts, public/Lesson-1A.json,
+tests/e2e/lessonWalkingSkeleton.test.ts, and this SUMMARY.md). All 6 commit hashes
+(90dce95, 61808e1, 2bba81f, 26468e2, d82eca1, 58862d8) verified present in git log.
