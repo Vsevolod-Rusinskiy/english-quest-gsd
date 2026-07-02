@@ -34,11 +34,11 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. Text-input answers that exactly match `acceptedAnswers` (after case/whitespace/punctuation normalization) are marked correct without any network call; single-choice/matching/order-builder are graded purely by deterministic comparison
   4. Reloading the browser mid-lesson restores exactly where the child left off, reading from the single `english-quest-progress-v1` localStorage key
 
-**Plans**: 3 plans
+**Plans**: 1/3 plans executed
 Plans:
 **Wave 1**
 
-- [ ] 01-01-PLAN.md — Walking Skeleton: scaffold + theory + first text-input exercise + versioned persistence + reload-resume (THEORY-01/02, EXERCISE-01/05, CHECK-01, PERSIST-01/02)
+- [x] 01-01-PLAN.md — Walking Skeleton: scaffold + theory + first text-input exercise + versioned persistence + reload-resume (THEORY-01/02, EXERCISE-01/05, CHECK-01, PERSIST-01/02)
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
@@ -116,7 +116,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Deterministic Core, Lesson Rendering & Persistence | 0/3 | Not started | - |
+| 1. Deterministic Core, Lesson Rendering & Persistence | 1/3 | In Progress|  |
 | 2. Progress Tracking, Review Queue & Reward Engine | 0/TBD | Not started | - |
 | 3. Agent Gateway, Answer Checker & Theory Tutor | 0/TBD | Not started | - |
 | 4. Progress Advisor, Reward Advisor & Parent Report | 0/TBD | Not started | - |
