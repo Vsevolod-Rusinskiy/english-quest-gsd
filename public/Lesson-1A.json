@@ -1,0 +1,382 @@
+{
+  "lessonId": "eq-1a-food-fuel-or-pleasure-v1",
+  "schemaVersion": "lesson-json-v1",
+  "unitTitle": "1A Food: fuel or pleasure?",
+  "theme": "Food, restaurants, present simple and present continuous",
+  "lessonGoal": "Потренировать слова о еде и выбор между present simple и present continuous.",
+  "sourceCatalog": "Working-Catalog-1A.md",
+  "status": "ready",
+  "requiresAdultApproval": false,
+  "authorNote": "Урок собран вручную автором из готовых данных каталога и взят как исходный. Шаг утверждения взрослым в первом MVP не используется.",
+  "defaultNormalization": {
+    "lowercase": true,
+    "trim": true,
+    "collapseSpaces": true,
+    "stripFinalPunctuation": true
+  },
+  "defaultRewardRules": [
+    { "reason": "honest_attempt", "amount": 1, "limitPerExercise": 1 },
+    { "reason": "first_try_correct", "amount": 5, "limitPerExercise": 1 },
+    { "reason": "correct_after_hint", "amount": 3, "limitPerExercise": 1 },
+    { "reason": "fixed_mistake", "amount": 4, "limitPerExercise": 1 }
+  ],
+  "targetVocabulary": [
+    "meat", "raw", "home-made", "steak", "frozen", "meal", "spicy", "chicken", "takeaway",
+    "knife", "fork", "napkin", "serviette", "glass", "prawns", "fried eggs", "strawberries", "salt and pepper"
+  ],
+  "targetGrammar": [
+    "present_simple",
+    "present_continuous",
+    "action_and_non_action_verbs"
+  ],
+  "theory": {
+    "theoryRef": "SB-1A-present-simple-continuous-non-action-verbs",
+    "topicId": "present-simple-vs-continuous",
+    "titleRu": "Present simple или continuous?",
+    "rule": "present simple - привычки, факты, частотные слова (usually, often); present continuous - be + verb-ing, действие сейчас и планы; глаголы-состояния (love, know, like) не ставят в -ing.",
+    "explanationLevels": [
+      {
+        "level": "normal",
+        "textRu": "Present simple - про то, что бывает обычно и регулярно: привычки и факты. Рядом часто usually, often, never. Present continuous - про то, что происходит прямо сейчас: be + глагол с -ing. Им же говорят о планах на будущее. Глаголы-состояния (love, know, like, want) обычно не ставят в -ing.",
+        "exampleRu": "I usually have breakfast at 8. Right now I am eating. I love pizza (не «I am loving»)."
+      },
+      {
+        "level": "simple",
+        "textRu": "Привычка или всегда → простое время: I eat. Прямо сейчас → am/is/are + глагол с -ing: I am eating. Слова чувств (love, know, like) - всегда без -ing.",
+        "exampleRu": "I eat at home. Now I am eating. I love it."
+      }
+    ],
+    "maxSimplifyRounds": 3
+  },
+  "sections": [
+    {
+      "sectionId": "grammar-present-simple-continuous",
+      "title": "Grammar: present simple или continuous",
+      "instructionRu": "Поставь глагол в скобках в present simple или present continuous.",
+      "instructionEn": "Complete the sentences with the present simple or continuous form of the verbs in brackets.",
+      "skill": "grammar",
+      "imagePolicy": "optional",
+      "exercises": [
+        {
+          "exerciseId": "eq-1a-ex001",
+          "catalogRef": "wb-1a-p5-ex2a",
+          "catalogItemRef": "2",
+          "sourceRef": { "sourceBook": "Workbook", "unit": "1A", "page": "5", "exerciseNumber": "2a" },
+          "type": "text-input",
+          "skill": "grammar",
+          "prompt": "He ___ at home today. (work)",
+          "targetWords": [],
+          "targetGrammar": ["present_continuous"],
+          "answerCheck": { "mode": "normalizedText", "correctAnswers": ["is working"], "acceptedAnswers": ["is working", "'s working", "he is working", "he's working"] },
+          "hint": { "firstError": "Действие происходит прямо сейчас, сегодня. Какое это время?", "secondError": "Сейчас - это present continuous: be + verb-ing.", "parentExplanation": "Проверяет present continuous для действия в момент речи." },
+          "topicImpact": ["present_continuous_now"]
+        },
+        {
+          "exerciseId": "eq-1a-ex002",
+          "catalogRef": "wb-1a-p5-ex2a",
+          "catalogItemRef": "3",
+          "sourceRef": { "sourceBook": "Workbook", "unit": "1A", "page": "5", "exerciseNumber": "2a" },
+          "type": "text-input",
+          "skill": "grammar",
+          "prompt": "___ you usually ___ late? (get up)",
+          "targetWords": [],
+          "targetGrammar": ["present_simple"],
+          "answerCheck": { "mode": "normalizedText", "correctAnswers": ["Do you usually get up"], "acceptedAnswers": ["do you usually get up"] },
+          "hint": { "firstError": "Это привычка (usually). Нужен вопрос в present simple.", "secondError": "Порядок: Do + you + usually + get up.", "parentExplanation": "Проверяет порядок слов в вопросе present simple." },
+          "topicImpact": ["present_simple_question_order"]
+        },
+        {
+          "exerciseId": "eq-1a-ex003",
+          "catalogRef": "wb-1a-p5-ex2a",
+          "catalogItemRef": "4",
+          "sourceRef": { "sourceBook": "Workbook", "unit": "1A", "page": "5", "exerciseNumber": "2a" },
+          "type": "text-input",
+          "skill": "grammar",
+          "prompt": "They ___ usually ___ a big meal in the evening. (not have)",
+          "targetWords": [],
+          "targetGrammar": ["present_simple"],
+          "answerCheck": { "mode": "normalizedText", "correctAnswers": ["don't usually have"], "acceptedAnswers": ["do not usually have", "don't usually have"] },
+          "hint": { "firstError": "Привычка с отрицанием. Present simple.", "secondError": "don't + usually + have.", "parentExplanation": "Проверяет отрицание present simple с наречием частотности." },
+          "topicImpact": ["present_simple_negative"]
+        },
+        {
+          "exerciseId": "eq-1a-ex004",
+          "catalogRef": "wb-1a-p5-ex2a",
+          "catalogItemRef": "5",
+          "sourceRef": { "sourceBook": "Workbook", "unit": "1A", "page": "5", "exerciseNumber": "2a" },
+          "type": "text-input",
+          "skill": "grammar",
+          "prompt": "What ___ you ___ tonight? (do)",
+          "targetWords": [],
+          "targetGrammar": ["present_continuous"],
+          "answerCheck": { "mode": "normalizedText", "correctAnswers": ["What are you doing"], "acceptedAnswers": ["what are you doing"] },
+          "hint": { "firstError": "Договорённость на вечер. Какое время для планов?", "secondError": "Будущая договорённость - present continuous: are you doing.", "parentExplanation": "Проверяет present continuous для запланированного будущего." },
+          "topicImpact": ["present_continuous_future_arrangement"]
+        },
+        {
+          "exerciseId": "eq-1a-ex005",
+          "catalogRef": "wb-1a-p5-ex2a",
+          "catalogItemRef": "6",
+          "sourceRef": { "sourceBook": "Workbook", "unit": "1A", "page": "5", "exerciseNumber": "2a" },
+          "type": "text-input",
+          "skill": "grammar",
+          "prompt": "I ___ going out to restaurants. (love)",
+          "targetWords": [],
+          "targetGrammar": ["action_and_non_action_verbs"],
+          "answerCheck": { "mode": "normalizedText", "correctAnswers": ["love"], "acceptedAnswers": ["love"] },
+          "hint": { "firstError": "love - это чувство, а не действие. Можно ли его ставить в continuous?", "secondError": "Non-action verb: используем present simple - love.", "parentExplanation": "Проверяет non-action verb (love не идёт в continuous)." },
+          "topicImpact": ["non_action_verb"]
+        },
+        {
+          "exerciseId": "eq-1a-ex006",
+          "catalogRef": "wb-1a-p5-ex2a",
+          "catalogItemRef": "7",
+          "sourceRef": { "sourceBook": "Workbook", "unit": "1A", "page": "5", "exerciseNumber": "2a" },
+          "type": "text-input",
+          "skill": "grammar",
+          "prompt": "I can't play tennis this weekend: I ___ to the mountains with my family. (go)",
+          "targetWords": [],
+          "targetGrammar": ["present_continuous"],
+          "answerCheck": { "mode": "normalizedText", "correctAnswers": ["am going"], "acceptedAnswers": ["am going", "'m going", "i am going", "i'm going"] },
+          "hint": { "firstError": "Это план на выходные. Present continuous.", "secondError": "be + going: am going.", "parentExplanation": "Проверяет present continuous для запланированного будущего." },
+          "topicImpact": ["present_continuous_future_arrangement"]
+        },
+        {
+          "exerciseId": "eq-1a-ex007",
+          "catalogRef": "wb-1a-p5-ex2a",
+          "catalogItemRef": "8",
+          "sourceRef": { "sourceBook": "Workbook", "unit": "1A", "page": "5", "exerciseNumber": "2a" },
+          "type": "text-input",
+          "skill": "grammar",
+          "prompt": "She ___ low fat products very often. (not buy)",
+          "targetWords": [],
+          "targetGrammar": ["present_simple"],
+          "answerCheck": { "mode": "normalizedText", "correctAnswers": ["doesn't buy"], "acceptedAnswers": ["does not buy", "doesn't buy"] },
+          "hint": { "firstError": "Привычка (very often) с she. Present simple, отрицание.", "secondError": "doesn't + buy (3-е лицо).", "parentExplanation": "Проверяет отрицание present simple в 3-м лице." },
+          "topicImpact": ["present_simple_third_person_negative"]
+        },
+        {
+          "exerciseId": "eq-1a-ex008",
+          "catalogRef": "wb-1a-p5-ex2a",
+          "catalogItemRef": "9",
+          "sourceRef": { "sourceBook": "Workbook", "unit": "1A", "page": "5", "exerciseNumber": "2a" },
+          "type": "text-input",
+          "skill": "grammar",
+          "prompt": "I ___ to watch TV. (try)",
+          "targetWords": [],
+          "targetGrammar": ["present_continuous"],
+          "answerCheck": { "mode": "normalizedText", "correctAnswers": ["am trying"], "acceptedAnswers": ["am trying", "'m trying", "i am trying", "i'm trying"] },
+          "hint": { "firstError": "Действие сейчас. Present continuous.", "secondError": "be + try-ing: am trying.", "parentExplanation": "Проверяет present continuous для действия в момент речи." },
+          "topicImpact": ["present_continuous_now"]
+        },
+        {
+          "exerciseId": "eq-1a-ex009",
+          "catalogRef": "wb-1a-p5-ex2a",
+          "catalogItemRef": "10",
+          "sourceRef": { "sourceBook": "Workbook", "unit": "1A", "page": "5", "exerciseNumber": "2a" },
+          "type": "text-input",
+          "skill": "grammar",
+          "prompt": "I ___ guilty when I eat chocolate. (feel)",
+          "targetWords": [],
+          "targetGrammar": ["action_and_non_action_verbs"],
+          "answerCheck": { "mode": "normalizedText", "correctAnswers": ["feel"], "acceptedAnswers": ["feel"] },
+          "hint": { "firstError": "feel здесь - это состояние. Present simple.", "secondError": "Non-action значение: feel.", "parentExplanation": "Проверяет non-action значение глагола feel." },
+          "topicImpact": ["non_action_verb"]
+        }
+      ]
+    },
+    {
+      "sectionId": "food-vocabulary",
+      "title": "Слова о еде",
+      "instructionRu": "Допиши предложение подходящим словом из темы про еду.",
+      "instructionEn": "Complete the sentences with a word from the list.",
+      "skill": "vocabulary",
+      "imagePolicy": "optional",
+      "exercises": [
+        {
+          "exerciseId": "eq-1a-ex010",
+          "catalogRef": "wb-1a-p5-ex3a",
+          "catalogItemRef": "2",
+          "sourceRef": { "sourceBook": "Workbook", "unit": "1A", "page": "5", "exerciseNumber": "3a" },
+          "type": "text-input",
+          "skill": "vocabulary",
+          "prompt": "Strict vegetarians don't eat ___ or fish.",
+          "targetWords": ["meat"],
+          "targetGrammar": [],
+          "answerCheck": { "mode": "normalizedText", "correctAnswers": ["meat"], "acceptedAnswers": ["meat"] },
+          "hint": { "firstError": "Что не едят вегетарианцы, кроме рыбы?", "parentExplanation": "Слово: meat." },
+          "topicImpact": ["food_vocabulary"]
+        },
+        {
+          "exerciseId": "eq-1a-ex011",
+          "catalogRef": "wb-1a-p5-ex3a",
+          "catalogItemRef": "3",
+          "sourceRef": { "sourceBook": "Workbook", "unit": "1A", "page": "5", "exerciseNumber": "3a" },
+          "type": "text-input",
+          "skill": "vocabulary",
+          "prompt": "___ vegetables have more vitamins than when they are cooked.",
+          "targetWords": ["raw"],
+          "targetGrammar": [],
+          "answerCheck": { "mode": "normalizedText", "correctAnswers": ["raw"], "acceptedAnswers": ["raw"] },
+          "hint": { "firstError": "Сырые овощи - какое это слово по-английски?", "parentExplanation": "Слово: raw." },
+          "topicImpact": ["food_vocabulary"]
+        },
+        {
+          "exerciseId": "eq-1a-ex012",
+          "catalogRef": "wb-1a-p5-ex3a",
+          "catalogItemRef": "4",
+          "sourceRef": { "sourceBook": "Workbook", "unit": "1A", "page": "5", "exerciseNumber": "3a" },
+          "type": "text-input",
+          "skill": "vocabulary",
+          "prompt": "I love ___ food but I don't have much time to cook.",
+          "targetWords": ["home-made"],
+          "targetGrammar": [],
+          "answerCheck": { "mode": "normalizedText", "correctAnswers": ["home-made"], "acceptedAnswers": ["home-made", "homemade"] },
+          "hint": { "firstError": "Еда, приготовленная дома.", "parentExplanation": "Слово: home-made." },
+          "topicImpact": ["food_vocabulary"]
+        },
+        {
+          "exerciseId": "eq-1a-ex013",
+          "catalogRef": "wb-1a-p5-ex3a",
+          "catalogItemRef": "5",
+          "sourceRef": { "sourceBook": "Workbook", "unit": "1A", "page": "5", "exerciseNumber": "3a" },
+          "type": "text-input",
+          "skill": "vocabulary",
+          "prompt": "She likes her ___ well done.",
+          "targetWords": ["steak"],
+          "targetGrammar": [],
+          "answerCheck": { "mode": "normalizedText", "correctAnswers": ["steak"], "acceptedAnswers": ["steak"] },
+          "hint": { "firstError": "Кусок жареного мяса, его заказывают well done.", "parentExplanation": "Слово: steak." },
+          "topicImpact": ["food_vocabulary"]
+        },
+        {
+          "exerciseId": "eq-1a-ex014",
+          "catalogRef": "wb-1a-p5-ex3a",
+          "catalogItemRef": "6",
+          "sourceRef": { "sourceBook": "Workbook", "unit": "1A", "page": "5", "exerciseNumber": "3a" },
+          "type": "text-input",
+          "skill": "vocabulary",
+          "prompt": "I often just buy a ___ meal and heat it up in the microwave.",
+          "targetWords": ["frozen"],
+          "targetGrammar": [],
+          "answerCheck": { "mode": "normalizedText", "correctAnswers": ["frozen"], "acceptedAnswers": ["frozen"] },
+          "hint": { "firstError": "Еда из морозилки, её разогревают.", "parentExplanation": "Слово: frozen." },
+          "topicImpact": ["food_vocabulary"]
+        },
+        {
+          "exerciseId": "eq-1a-ex015",
+          "catalogRef": "wb-1a-p5-ex3a",
+          "catalogItemRef": "7",
+          "sourceRef": { "sourceBook": "Workbook", "unit": "1A", "page": "5", "exerciseNumber": "3a" },
+          "type": "text-input",
+          "skill": "vocabulary",
+          "prompt": "Our biggest ___ of the day is usually lunch.",
+          "targetWords": ["meal"],
+          "targetGrammar": [],
+          "answerCheck": { "mode": "normalizedText", "correctAnswers": ["meal"], "acceptedAnswers": ["meal"] },
+          "hint": { "firstError": "Один приём пищи (завтрак, обед, ужин).", "parentExplanation": "Слово: meal." },
+          "topicImpact": ["food_vocabulary"]
+        },
+        {
+          "exerciseId": "eq-1a-ex016",
+          "catalogRef": "wb-1a-p5-ex3a",
+          "catalogItemRef": "8",
+          "sourceRef": { "sourceBook": "Workbook", "unit": "1A", "page": "5", "exerciseNumber": "3a" },
+          "type": "text-input",
+          "skill": "vocabulary",
+          "prompt": "She doesn't like Mexican food because it is too ___.",
+          "targetWords": ["spicy"],
+          "targetGrammar": [],
+          "answerCheck": { "mode": "normalizedText", "correctAnswers": ["spicy"], "acceptedAnswers": ["spicy"] },
+          "hint": { "firstError": "Острая еда - какая она?", "parentExplanation": "Слово: spicy." },
+          "topicImpact": ["food_vocabulary"]
+        },
+        {
+          "exerciseId": "eq-1a-ex017",
+          "catalogRef": "wb-1a-p5-ex3a",
+          "catalogItemRef": "9",
+          "sourceRef": { "sourceBook": "Workbook", "unit": "1A", "page": "5", "exerciseNumber": "3a" },
+          "type": "text-input",
+          "skill": "vocabulary",
+          "prompt": "Our typical Sunday lunch is roast ___; I especially like the wings.",
+          "targetWords": ["chicken"],
+          "targetGrammar": [],
+          "answerCheck": { "mode": "normalizedText", "correctAnswers": ["chicken"], "acceptedAnswers": ["chicken"] },
+          "hint": { "firstError": "У неё есть крылышки (wings).", "parentExplanation": "Слово: chicken." },
+          "topicImpact": ["food_vocabulary"]
+        },
+        {
+          "exerciseId": "eq-1a-ex018",
+          "catalogRef": "wb-1a-p5-ex3a",
+          "catalogItemRef": "10",
+          "sourceRef": { "sourceBook": "Workbook", "unit": "1A", "page": "5", "exerciseNumber": "3a" },
+          "type": "text-input",
+          "skill": "vocabulary",
+          "prompt": "We often buy ___ food on Fridays - either Chinese or Indian food.",
+          "targetWords": ["takeaway"],
+          "targetGrammar": [],
+          "answerCheck": { "mode": "normalizedText", "correctAnswers": ["takeaway"], "acceptedAnswers": ["takeaway", "take-away"] },
+          "hint": { "firstError": "Еда навынос из ресторана.", "parentExplanation": "Слово: takeaway." },
+          "topicImpact": ["food_vocabulary"]
+        }
+      ]
+    },
+    {
+      "sectionId": "restaurant-vocabulary",
+      "title": "На столе: подбери слово к картинке",
+      "instructionRu": "Соедини каждую картинку с правильным словом.",
+      "instructionEn": "Label the pictures.",
+      "skill": "vocabulary",
+      "imagePolicy": "required",
+      "exercises": [
+        {
+          "exerciseId": "eq-1a-ex019",
+          "catalogRef": "wb-1a-p5-p6-ex3b",
+          "catalogItemRef": "all",
+          "sourceRef": { "sourceBook": "Workbook", "unit": "1A", "page": "5-6", "exerciseNumber": "3b" },
+          "type": "matching",
+          "skill": "vocabulary",
+          "prompt": "Соедини картинку и слово.",
+          "targetWords": ["knife", "fork", "napkin", "glass", "prawns", "fried eggs", "strawberries", "salt and pepper"],
+          "targetGrammar": [],
+          "answerCheck": {
+            "mode": "pairIds",
+            "pairs": [
+              { "leftId": "picture-1", "rightId": "knife" },
+              { "leftId": "picture-2", "rightId": "fork" },
+              { "leftId": "picture-3", "rightId": "napkin" },
+              { "leftId": "picture-4", "rightId": "glass" },
+              { "leftId": "picture-5", "rightId": "prawns" },
+              { "leftId": "picture-6", "rightId": "fried-eggs" },
+              { "leftId": "picture-7", "rightId": "strawberries" },
+              { "leftId": "picture-8", "rightId": "salt-and-pepper" }
+            ]
+          },
+          "leftItems": [
+            { "id": "picture-1", "imagePrompt": "a single table knife, flat icon" },
+            { "id": "picture-2", "imagePrompt": "a single table fork, flat icon" },
+            { "id": "picture-3", "imagePrompt": "a folded paper napkin, flat icon" },
+            { "id": "picture-4", "imagePrompt": "an empty drinking glass, flat icon" },
+            { "id": "picture-5", "imagePrompt": "a plate of prawns, flat icon" },
+            { "id": "picture-6", "imagePrompt": "two fried eggs, flat icon" },
+            { "id": "picture-7", "imagePrompt": "a few strawberries, flat icon" },
+            { "id": "picture-8", "imagePrompt": "salt and pepper shakers, flat icon" }
+          ],
+          "rightOptions": [
+            { "id": "knife", "labelEn": "a knife" },
+            { "id": "fork", "labelEn": "a fork" },
+            { "id": "napkin", "labelEn": "a napkin / serviette" },
+            { "id": "glass", "labelEn": "a glass" },
+            { "id": "prawns", "labelEn": "prawns" },
+            { "id": "fried-eggs", "labelEn": "fried eggs" },
+            { "id": "strawberries", "labelEn": "strawberries" },
+            { "id": "salt-and-pepper", "labelEn": "salt and pepper" }
+          ],
+          "hint": { "firstError": "Посмотри внимательно на картинку и выбери предмет со стола.", "parentExplanation": "Слова про сервировку и еду в ресторане." },
+          "topicImpact": ["restaurant_vocabulary"]
+        }
+      ]
+    }
+  ],
+  "reviewExercises": []
+}
