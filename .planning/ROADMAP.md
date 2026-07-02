@@ -61,11 +61,11 @@ Plans:
   3. Child can open and complete `reviewQueue` items within the same session, and completing them updates topic status
   4. Rubles are awarded only for the fixed reasons (`honest_attempt`, `first_try_correct`, `correct_after_hint`, `fixed_mistake`, `streak_bonus`, `weak_topic_closed`), each capped per exercise, and every award appears as an entry in `rewardHistory` with reason/amount/attemptNumber/timestamp
 
-**Plans**: 3 plans
+**Plans**: 1/3 plans executed
 Plans:
 **Wave 1**
 
-- [ ] 02-01-PLAN.md — Typed schema + topic-status FSM + reviewQueue population scan (PROGRESS-01/02/03)
+- [x] 02-01-PLAN.md — Typed schema + topic-status FSM + reviewQueue population scan (PROGRESS-01/02/03)
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
@@ -129,7 +129,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Deterministic Core, Lesson Rendering & Persistence | 3/3 | Complete    | 2026-07-02 |
-| 2. Progress Tracking, Review Queue & Reward Engine | 0/3 | Not started | - |
+| 2. Progress Tracking, Review Queue & Reward Engine | 1/3 | In Progress|  |
 | 3. Agent Gateway, Answer Checker & Theory Tutor | 0/TBD | Not started | - |
 | 4. Progress Advisor, Reward Advisor & Parent Report | 0/TBD | Not started | - |
 | 5. Kid-Friendly Visual Design | 0/TBD | Not started | - |
