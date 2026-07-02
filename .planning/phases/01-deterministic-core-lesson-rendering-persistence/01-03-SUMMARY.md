@@ -228,3 +228,10 @@ None — this plan's three new renderers and the `renderExercise` dispatcher imp
 ---
 *Phase: 01-deterministic-core-lesson-rendering-persistence*
 *Completed: 2026-07-02*
+
+## Self-Check: PASSED
+
+All 9 created files verified present on disk (singleChoice.ts, matching.ts, orderBuilder.ts,
+renderExercise.ts, singleChoice.test.ts, matching.test.ts, orderBuilder.test.ts,
+fullLessonTraversal.test.ts, and this SUMMARY.md). All 7 commit hashes (ecc4226, ce36d75,
+138192b, d7b203a, 199ce3e, cb7e7ef, b696726) verified present in git log.
