@@ -18,6 +18,7 @@ export function checkMatching(exercise: MatchingExercise, userPairs: Pair[]): Ch
 
   const isCorrect =
     expected.size === actual.size &&
+    userPairs.length === actual.size && // reject duplicate/collapsed leftId entries
     [...expected.entries()].every(([leftId, rightId]) => actual.get(leftId) === rightId);
 
   return { isCorrect, source: "core" };
