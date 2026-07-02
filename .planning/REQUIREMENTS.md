@@ -106,17 +106,48 @@ Explicitly excluded. Documented to prevent scope creep.
 
 ## Traceability
 
-Populated during roadmap creation (Step 8) — see `.planning/ROADMAP.md` once generated.
+Populated during roadmap creation — see `.planning/ROADMAP.md`.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| _pending roadmap generation_ | — | — |
+| THEORY-01 | Phase 1 | Pending |
+| THEORY-02 | Phase 1 | Pending |
+| THEORY-03 | Phase 3 | Pending |
+| EXERCISE-01 | Phase 1 | Pending |
+| EXERCISE-02 | Phase 1 | Pending |
+| EXERCISE-03 | Phase 1 | Pending |
+| EXERCISE-04 | Phase 1 | Pending |
+| EXERCISE-05 | Phase 1 | Pending |
+| CHECK-01 | Phase 1 | Pending |
+| CHECK-02 | Phase 1 | Pending |
+| CHECK-03 | Phase 3 | Pending |
+| CHECK-04 | Phase 3 | Pending |
+| PROGRESS-01 | Phase 2 | Pending |
+| PROGRESS-02 | Phase 2 | Pending |
+| PROGRESS-03 | Phase 2 | Pending |
+| PROGRESS-04 | Phase 2 | Pending |
+| PERSONAL-01 | Phase 4 | Pending |
+| PERSONAL-02 | Phase 4 | Pending |
+| PERSONAL-03 | Phase 4 | Pending |
+| REWARD-01 | Phase 2 | Pending |
+| REWARD-02 | Phase 2 | Pending |
+| REWARD-03 | Phase 4 | Pending |
+| REWARD-04 | Phase 4 | Pending |
+| REPORT-01 | Phase 4 | Pending |
+| REPORT-02 | Phase 4 | Pending |
+| PERSIST-01 | Phase 1 | Pending |
+| PERSIST-02 | Phase 1 | Pending |
+| RELY-01 | Phase 3 | Pending |
+| RELY-02 | Phase 3 | Pending |
+| RELY-03 | Phase 3 | Pending |
+| UI-01 | Phase 5 | Pending |
+| UI-02 | Phase 5 | Pending |
 
 **Coverage:**
-- v1 requirements: 30 total
-- Mapped to phases: 0 (pending roadmap)
-- Unmapped: 30 ⚠️ (expected — roadmapper fills this next)
+- v1 requirements: 32 total (note: this section previously stated "30 total" — recount at roadmap creation found 32 distinct requirement IDs actually listed above; all 32 are mapped below)
+- Mapped to phases: 32/32
+- Unmapped: 0 ✓
 
 ---
 *Requirements defined: 2026-07-02*
-*Last updated: 2026-07-02 after initial definition*
+*Last updated: 2026-07-02 after roadmap creation (traceability populated)*
