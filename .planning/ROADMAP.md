@@ -138,7 +138,16 @@ Plans:
   3. Waiting states for any agent call (Answer Checker, Theory Tutor, Progress Advisor, Reward Advisor, Parent Report Generator) show a calm, on-brand "thinking" indicator rather than a blank screen or generic spinner
   4. Wrong answers are presented with a non-punitive, encouraging tone consistent with the rest of the visual style
 
-**Plans**: TBD
+**Plans**: 2 plans
+Plans:
+**Wave 1**
+
+- [ ] 05-01-PLAN.md — Foundation: design tokens, ThinkingIndicator + RewardToast components, ruble-balance top bar, D-12 bug fixes (UI-01, UI-02)
+
+**Wave 2** *(blocked on Wave 1 completion)*
+
+- [ ] 05-02-PLAN.md — Application: chunky chip/option styling across all 4 exercise renderers + theory toggle buttons, manual visual walkthrough checkpoint (UI-01, UI-02)
+
 **UI hint**: yes
 
 ## Progress
