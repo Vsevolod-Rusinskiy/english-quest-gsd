@@ -37,9 +37,9 @@ Requirements for initial release (single lesson `Lesson-1A.json`). Each maps to 
 
 ### Personalization (PERSONAL)
 
-- [ ] **PERSONAL-01**: Агент Progress Advisor даёт рекомендацию следующего фокуса, сложности (easy/normal/challenge) и совет по завершению сессии на основе `topicStats`/`wordStats`/`exerciseTypeStats`
-- [ ] **PERSONAL-02**: Ядро применяет защитные правила смены сложности (не прыгать easy→challenge напрямую, менять только между уроками, вверх после 3 правильных подряд, вниз после 2 ошибок) независимо от совета агента
-- [ ] **PERSONAL-03**: При недоступности Progress Advisor ядро использует только пороговые правила без персонализации
+- [x] **PERSONAL-01**: Агент Progress Advisor даёт рекомендацию следующего фокуса, сложности (easy/normal/challenge) и совет по завершению сессии на основе `topicStats`/`wordStats`/`exerciseTypeStats`
+- [x] **PERSONAL-02**: Ядро применяет защитные правила смены сложности (не прыгать easy→challenge напрямую, менять только между уроками, вверх после 3 правильных подряд, вниз после 2 ошибок) независимо от совета агента
+- [x] **PERSONAL-03**: При недоступности Progress Advisor ядро использует только пороговые правила без персонализации
 
 ### Rewards (REWARD)
 
@@ -50,8 +50,8 @@ Requirements for initial release (single lesson `Lesson-1A.json`). Each maps to 
 
 ### Parent Report (REPORT)
 
-- [ ] **REPORT-01**: После урока родитель видит короткий отчёт: сколько пройдено, сколько верно, что даётся трудно, что повторить, сколько рублей, одна рекомендация
-- [ ] **REPORT-02**: Отчёт формируется агентом Parent Report Generator; при недоступности агента используется шаблонный отчёт из тех же полей
+- [x] **REPORT-01**: После урока родитель видит короткий отчёт: сколько пройдено, сколько верно, что даётся трудно, что повторить, сколько рублей, одна рекомендация
+- [x] **REPORT-02**: Отчёт формируется агентом Parent Report Generator; при недоступности агента используется шаблонный отчёт из тех же полей
 
 ### Persistence (PERSIST)
 
@@ -126,15 +126,15 @@ Populated during roadmap creation — see `.planning/ROADMAP.md`.
 | PROGRESS-02 | Phase 2 | Complete |
 | PROGRESS-03 | Phase 2 | Complete |
 | PROGRESS-04 | Phase 2 | Complete |
-| PERSONAL-01 | Phase 4 | Pending |
-| PERSONAL-02 | Phase 4 | Pending |
-| PERSONAL-03 | Phase 4 | Pending |
+| PERSONAL-01 | Phase 4 | Complete |
+| PERSONAL-02 | Phase 4 | Complete |
+| PERSONAL-03 | Phase 4 | Complete |
 | REWARD-01 | Phase 2 | Complete |
 | REWARD-02 | Phase 2 | Complete |
 | REWARD-03 | Phase 4 | Complete |
 | REWARD-04 | Phase 4 | Complete |
-| REPORT-01 | Phase 4 | Pending |
-| REPORT-02 | Phase 4 | Pending |
+| REPORT-01 | Phase 4 | Complete |
+| REPORT-02 | Phase 4 | Complete |
 | PERSIST-01 | Phase 1 | Complete |
 | PERSIST-02 | Phase 1 | Complete |
 | RELY-01 | Phase 3 | Complete |

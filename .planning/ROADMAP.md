@@ -16,7 +16,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 1: Deterministic Core, Lesson Rendering & Persistence** - Child can complete the full lesson (theory + all 4 exercise types) with exact-match answer checking, and progress survives a page reload (completed 2026-07-02)
 - [x] **Phase 2: Progress Tracking, Review Queue & Reward Engine** - Core tracks topic mastery, queues weak topics for same-session review, and awards/ledgers rubles by fixed rules, with no agent involved (completed 2026-07-02)
 - [x] **Phase 3: Agent Gateway, Answer Checker & Theory Tutor** - Ambiguous text answers get LLM-assisted checking with typed errors, and confused kids get a simpler explanation, both through one shared trust boundary with automatic fallback (completed 2026-07-03)
-- [ ] **Phase 4: Progress Advisor, Reward Advisor & Parent Report** - Session-end personalization, reward praise text, and the parent report all work through the same gateway with core-enforced guardrails and template fallback
+- [x] **Phase 4: Progress Advisor, Reward Advisor & Parent Report** - Session-end personalization, reward praise text, and the parent report all work through the same gateway with core-enforced guardrails and template fallback (completed 2026-07-03)
 - [ ] **Phase 5: Kid-Friendly Visual Design** - The lesson experience looks and feels like a bright, blocky, Roblox-inspired kids' app
 
 ## Phase Details
@@ -111,7 +111,7 @@ Plans:
   3. Reward events still get correct fixed amounts even when the Reward Advisor is down; when it's up, its suggested reason/praise text is only used if it matches a reward the core already decided to grant
   4. After the lesson, the parent sees a short report (exercises completed, correct count, struggling topics, review topics, rubles earned, one recommendation); if Parent Report Generator is unavailable, the same fields render via a template with no agent text
 
-**Plans**: 2/3 plans executed
+**Plans**: 3/3 plans complete
 Plans:
 **Wave 1**
 
@@ -123,7 +123,7 @@ Plans:
 
 **Wave 3** *(blocked on Wave 2 completion)*
 
-- [ ] 04-03-PLAN.md — Parent Report Generator + LessonEngine.handleSessionEnd() sequential orchestration + combined SessionEndScreen replacing "Урок завершён!" (PERSONAL-01/02/03, REPORT-01/02)
+- [x] 04-03-PLAN.md — Parent Report Generator + LessonEngine.handleSessionEnd() sequential orchestration + combined SessionEndScreen replacing "Урок завершён!" (PERSONAL-01/02/03, REPORT-01/02)
 
 ### Phase 5: Kid-Friendly Visual Design
 
@@ -151,5 +151,5 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 | 1. Deterministic Core, Lesson Rendering & Persistence | 3/3 | Complete    | 2026-07-02 |
 | 2. Progress Tracking, Review Queue & Reward Engine | 3/3 | Complete    | 2026-07-02 |
 | 3. Agent Gateway, Answer Checker & Theory Tutor | 2/2 | Complete    | 2026-07-03 |
-| 4. Progress Advisor, Reward Advisor & Parent Report | 2/3 | In Progress|  |
+| 4. Progress Advisor, Reward Advisor & Parent Report | 3/3 | Complete   | 2026-07-03 |
 | 5. Kid-Friendly Visual Design | 0/TBD | Not started | - |
