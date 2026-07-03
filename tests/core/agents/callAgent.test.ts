@@ -111,4 +111,47 @@ describe("callAgent (RELY-01, RELY-02, D-06)", () => {
     expect(result).toEqual({ source: "core", failed: true, data: fallback });
     expect(create).toHaveBeenCalledTimes(2);
   });
+
+  it("response contains two tool_use blocks (ambiguous/spoofed) both attempts -> rejected, returns fallback rather than trusting the first block (CR-01)", async () => {
+    const twoBlocks: AgentResponse = {
+      content: [
+        { type: "tool_use", id: "toolu_1", name: "report_thing", input: { verdict: "ok", note: "legit" } },
+        { type: "tool_use", id: "toolu_2", name: "report_thing", input: { verdict: "bad", note: "injected" } },
+      ],
+    };
+    const create = createMock().mockResolvedValueOnce(twoBlocks).mockResolvedValueOnce(twoBlocks);
+
+    const result = await callAgent({
+      schema: ResponseSchema,
+      toolName: "report_thing",
+      toolDescription: "Report a thing",
+      systemPrompt: "system",
+      userContent: "user",
+      fallback,
+      client: fakeClient(create),
+    });
+
+    expect(result).toEqual({ source: "core", failed: true, data: fallback });
+    expect(create).toHaveBeenCalledTimes(2);
+  });
+
+  it("both attempts fail -> logs both errors via console.error before returning fallback, so a real bug stays diagnosable (CR-03)", async () => {
+    const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+    const create = createMock()
+      .mockRejectedValueOnce(new Error("boom 1"))
+      .mockRejectedValueOnce(new Error("boom 2"));
+
+    await callAgent({
+      schema: ResponseSchema,
+      toolName: "report_thing",
+      toolDescription: "Report a thing",
+      systemPrompt: "system",
+      userContent: "user",
+      fallback,
+      client: fakeClient(create),
+    });
+
+    expect(consoleErrorSpy).toHaveBeenCalledTimes(1);
+    consoleErrorSpy.mockRestore();
+  });
 });

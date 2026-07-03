@@ -8,6 +8,15 @@ import { callAgent, type AgentClient } from "./callAgent";
 import { AnswerCheckerResponseSchema, type AnswerCheckerResponse } from "./answerCheckerSchema";
 import type { CheckResult } from "../answer-checking/checkTextInput";
 
+// Core-side confidence floor (CR-02): the agent proposes isCorrect, but the
+// core is the one that must decide whether to trust it before it feeds
+// reward/mastery state — an unbounded isCorrect:true would let the agent
+// write those numbers indirectly, violating CLAUDE.md's "agent proposes,
+// core writes" rule. Below this threshold, isCorrect:true is downgraded to
+// false; errorType/confidence/hintRu are still passed through so the child
+// still gets the agent's hint.
+const CORRECT_CONFIDENCE_THRESHOLD = 0.8;
+
 export interface AnswerCheckerInput {
   prompt: string;
   correctAnswers: string[];
@@ -58,8 +67,10 @@ export async function callAnswerChecker(input: AnswerCheckerInput): Promise<Chec
   });
 
   if (result.source === "agent") {
+    const trustedCorrect =
+      result.data.isCorrect && result.data.confidence >= CORRECT_CONFIDENCE_THRESHOLD;
     return {
-      isCorrect: result.data.isCorrect,
+      isCorrect: trustedCorrect,
       source: "agent",
       errorType: result.data.errorType,
       confidence: result.data.confidence,

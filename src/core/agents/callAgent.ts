@@ -93,8 +93,13 @@ export async function callAgent<T>(
       { timeout: TIMEOUT_MS, maxRetries: 0 },
     );
 
-    const block = response.content.find((b) => b.type === "tool_use");
-    const parsed = opts.schema.safeParse(block?.input);
+    const toolUseBlocks = response.content.filter((b) => b.type === "tool_use");
+    if (toolUseBlocks.length !== 1) {
+      throw new Error(
+        `Agent response contained ${toolUseBlocks.length} tool_use blocks, expected exactly 1`,
+      );
+    }
+    const parsed = opts.schema.safeParse(toolUseBlocks[0].input);
     if (!parsed.success) {
       throw new Error(`Agent response failed schema validation: ${parsed.error.message}`);
     }
@@ -104,7 +109,7 @@ export async function callAgent<T>(
   try {
     const data = await attempt();
     return { data, source: "agent", failed: false };
-  } catch {
+  } catch (firstErr) {
     // D-06: exactly one immediate retry, no backoff — covers BOTH SDK/
     // transport errors AND Zod validation failures uniformly, since
     // attempt() throws for both cases the same way. Broad catch, no
@@ -113,7 +118,11 @@ export async function callAgent<T>(
     try {
       const data = await attempt();
       return { data, source: "agent", failed: false };
-    } catch {
+    } catch (secondErr) {
+      // Logged (not swallowed silently) so a genuine code defect — as
+      // opposed to a transient network blip — stays diagnosable in
+      // production instead of looking identical to a normal fallback.
+      console.error("Agent Gateway: both attempts failed", firstErr, secondErr);
       return { data: opts.fallback, source: "core", failed: true };
     }
   }
