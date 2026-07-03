@@ -44,4 +44,16 @@ describe("TheoryScreen", () => {
 
     expect(onUnderstoodChoice).toHaveBeenCalledWith(false);
   });
+
+  it("both theory toggle buttons carry a shared .theory-toggle className, distinct from the CTA-only .accent marker", () => {
+    const onUnderstoodChoice = vi.fn();
+    const el = renderTheoryScreen({ theory: lesson.theory, onUnderstoodChoice });
+
+    const toggles = Array.from(el.querySelectorAll(".theory-toggle"));
+    expect(toggles).toHaveLength(2);
+
+    for (const toggle of toggles) {
+      expect(toggle.classList.contains("accent")).toBe(false);
+    }
+  });
 });
