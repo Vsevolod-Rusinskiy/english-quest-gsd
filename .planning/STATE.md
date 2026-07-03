@@ -2,18 +2,18 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-current_phase: 5
-current_phase_name: Kid-Friendly Visual Design
+current_phase: 05
+current_phase_name: kid-friendly-visual-design
 status: executing
 stopped_at: Phase 5 UI-SPEC approved
-last_updated: "2026-07-03T19:21:08.260Z"
+last_updated: "2026-07-03T19:52:10.185Z"
 last_activity: 2026-07-03
-last_activity_desc: Phase 04 complete, transitioned to Phase 5
+last_activity_desc: Phase 05 execution started
 progress:
   total_phases: 5
   completed_phases: 4
-  total_plans: 11
-  completed_plans: 11
+  total_plans: 13
+  completed_plans: 12
   percent: 80
 ---
 
@@ -24,14 +24,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-07-02)
 
 **Core value:** Проверить механику обучения целиком: детерминированная проверка ответов + LLM-агенты там, где нужна интерпретация, персонализация по прогрессу, повторение слабых тем, начисление бонусов — без единого «сломанного» состояния, даже если агент недоступен.
-**Current focus:** Phase 04 — progress-advisor-reward-advisor-parent-report
+**Current focus:** Phase 05 — kid-friendly-visual-design
 
 ## Current Position
 
-Phase: 5 — Kid-Friendly Visual Design
-Plan: Not started
+Phase: 05 (kid-friendly-visual-design) — EXECUTING
+Plan: 2 of 2
 Status: Ready to execute
-Last activity: 2026-07-03 — Phase 04 complete, transitioned to Phase 5
+Last activity: 2026-07-03 — Phase 05 execution started
 
 Progress: [░░░░░░░░░░] 0%
 
@@ -61,6 +61,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 03 P02 | 22min | 3 tasks | 16 files |
 | Phase 04 P01 | 10min | 2 tasks | 9 files |
 | Phase 04 P03 | 35min | 3 tasks | 8 files |
+| Phase 05 P01 | 12min | 2 tasks | 9 files |
 
 ## Accumulated Context
 
@@ -79,6 +80,8 @@ Recent decisions affecting current work:
 - [Phase ?]: Reward Advisor cross-check gate implemented as Set intersection against granted rewardEvents, discarding ungranted suggestions identically to an agent failure (REWARD-03)
 - [Phase ?]: handleSessionEnd() sequentially resolves Progress Advisor -> guardrails -> Parent Report Generator into ONE session_end dispatch, never Promise.all (D-06/D-07)
 - [Phase ?]: Fixed a plan-authored guardrail test premise inconsistent with Plan 02's already-tested contract: insufficient-signal case correctly stays unchanged, not normal
+- [Phase ?]: D-12 Gap 1's actual leak point is the lesson-complete branch's feedbackAppliesHere check (reviewQueue.length === 0 permanently true post-completion), not the main-pass advance render — fixed by nulling feedback right after the render() call that legitimately shows it
+- [Phase ?]: Reward-toast trigger uses a before/after state.currentRewards diff around handleAnswer(), per 05-PATTERNS.md's correction to RESEARCH.md's Assumption A1 (HandleAnswerResult has no rewardAmount field)
 
 ### Pending Todos
 
@@ -101,6 +104,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-07-03T19:21:08.256Z
+Last session: 2026-07-03T19:51:19.105Z
 Stopped at: Phase 5 UI-SPEC approved
 Resume file: .planning/phases/05-kid-friendly-visual-design/05-UI-SPEC.md

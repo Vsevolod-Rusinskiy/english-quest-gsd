@@ -138,11 +138,11 @@ Plans:
   3. Waiting states for any agent call (Answer Checker, Theory Tutor, Progress Advisor, Reward Advisor, Parent Report Generator) show a calm, on-brand "thinking" indicator rather than a blank screen or generic spinner
   4. Wrong answers are presented with a non-punitive, encouraging tone consistent with the rest of the visual style
 
-**Plans**: 2 plans
+**Plans**: 1/2 plans executed
 Plans:
 **Wave 1**
 
-- [ ] 05-01-PLAN.md — Foundation: design tokens, ThinkingIndicator + RewardToast components, ruble-balance top bar, D-12 bug fixes (UI-01, UI-02)
+- [x] 05-01-PLAN.md — Foundation: design tokens, ThinkingIndicator + RewardToast components, ruble-balance top bar, D-12 bug fixes (UI-01, UI-02)
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
@@ -161,4 +161,4 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 | 2. Progress Tracking, Review Queue & Reward Engine | 3/3 | Complete    | 2026-07-02 |
 | 3. Agent Gateway, Answer Checker & Theory Tutor | 2/2 | Complete    | 2026-07-03 |
 | 4. Progress Advisor, Reward Advisor & Parent Report | 3/3 | Complete    | 2026-07-03 |
-| 5. Kid-Friendly Visual Design | 0/TBD | Not started | - |
+| 5. Kid-Friendly Visual Design | 1/2 | In Progress|  |

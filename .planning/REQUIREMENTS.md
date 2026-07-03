@@ -66,8 +66,8 @@ Requirements for initial release (single lesson `Lesson-1A.json`). Each maps to 
 
 ### Visual Design (UI)
 
-- [ ] **UI-01**: Экран урока использует детский, блочный, яркий стиль с крупными скруглёнными кнопками (Roblox-вдохновлённый, без брендинга/логотипов/ассетов Roblox)
-- [ ] **UI-02**: Экран урока показывает верхнюю панель (название, баланс рублей, прогресс), заголовок урока и карточку задания с инструкцией RU+EN
+- [x] **UI-01**: Экран урока использует детский, блочный, яркий стиль с крупными скруглёнными кнопками (Roblox-вдохновлённый, без брендинга/логотипов/ассетов Roblox)
+- [x] **UI-02**: Экран урока показывает верхнюю панель (название, баланс рублей, прогресс), заголовок урока и карточку задания с инструкцией RU+EN
 
 ## v2 Requirements
 
@@ -140,8 +140,8 @@ Populated during roadmap creation — see `.planning/ROADMAP.md`.
 | RELY-01 | Phase 3 | Complete |
 | RELY-02 | Phase 3 | Complete |
 | RELY-03 | Phase 3 | Complete |
-| UI-01 | Phase 5 | Pending |
-| UI-02 | Phase 5 | Pending |
+| UI-01 | Phase 5 | Complete |
+| UI-02 | Phase 5 | Complete |
 
 **Coverage:**
 
