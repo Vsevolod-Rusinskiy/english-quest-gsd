@@ -11,6 +11,7 @@ import { StateStore } from "../../src/core/state/store";
 import { initialState } from "../../src/core/state/initialState";
 import { load } from "../../src/core/state/persistence";
 import * as answerCheckerModule from "../../src/core/agents/answerChecker";
+import * as theoryTutorModule from "../../src/core/agents/theoryTutor";
 
 const lessonPath = resolve(process.cwd(), "public/Lesson-1A.json");
 const realLesson1A = JSON.parse(readFileSync(lessonPath, "utf-8"));
@@ -49,34 +50,38 @@ describe("LessonEngine", () => {
   // network or wait on the gateway's retry/timeout — individual Answer
   // Checker tests below override this via mockResolvedValueOnce/mockResolvedValue.
   let answerCheckerSpy: ReturnType<typeof vi.spyOn>;
+  let theoryTutorSpy: ReturnType<typeof vi.spyOn>;
 
   beforeEach(() => {
     localStorage.clear();
     answerCheckerSpy = vi
       .spyOn(answerCheckerModule, "callAnswerChecker")
       .mockResolvedValue({ isCorrect: false, source: "core", errorType: "unknown" });
+    // Plan 02 (THEORY-03, D-11): default every callTheoryTutor call to a
+    // fast, deterministic agent-shaped result so tests unrelated to Theory
+    // Tutor's own behavior (round-1 core-only assertions, "понятно" exit)
+    // don't hit the real network — dedicated round-sequencing tests below
+    // override this via mockResolvedValueOnce/mockResolvedValue.
+    theoryTutorSpy = vi.spyOn(theoryTutorModule, "callTheoryTutor").mockResolvedValue({
+      explanationRu: "Agent-simplified explanation",
+      exampleRu: "Agent example",
+      source: "agent",
+    });
   });
 
   afterEach(() => {
     answerCheckerSpy.mockRestore();
+    theoryTutorSpy.mockRestore();
   });
 
-  it("theory: handleTheoryStep(true) dispatches theory_step and sets theoryUnderstood", async () => {
+  it("theory: handleTheoryStep(true) dispatches theory_step and sets theoryUnderstood immediately, no agent call", async () => {
     const store = new StateStore(initialState());
     const engine = new LessonEngine(lesson, store);
 
     await engine.handleTheoryStep(true);
 
     expect(store.getState().currentPosition.theoryUnderstood).toBe(true);
-  });
-
-  it("theory: handleTheoryStep(false) also advances (no Theory Tutor branch in Phase 1)", async () => {
-    const store = new StateStore(initialState());
-    const engine = new LessonEngine(lesson, store);
-
-    await engine.handleTheoryStep(false);
-
-    expect(store.getState().currentPosition.theoryUnderstood).toBe(true);
+    expect(theoryTutorSpy).not.toHaveBeenCalled();
   });
 
   it("theory: save() fires via the dispatch (localStorage is written)", async () => {
@@ -86,6 +91,103 @@ describe("LessonEngine", () => {
     await engine.handleTheoryStep(true);
 
     expect(localStorage.getItem("english-quest-progress-v1")).toBeTruthy();
+  });
+
+  // Plan 02 (THEORY-03, D-11): round sequencing — round 1 is core-only,
+  // rounds 2-3 call Theory Tutor via the gateway, reaching maxSimplifyRounds
+  // soft-transitions to practice regardless of the last answer.
+  describe("Plan 02: Theory Tutor round sequencing (THEORY-03, D-11)", () => {
+    it("round 1 (simplifyRoundCount 0 -> 1): handleTheoryStep(false) does NOT call the agent; count becomes 1; theoryUnderstood stays false", async () => {
+      const store = new StateStore(initialState());
+      const engine = new LessonEngine(lesson, store);
+
+      await engine.handleTheoryStep(false);
+
+      expect(theoryTutorSpy).not.toHaveBeenCalled();
+      expect(store.getState().currentPosition.simplifyRoundCount).toBe(1);
+      expect(store.getState().currentPosition.theoryUnderstood).toBe(false);
+    });
+
+    it("round 2 (simplifyRoundCount 1 -> 2): handleTheoryStep(false) calls callTheoryTutor; count becomes 2; theoryUnderstood stays false", async () => {
+      const store = new StateStore({
+        ...initialState(),
+        currentPosition: {
+          theoryUnderstood: false,
+          currentExerciseIndex: 0,
+          reviewPassIndex: 0,
+          simplifyRoundCount: 1,
+        },
+      });
+      const engine = new LessonEngine(lesson, store);
+
+      await engine.handleTheoryStep(false);
+
+      expect(theoryTutorSpy).toHaveBeenCalledTimes(1);
+      expect(store.getState().currentPosition.simplifyRoundCount).toBe(2);
+      expect(store.getState().currentPosition.theoryUnderstood).toBe(false);
+    });
+
+    it("round 3 (simplifyRoundCount 2 -> 3, = maxSimplifyRounds): handleTheoryStep(false) calls callTheoryTutor; count becomes 3; soft transition sets theoryUnderstood true", async () => {
+      const store = new StateStore({
+        ...initialState(),
+        currentPosition: {
+          theoryUnderstood: false,
+          currentExerciseIndex: 0,
+          reviewPassIndex: 0,
+          simplifyRoundCount: 2,
+        },
+      });
+      const engine = new LessonEngine(lesson, store);
+
+      await engine.handleTheoryStep(false);
+
+      expect(theoryTutorSpy).toHaveBeenCalledTimes(1);
+      expect(store.getState().currentPosition.simplifyRoundCount).toBe(3);
+      // Soft transition: reaching maxSimplifyRounds (3) advances to practice
+      // regardless of the last answer being "не понятно".
+      expect(store.getState().currentPosition.theoryUnderstood).toBe(true);
+    });
+
+    it("agent-failure round (Theory Tutor fallback): the round still counts, source:'core'/agentFailed:true, lesson never stalls", async () => {
+      theoryTutorSpy.mockResolvedValueOnce({
+        explanationRu: "Привычка или всегда → простое время: I eat.",
+        exampleRu: "I eat at home. Now I am eating.",
+        source: "core",
+      });
+      const store = new StateStore({
+        ...initialState(),
+        currentPosition: {
+          theoryUnderstood: false,
+          currentExerciseIndex: 0,
+          reviewPassIndex: 0,
+          simplifyRoundCount: 1,
+        },
+      });
+      const engine = new LessonEngine(lesson, store);
+
+      await engine.handleTheoryStep(false);
+
+      expect(store.getState().currentPosition.simplifyRoundCount).toBe(2);
+      expect(store.getState().currentPosition.theoryUnderstood).toBe(false);
+    });
+
+    it("'Понятно' at any round (e.g. mid-simplify at round 2) exits immediately, no agent call", async () => {
+      const store = new StateStore({
+        ...initialState(),
+        currentPosition: {
+          theoryUnderstood: false,
+          currentExerciseIndex: 0,
+          reviewPassIndex: 0,
+          simplifyRoundCount: 1,
+        },
+      });
+      const engine = new LessonEngine(lesson, store);
+
+      await engine.handleTheoryStep(true);
+
+      expect(theoryTutorSpy).not.toHaveBeenCalled();
+      expect(store.getState().currentPosition.theoryUnderstood).toBe(true);
+    });
   });
 
   it("handleAnswer routes text-input exercises to checkTextInput and advances on correct", async () => {

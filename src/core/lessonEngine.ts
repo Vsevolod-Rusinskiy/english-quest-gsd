@@ -10,6 +10,7 @@ import { checkOrderBuilder } from "./answer-checking/checkOrderBuilder";
 import type { MatchingPair } from "../ui/exercise-renderers/matching";
 import { evaluateAttempt } from "./progress/evaluateAttempt";
 import { callAnswerChecker } from "./agents/answerChecker";
+import { callTheoryTutor } from "./agents/theoryTutor";
 
 export type AnswerPayload = string | MatchingPair[] | string[];
 
@@ -64,11 +65,71 @@ export class LessonEngine {
     return this.exercises.find((e) => e.exerciseId === id) ?? null;
   }
 
-  // Phase 1 has no Theory Tutor branch — both "понятно" and "не понятно" advance
-  // to the first exercise (THEORY-02 literal). Theory Tutor's real "не понятно"
-  // branch (D-11) is Plan 02's concern, not this plan's.
-  async handleTheoryStep(_understood: boolean): Promise<void> {
-    this.store.dispatch({ type: "theory_step", understood: true });
+  // Phase 3 Plan 02 (THEORY-03, D-11): full round-sequencing implementation.
+  // "понятно" exits immediately (THEORY-01/02, unchanged). "не понятно"
+  // branches by simplifyRoundCount:
+  //   - count === 0 (round 1): CORE-ONLY, no agent call — the caller-visible
+  //     text is theory.explanationLevels[1] ("simple"); count -> 1.
+  //   - count is 1 or 2 (rounds 2-3): await callTheoryTutor via the shared
+  //     gateway; count -> count+1; source/agentFailed recorded from the
+  //     gateway's result.
+  //   - once the incremented count reaches theory.maxSimplifyRounds (3):
+  //     SOFT TRANSITION — theoryUnderstood becomes true regardless of the
+  //     last answer, the first exercise renders next.
+  // Exactly one theory_step dispatch per call (single-dispatch invariant).
+  async handleTheoryStep(understood: boolean): Promise<void> {
+    if (understood) {
+      this.store.dispatch({
+        type: "theory_step",
+        theoryUnderstood: true,
+        simplifyRoundCount: this.store.getState().currentPosition.simplifyRoundCount,
+        source: "core",
+        agentFailed: false,
+      });
+      return;
+    }
+
+    const state = this.store.getState();
+    const { simplifyRoundCount } = state.currentPosition;
+    const { explanationLevels, maxSimplifyRounds, rule } = this.lesson.theory;
+    const simpleLevel = explanationLevels[1];
+
+    let nextCount: number;
+    let source: "core" | "agent" = "core";
+    let agentFailed = false;
+
+    if (simplifyRoundCount === 0) {
+      // Round 1: core-only, no agent call (D-11).
+      nextCount = 1;
+    } else {
+      // Rounds 2-3: call Theory Tutor via the shared gateway. On failure the
+      // gateway's fallback re-serves simpleLevel verbatim (never fabricated).
+      const currentLevelText = simpleLevel?.textRu ?? this.lesson.theory.rule;
+      const tutorResult = await callTheoryTutor({
+        rule,
+        currentLevelText,
+        fallbackLevel: {
+          textRu: simpleLevel?.textRu ?? "",
+          exampleRu: simpleLevel?.exampleRu ?? "",
+        },
+        roundNumber: simplifyRoundCount + 1,
+      });
+      nextCount = simplifyRoundCount + 1;
+      source = tutorResult.source;
+      agentFailed = tutorResult.source === "core";
+    }
+
+    // Soft transition: reaching maxSimplifyRounds advances to practice
+    // regardless of the last answer being "не понятно".
+    const theoryUnderstood = nextCount >= maxSimplifyRounds;
+
+    this.store.dispatch({
+      type: "theory_step",
+      theoryUnderstood,
+      simplifyRoundCount: nextCount,
+      source,
+      agentFailed,
+    });
   }
 
   async handleAnswer(exerciseId: string, answer: AnswerPayload): Promise<CheckResult> {

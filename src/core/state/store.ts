@@ -4,7 +4,26 @@ import type { ProgressState, TopicStat, RewardEvent } from "./progressSchema";
 import { save } from "./persistence";
 
 export type Action =
-  | { type: "theory_step"; understood: boolean }
+  | {
+      type: "theory_step";
+      // Phase 3 Plan 02 (THEORY-03, D-11): the engine (not the reducer)
+      // decides theoryUnderstood — true on an explicit "понятно" tap OR on
+      // reaching maxSimplifyRounds (soft transition), false while still
+      // mid-simplify-loop. The reducer honors this rather than hardcoding
+      // true as the Phase 1 stub did.
+      theoryUnderstood: boolean;
+      // The new persisted round count to write into currentPosition
+      // (D-11, RESEARCH.md Open Question 2) — 0 on an immediate "понятно"
+      // exit (no simplify loop was entered this call), incremented by the
+      // engine otherwise.
+      simplifyRoundCount: number;
+      // RELY-03/D-08: mirrors exercise_attempt's source/agentFailed
+      // convention — source:"agent" only when Theory Tutor's call
+      // succeeded this step; agentFailed:true when an agent call was
+      // attempted (rounds 2-3) and fell back to core.
+      source: "core" | "agent";
+      agentFailed: boolean;
+    }
   | {
       type: "exercise_attempt";
       exerciseId: string;
@@ -66,7 +85,11 @@ export class StateStore {
       case "theory_step":
         return {
           ...state,
-          currentPosition: { ...state.currentPosition, theoryUnderstood: true },
+          currentPosition: {
+            ...state.currentPosition,
+            theoryUnderstood: action.theoryUnderstood,
+            simplifyRoundCount: action.simplifyRoundCount,
+          },
         };
       case "exercise_attempt": {
         const prevStat = state.exerciseStats[action.exerciseId] ?? {

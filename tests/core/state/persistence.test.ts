@@ -81,7 +81,13 @@ describe("persistence", () => {
       const store = new StateStore(initialState());
       setItemSpy.mockClear();
 
-      store.dispatch({ type: "theory_step", understood: true });
+      store.dispatch({
+        type: "theory_step",
+        theoryUnderstood: true,
+        simplifyRoundCount: 0,
+        source: "core",
+        agentFailed: false,
+      });
       expect(setItemSpy).toHaveBeenCalledTimes(1);
 
       store.dispatch({ type: "advance_position" });
@@ -95,7 +101,13 @@ describe("persistence", () => {
       const listener = vi.fn();
       store.subscribe(listener);
 
-      store.dispatch({ type: "theory_step", understood: true });
+      store.dispatch({
+        type: "theory_step",
+        theoryUnderstood: true,
+        simplifyRoundCount: 0,
+        source: "core",
+        agentFailed: false,
+      });
 
       expect(listener).toHaveBeenCalledTimes(1);
       expect(listener).toHaveBeenCalledWith(store.getState());
