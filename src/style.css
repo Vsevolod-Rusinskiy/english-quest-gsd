@@ -25,6 +25,7 @@
   --color-highlight: #ffc93c;
   --color-highlight-dark: #d9a615;
   --color-text: #111827;
+  --color-bg-secondary-dark: #b8d9f5;
 }
 
 * {
@@ -186,6 +187,26 @@ button:disabled {
 
 .submit-row {
   margin-top: var(--space-lg);
+}
+
+/* Chip/option-specific chunky styling (D-04) — unselected state for the
+   5 classNames Plan 01 intentionally left untouched: single-choice options,
+   matching left/right buttons, order-builder bank/sequence chips. Structurally
+   outside .submit-row, so these never match the CTA-only 52px/shadow rule
+   above (Pitfall 3) — 44px floor only, no box-shadow. Selection/pairing/
+   placement continues to be signalled by the existing button.accent rule
+   (background/color only), toggled by each renderer's TS, unchanged here. */
+.option,
+.match-left,
+.match-right,
+.bank-chip,
+.sequence-chip {
+  min-height: 44px;
+  min-width: 44px;
+  border-radius: 14px;
+  border: 3px solid var(--color-bg-secondary-dark);
+  background: var(--color-bg-secondary);
+  padding: var(--space-sm) var(--space-md);
 }
 
 /* Feedback banner */
