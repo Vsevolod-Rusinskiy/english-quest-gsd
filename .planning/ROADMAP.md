@@ -15,7 +15,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: Deterministic Core, Lesson Rendering & Persistence** - Child can complete the full lesson (theory + all 4 exercise types) with exact-match answer checking, and progress survives a page reload (completed 2026-07-02)
 - [x] **Phase 2: Progress Tracking, Review Queue & Reward Engine** - Core tracks topic mastery, queues weak topics for same-session review, and awards/ledgers rubles by fixed rules, with no agent involved (completed 2026-07-02)
-- [ ] **Phase 3: Agent Gateway, Answer Checker & Theory Tutor** - Ambiguous text answers get LLM-assisted checking with typed errors, and confused kids get a simpler explanation, both through one shared trust boundary with automatic fallback
+- [x] **Phase 3: Agent Gateway, Answer Checker & Theory Tutor** - Ambiguous text answers get LLM-assisted checking with typed errors, and confused kids get a simpler explanation, both through one shared trust boundary with automatic fallback (completed 2026-07-03)
 - [ ] **Phase 4: Progress Advisor, Reward Advisor & Parent Report** - Session-end personalization, reward praise text, and the parent report all work through the same gateway with core-enforced guardrails and template fallback
 - [ ] **Phase 5: Kid-Friendly Visual Design** - The lesson experience looks and feels like a bright, blocky, Roblox-inspired kids' app
 
@@ -88,7 +88,7 @@ Plans:
   3. Killing/timing out/corrupting either agent's response results in exactly one retry, then a deterministic fallback (strict comparison with `errorType: unknown` for Answer Checker; a pre-written simpler explanation for Theory Tutor) — the lesson never stalls or crashes
   4. No agent JSON response is used to update state unless it first passes one shared schema+semantic validation function (same function for both agents), and every such event records whether the data came from `core` or `agent` plus whether a fallback fired
 
-**Plans**: 1/2 plans executed
+**Plans**: 2/2 plans complete
 Plans:
 **Wave 1**
 
@@ -96,7 +96,7 @@ Plans:
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
-- [ ] 03-02-PLAN.md — Theory Tutor vertical slice: simplifyRoundCount schema, D-11 round sequencing (round 1 core-only, rounds 2-3 agent, cap→soft transition), round-aware TheoryScreen, reusing the Wave 1 gateway (THEORY-03, RELY-01/02/03)
+- [x] 03-02-PLAN.md — Theory Tutor vertical slice: simplifyRoundCount schema, D-11 round sequencing (round 1 core-only, rounds 2-3 agent, cap→soft transition), round-aware TheoryScreen, reusing the Wave 1 gateway (THEORY-03, RELY-01/02/03)
 
 ### Phase 4: Progress Advisor, Reward Advisor & Parent Report
 
@@ -138,6 +138,6 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 |-------|----------------|--------|-----------|
 | 1. Deterministic Core, Lesson Rendering & Persistence | 3/3 | Complete    | 2026-07-02 |
 | 2. Progress Tracking, Review Queue & Reward Engine | 3/3 | Complete    | 2026-07-02 |
-| 3. Agent Gateway, Answer Checker & Theory Tutor | 1/2 | In Progress|  |
+| 3. Agent Gateway, Answer Checker & Theory Tutor | 2/2 | Complete   | 2026-07-03 |
 | 4. Progress Advisor, Reward Advisor & Parent Report | 0/TBD | Not started | - |
 | 5. Kid-Friendly Visual Design | 0/TBD | Not started | - |

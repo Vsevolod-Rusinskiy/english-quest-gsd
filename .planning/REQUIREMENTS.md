@@ -11,7 +11,7 @@ Requirements for initial release (single lesson `Lesson-1A.json`). Each maps to 
 
 - [x] **THEORY-01**: Ребёнок видит блок теории (правило + пример) перед началом упражнений урока
 - [x] **THEORY-02**: Ребёнок может отметить теорию как «понятно» или «не понятно»
-- [ ] **THEORY-03**: При «не понятно» ребёнок получает более простое объяснение (Theory Tutor или заранее написанный fallback-уровень), максимум `maxSimplifyRounds` раз, затем мягкий переход к практике
+- [x] **THEORY-03**: При «не понятно» ребёнок получает более простое объяснение (Theory Tutor или заранее написанный fallback-уровень), максимум `maxSimplifyRounds` раз, затем мягкий переход к практике
 
 ### Exercises (EXERCISE)
 
@@ -60,9 +60,9 @@ Requirements for initial release (single lesson `Lesson-1A.json`). Each maps to 
 
 ### Agent Reliability (RELY)
 
-- [ ] **RELY-01**: Ответ любого из 5 агентов не считается доверенным, пока ядро не проверит валидность JSON и допустимость значений (единая точка валидации, не 5 разных реализаций)
-- [ ] **RELY-02**: При сбое агента (битый JSON, таймаут, недоступность) — один повтор, затем детерминированный fallback; урок не прерывается
-- [ ] **RELY-03**: В событиях фиксируется источник данных (`core`/`agent`) и факт сбоя — для отладки
+- [x] **RELY-01**: Ответ любого из 5 агентов не считается доверенным, пока ядро не проверит валидность JSON и допустимость значений (единая точка валидации, не 5 разных реализаций)
+- [x] **RELY-02**: При сбое агента (битый JSON, таймаут, недоступность) — один повтор, затем детерминированный fallback; урок не прерывается
+- [x] **RELY-03**: В событиях фиксируется источник данных (`core`/`agent`) и факт сбоя — для отладки
 
 ### Visual Design (UI)
 
@@ -112,7 +112,7 @@ Populated during roadmap creation — see `.planning/ROADMAP.md`.
 |-------------|-------|--------|
 | THEORY-01 | Phase 1 | Complete |
 | THEORY-02 | Phase 1 | Complete |
-| THEORY-03 | Phase 3 | Pending |
+| THEORY-03 | Phase 3 | Complete |
 | EXERCISE-01 | Phase 1 | Complete |
 | EXERCISE-02 | Phase 1 | Complete |
 | EXERCISE-03 | Phase 1 | Complete |
@@ -137,9 +137,9 @@ Populated during roadmap creation — see `.planning/ROADMAP.md`.
 | REPORT-02 | Phase 4 | Pending |
 | PERSIST-01 | Phase 1 | Complete |
 | PERSIST-02 | Phase 1 | Complete |
-| RELY-01 | Phase 3 | Pending |
-| RELY-02 | Phase 3 | Pending |
-| RELY-03 | Phase 3 | Pending |
+| RELY-01 | Phase 3 | Complete |
+| RELY-02 | Phase 3 | Complete |
+| RELY-03 | Phase 3 | Complete |
 | UI-01 | Phase 5 | Pending |
 | UI-02 | Phase 5 | Pending |
 
