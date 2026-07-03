@@ -27,8 +27,13 @@ export async function mountApp(root: HTMLElement): Promise<void> {
   // answered and the verdict. Reset to null whenever a fresh screen is (re)built for
   // a DIFFERENT index than the one the feedback belongs to, so it never leaks onto a
   // later, not-yet-answered exercise.
-  let feedback: { atIndex: number; exerciseId: string; isCorrect: boolean; hint?: string } | null =
-    null;
+  let feedback: {
+    atIndex: number;
+    exerciseId: string;
+    isCorrect: boolean;
+    hint?: string;
+    praiseRu?: string;
+  } | null = null;
 
   // Phase 3 Plan 02 (THEORY-03, D-11, RESEARCH.md Open Question 2): the
   // currently-active theory explanation text — transient/in-memory, NOT
@@ -208,7 +213,13 @@ export async function mountApp(root: HTMLElement): Promise<void> {
 
             const hint =
               result.hintRu ?? ("hint" in exercise ? exercise.hint.firstError : undefined);
-            feedback = { atIndex: index, exerciseId: feedbackKey, isCorrect: result.isCorrect, hint };
+            feedback = {
+              atIndex: index,
+              exerciseId: feedbackKey,
+              isCorrect: result.isCorrect,
+              hint,
+              praiseRu: result.praiseRu,
+            };
 
             // WR-02: review-pass answers used to always call render() here
             // (result.isCorrect || inReviewPass was always true while
@@ -250,7 +261,7 @@ export async function mountApp(root: HTMLElement): Promise<void> {
               // require an explicit "Продолжить" tap before advancing.
               const previousBanner = main.querySelector(".feedback-banner");
               previousBanner?.remove();
-              main.appendChild(renderFeedbackBanner(feedback.isCorrect, feedback.hint));
+              main.appendChild(renderFeedbackBanner(feedback.isCorrect, feedback.hint, feedback.praiseRu));
 
               const continueButton = document.createElement("button");
               continueButton.type = "button";
@@ -267,7 +278,7 @@ export async function mountApp(root: HTMLElement): Promise<void> {
               // banner in place and leave the exercise subtree untouched.
               const previousBanner = main.querySelector(".feedback-banner");
               previousBanner?.remove();
-              main.appendChild(renderFeedbackBanner(feedback.isCorrect, feedback.hint));
+              main.appendChild(renderFeedbackBanner(feedback.isCorrect, feedback.hint, feedback.praiseRu));
             }
           },
         });
@@ -288,7 +299,7 @@ export async function mountApp(root: HTMLElement): Promise<void> {
           (feedback.exerciseId === feedbackKey ||
             (feedback.isCorrect && feedback.atIndex === index - 1));
         if (feedbackAppliesHere && feedback) {
-          main.appendChild(renderFeedbackBanner(feedback.isCorrect, feedback.hint));
+          main.appendChild(renderFeedbackBanner(feedback.isCorrect, feedback.hint, feedback.praiseRu));
         }
       } else {
         // Lesson complete: main sequence done AND reviewQueue empty (Task 2
@@ -303,7 +314,7 @@ export async function mountApp(root: HTMLElement): Promise<void> {
           feedback.isCorrect &&
           (feedback.atIndex === index - 1 || state.reviewQueue.length === 0);
         if (feedbackAppliesHere && feedback) {
-          main.appendChild(renderFeedbackBanner(feedback.isCorrect, feedback.hint));
+          main.appendChild(renderFeedbackBanner(feedback.isCorrect, feedback.hint, feedback.praiseRu));
         }
 
         // Plan 04-03 (D-05/D-08): replaces the bare "Урок завершён!" message.
