@@ -2,11 +2,12 @@
 import { loadLesson } from "./core/lesson/lessonLoader";
 import { load as loadProgress } from "./core/state/persistence";
 import { StateStore } from "./core/state/store";
-import { LessonEngine } from "./core/lessonEngine";
+import { LessonEngine, type SessionEndResult } from "./core/lessonEngine";
 import type { ProgressState } from "./core/state/progressSchema";
 import { renderTheoryScreen, type TheoryExplanation } from "./ui/screens/TheoryScreen";
 import { renderExerciseScreen, renderFeedbackBanner } from "./ui/screens/ExerciseScreen";
 import { renderProgressIndicator, renderReviewProgressIndicator } from "./ui/components/ProgressIndicator";
+import { renderSessionEndScreen } from "./ui/screens/SessionEndScreen";
 
 export async function mountApp(root: HTMLElement): Promise<void> {
   // Halt on failure per D-06 — loadLesson renders the FatalError state itself.
@@ -35,6 +36,13 @@ export async function mountApp(root: HTMLElement): Promise<void> {
   // from the live (shrinking) reviewQueue.length every render — otherwise
   // "Повторение: N из K" would have a K that decreases mid-pass.
   let reviewPassTotal: number | null = null;
+
+  // Plan 04-03 (D-05/D-08, RESEARCH.md Pitfall 6): the result of
+  // handleSessionEnd(), captured once the explicit "Показать итоги" tap
+  // resolves — transient/in-memory only (mirrors currentExplanation's
+  // precedent), never persisted verbatim. null before the button is tapped;
+  // once set, the combined SessionEndScreen renders instead of the button.
+  let sessionEndResult: SessionEndResult | null = null;
 
   function render(state: ProgressState): void {
     root.textContent = "";
@@ -238,9 +246,47 @@ export async function mountApp(root: HTMLElement): Promise<void> {
           main.appendChild(renderFeedbackBanner(feedback.isCorrect, feedback.hint));
         }
 
-        const done = document.createElement("p");
-        done.textContent = "Урок завершён!";
-        main.appendChild(done);
+        // Plan 04-03 (D-05/D-08): replaces the bare "Урок завершён!" message.
+        // Once sessionEndResult is available (the button tap resolved),
+        // render the combined SessionEndScreen; otherwise show the explicit
+        // "Показать итоги" affordance — RESEARCH.md Pitfall 6's recommended
+        // option (a): an explicit user tap triggers handleSessionEnd(),
+        // avoiding any render-time auto-firing side effect.
+        if (sessionEndResult) {
+          main.appendChild(
+            renderSessionEndScreen({
+              recommendedFocus: sessionEndResult.recommendedFocus,
+              motivationalMessageRu: sessionEndResult.motivationalMessageRu,
+              suggestedDifficulty: sessionEndResult.suggestedDifficulty,
+              parentReportRu: sessionEndResult.parentReportRu,
+              headlineRu: sessionEndResult.headlineRu,
+              rublesEarned: state.currentRewards,
+            }),
+          );
+        } else {
+          const showResultsButton = document.createElement("button");
+          showResultsButton.type = "button";
+          showResultsButton.className = "show-results-button";
+          showResultsButton.textContent = "Показать итоги";
+          showResultsButton.addEventListener("click", async () => {
+            // Same unsubscribe/thinking-cue/resubscribe shape as onSubmit/
+            // onUnderstoodChoice (D-08's session-end thinking-cue).
+            showResultsButton.disabled = true;
+
+            let result: SessionEndResult;
+            try {
+              unsubscribeRender();
+              result = await engine.handleSessionEnd();
+            } finally {
+              unsubscribeRender = store.subscribe(render);
+              showResultsButton.disabled = false;
+            }
+
+            sessionEndResult = result;
+            render(store.getState());
+          });
+          main.appendChild(showResultsButton);
+        }
       }
     }
 

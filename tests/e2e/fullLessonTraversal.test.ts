@@ -4,6 +4,12 @@ import { resolve } from "node:path";
 import { mountApp } from "../../src/main";
 import { PROGRESS_KEY } from "../../src/core/state/persistence";
 import * as rewardAdvisorModule from "../../src/core/agents/rewardAdvisor";
+import * as progressAdvisorModule from "../../src/core/agents/progressAdvisor";
+import * as parentReportGeneratorModule from "../../src/core/agents/parentReportGenerator";
+import { LessonSchema } from "../../src/core/lesson/lessonSchema";
+import { LessonEngine } from "../../src/core/lessonEngine";
+import { StateStore } from "../../src/core/state/store";
+import { initialState } from "../../src/core/state/initialState";
 
 // Full-lesson traversal e2e (Task 3, EXERCISE-05 headline proof): boots the real app
 // against the real public/Lesson-1A.json, answers all 18 text-input + 1 matching
@@ -123,7 +129,67 @@ describe("full lesson traversal (e2e)", () => {
       expect(blob.data.currentPosition.currentExerciseIndex).toBe(i + 1);
     }
 
-    // Lesson-complete state reached: index has advanced past the last real exercise.
-    expect(root.textContent).toContain("Урок завершён!");
+    // Lesson-complete state reached (Plan 04-03, D-05): the bare "Урок
+    // завершён!" message is replaced by an explicit "Показать итоги"
+    // affordance — the combined SessionEndScreen only renders after that
+    // button is tapped and handleSessionEnd() resolves.
+    expect(root.textContent).not.toContain("Урок завершён!");
+    expect(root.textContent).toContain("Показать итоги");
+  });
+
+  // Plan 04-03 (PERSONAL-01/02/03, REPORT-01/02): drives the engine directly
+  // (rather than simulated DOM clicks, matching this file's existing style
+  // of asserting on persisted/engine-level state alongside DOM text) to
+  // prove handleSessionEnd() produces a valid confidenceScore/difficultyMode
+  // decision and a non-empty transient report/recommendation.
+  it("session-end (Plan 04-03): a completed session's handleSessionEnd() produces a valid confidenceScore/difficultyMode and non-empty parentReportRu/recommendedFocus", async () => {
+    let progressAdvisorSpy: ReturnType<typeof vi.spyOn> | undefined;
+    let parentReportGeneratorSpy: ReturnType<typeof vi.spyOn> | undefined;
+    try {
+      progressAdvisorSpy = vi.spyOn(progressAdvisorModule, "callProgressAdvisor").mockResolvedValue({
+        recommendedFocus: "present_continuous_now",
+        suggestedDifficulty: "normal",
+        reviewSuggestions: [],
+        motivationalMessageRu: "Ты молодец, продолжай в том же духе!",
+        sessionAdvice: "continue",
+        source: "agent",
+      });
+      parentReportGeneratorSpy = vi
+        .spyOn(parentReportGeneratorModule, "callParentReportGenerator")
+        .mockResolvedValue({
+          parentReportRu: "Ребёнок отлично справился сегодня!",
+          headlineRu: "Итоги урока",
+          source: "agent",
+        });
+
+      const lesson = LessonSchema.parse(lessonData);
+      const store = new StateStore(initialState(lesson.lessonId));
+      const engine = new LessonEngine(lesson, store);
+
+      // Drive the full traversal at the engine level (all 18 text-input +
+      // 1 matching exercises, correctly answered).
+      for (const exercise of lesson.sections.flatMap((s) => s.exercises)) {
+        if (exercise.type === "text-input") {
+          await engine.handleAnswer(exercise.exerciseId, exercise.answerCheck.correctAnswers[0]);
+        } else if (exercise.type === "matching") {
+          await engine.handleAnswer(exercise.exerciseId, exercise.answerCheck.pairs);
+        }
+      }
+
+      expect(engine.getCurrentExercise()).toBeNull();
+
+      const result = await engine.handleSessionEnd();
+
+      const state = store.getState();
+      expect(typeof state.studentProfile.confidenceScore).toBe("number");
+      expect(state.studentProfile.confidenceScore).toBeGreaterThanOrEqual(0);
+      expect(state.studentProfile.confidenceScore).toBeLessThanOrEqual(1);
+      expect(["easy", "normal", "challenge"]).toContain(state.studentProfile.difficultyMode);
+      expect(result.parentReportRu.length).toBeGreaterThan(0);
+      expect(result.recommendedFocus.length).toBeGreaterThan(0);
+    } finally {
+      progressAdvisorSpy?.mockRestore();
+      parentReportGeneratorSpy?.mockRestore();
+    }
   });
 });
