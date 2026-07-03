@@ -4,17 +4,17 @@ milestone: v1.0
 milestone_name: milestone
 current_phase: 05
 current_phase_name: kid-friendly-visual-design
-status: executing
+status: verifying
 stopped_at: Phase 5 UI-SPEC approved
-last_updated: "2026-07-03T19:52:10.185Z"
+last_updated: "2026-07-03T20:19:31.287Z"
 last_activity: 2026-07-03
 last_activity_desc: Phase 05 execution started
 progress:
   total_phases: 5
-  completed_phases: 4
+  completed_phases: 5
   total_plans: 13
-  completed_plans: 12
-  percent: 80
+  completed_plans: 13
+  percent: 100
 ---
 
 # Project State
@@ -30,7 +30,7 @@ See: .planning/PROJECT.md (updated 2026-07-02)
 
 Phase: 05 (kid-friendly-visual-design) — EXECUTING
 Plan: 2 of 2
-Status: Ready to execute
+Status: Phase complete — ready for verification
 Last activity: 2026-07-03 — Phase 05 execution started
 
 Progress: [░░░░░░░░░░] 0%
@@ -62,6 +62,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 04 P01 | 10min | 2 tasks | 9 files |
 | Phase 04 P03 | 35min | 3 tasks | 8 files |
 | Phase 05 P01 | 12min | 2 tasks | 9 files |
+| Phase 05 P02 | 22min | 3 tasks | 7 files |
 
 ## Accumulated Context
 
@@ -82,6 +83,9 @@ Recent decisions affecting current work:
 - [Phase ?]: Fixed a plan-authored guardrail test premise inconsistent with Plan 02's already-tested contract: insufficient-signal case correctly stays unchanged, not normal
 - [Phase ?]: D-12 Gap 1's actual leak point is the lesson-complete branch's feedbackAppliesHere check (reviewQueue.length === 0 permanently true post-completion), not the main-pass advance render — fixed by nulling feedback right after the render() call that legitimately shows it
 - [Phase ?]: Reward-toast trigger uses a before/after state.currentRewards diff around handleAnswer(), per 05-PATTERNS.md's correction to RESEARCH.md's Assumption A1 (HandleAnswerResult has no rewardAmount field)
+- [Phase ?]: Theory toggle buttons get a dedicated .theory-toggle className, keeping the CTA-only 52px/shadow treatment isolated to submit-row/show-results/continue buttons
+- [Phase ?]: During Task 3's mandatory human-verify checkpoint (live browser walkthrough), 2 real gaps were found and fixed in-flight: Reward Advisor's praiseRu was computed/cross-checked but never rendered anywhere in the UI (wired into FeedbackBanner), and SessionEndScreen had zero visual treatment (added .child-section/.parent-section card styling)
+- [Phase ?]: Chip/option unselected-state styling (.option/.match-left/.match-right/.bank-chip/.sequence-chip) is CSS-only - no exercise-renderer TS changes needed since selection/pairing already applies Plan 01's shared button.accent/.selected rule
 
 ### Pending Todos
 
@@ -104,6 +108,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-07-03T19:51:19.105Z
+Last session: 2026-07-03T20:19:31.282Z
 Stopped at: Phase 5 UI-SPEC approved
 Resume file: .planning/phases/05-kid-friendly-visual-design/05-UI-SPEC.md

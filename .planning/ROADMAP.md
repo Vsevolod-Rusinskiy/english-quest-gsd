@@ -17,7 +17,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 2: Progress Tracking, Review Queue & Reward Engine** - Core tracks topic mastery, queues weak topics for same-session review, and awards/ledgers rubles by fixed rules, with no agent involved (completed 2026-07-02)
 - [x] **Phase 3: Agent Gateway, Answer Checker & Theory Tutor** - Ambiguous text answers get LLM-assisted checking with typed errors, and confused kids get a simpler explanation, both through one shared trust boundary with automatic fallback (completed 2026-07-03)
 - [x] **Phase 4: Progress Advisor, Reward Advisor & Parent Report** - Session-end personalization, reward praise text, and the parent report all work through the same gateway with core-enforced guardrails and template fallback (completed 2026-07-03)
-- [ ] **Phase 5: Kid-Friendly Visual Design** - The lesson experience looks and feels like a bright, blocky, Roblox-inspired kids' app
+- [x] **Phase 5: Kid-Friendly Visual Design** - The lesson experience looks and feels like a bright, blocky, Roblox-inspired kids' app (completed 2026-07-03)
 
 ## Phase Details
 
@@ -138,7 +138,7 @@ Plans:
   3. Waiting states for any agent call (Answer Checker, Theory Tutor, Progress Advisor, Reward Advisor, Parent Report Generator) show a calm, on-brand "thinking" indicator rather than a blank screen or generic spinner
   4. Wrong answers are presented with a non-punitive, encouraging tone consistent with the rest of the visual style
 
-**Plans**: 1/2 plans executed
+**Plans**: 2/2 plans complete
 Plans:
 **Wave 1**
 
@@ -146,7 +146,7 @@ Plans:
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
-- [ ] 05-02-PLAN.md — Application: chunky chip/option styling across all 4 exercise renderers + theory toggle buttons, manual visual walkthrough checkpoint (UI-01, UI-02)
+- [x] 05-02-PLAN.md — Application: chunky chip/option styling across all 4 exercise renderers + theory toggle buttons, manual visual walkthrough checkpoint (UI-01, UI-02)
 
 **UI hint**: yes
 
@@ -161,4 +161,4 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 | 2. Progress Tracking, Review Queue & Reward Engine | 3/3 | Complete    | 2026-07-02 |
 | 3. Agent Gateway, Answer Checker & Theory Tutor | 2/2 | Complete    | 2026-07-03 |
 | 4. Progress Advisor, Reward Advisor & Parent Report | 3/3 | Complete    | 2026-07-03 |
-| 5. Kid-Friendly Visual Design | 1/2 | In Progress|  |
+| 5. Kid-Friendly Visual Design | 2/2 | Complete   | 2026-07-03 |
