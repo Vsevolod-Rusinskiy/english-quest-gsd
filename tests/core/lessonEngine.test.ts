@@ -691,7 +691,7 @@ describe("LessonEngine", () => {
       expect(callArg.recommendation).toBe("food_vocabulary");
     });
 
-    it("PERSONAL-02 guardrail applied, not bypassed: Progress Advisor suggests 'challenge' while current mode is 'easy' with no correct-streak signal -> resulting difficultyMode is 'normal', never 'challenge' directly", async () => {
+    it("PERSONAL-02 guardrail applied, not bypassed: Progress Advisor suggests 'challenge' while current mode is 'easy' (a two-step jump) -> resulting difficultyMode is capped to 'normal' (one step, per Plan 02's guardrail), NEVER 'challenge' directly, even when the upward gate (correctStreak >= 3) IS met", async () => {
       progressAdvisorSpy.mockResolvedValueOnce({
         recommendedFocus: "present_continuous_now",
         suggestedDifficulty: "challenge",
@@ -709,7 +709,12 @@ describe("LessonEngine", () => {
           lastRecommendedFocus: null,
           motivationSignals: [],
         },
-        currentCorrectStreak: 0,
+        // Upward gate IS met (correctStreak >= 3) — proves the guardrail caps
+        // the two-step easy->challenge jump to one step (normal), it does NOT
+        // prove "no signal still produces normal" (that combination is
+        // impossible per difficultyGuardrails.test.ts's own "insufficient
+        // signal, no other change" case, which correctly stays at `easy`).
+        currentCorrectStreak: 3,
         currentErrorStreak: 0,
       });
       const engine = new LessonEngine(lesson, store);
@@ -717,6 +722,7 @@ describe("LessonEngine", () => {
       await engine.handleSessionEnd();
 
       expect(store.getState().studentProfile.difficultyMode).toBe("normal");
+      expect(store.getState().studentProfile.difficultyMode).not.toBe("challenge");
     });
 
     it("PERSONAL-03: Progress Advisor unavailable (fallback-shaped, source:'core') still produces a valid recommendedFocus/difficultyMode decision, and progressAdvisorFailed is recorded", async () => {
