@@ -12,6 +12,7 @@ import { initialState } from "../../src/core/state/initialState";
 import { load } from "../../src/core/state/persistence";
 import * as answerCheckerModule from "../../src/core/agents/answerChecker";
 import * as theoryTutorModule from "../../src/core/agents/theoryTutor";
+import * as rewardAdvisorModule from "../../src/core/agents/rewardAdvisor";
 
 const lessonPath = resolve(process.cwd(), "public/Lesson-1A.json");
 const realLesson1A = JSON.parse(readFileSync(lessonPath, "utf-8"));
@@ -51,6 +52,7 @@ describe("LessonEngine", () => {
   // Checker tests below override this via mockResolvedValueOnce/mockResolvedValue.
   let answerCheckerSpy: ReturnType<typeof vi.spyOn>;
   let theoryTutorSpy: ReturnType<typeof vi.spyOn>;
+  let rewardAdvisorSpy: ReturnType<typeof vi.spyOn>;
 
   beforeEach(() => {
     localStorage.clear();
@@ -67,11 +69,21 @@ describe("LessonEngine", () => {
       exampleRu: "Agent example",
       source: "agent",
     });
+    // Plan 04-01 (REWARD-03, REWARD-04): default every callRewardAdvisor call
+    // to the no-praise fallback shape so tests unrelated to Reward Advisor's
+    // own behavior don't hit the real network — dedicated Reward Advisor
+    // wiring tests below override this via mockResolvedValueOnce/mockResolvedValue.
+    rewardAdvisorSpy = vi.spyOn(rewardAdvisorModule, "callRewardAdvisor").mockResolvedValue({
+      suggestedReasons: [],
+      celebrationRu: undefined,
+      source: "core",
+    });
   });
 
   afterEach(() => {
     answerCheckerSpy.mockRestore();
     theoryTutorSpy.mockRestore();
+    rewardAdvisorSpy.mockRestore();
   });
 
   it("theory: handleTheoryStep(true) dispatches theory_step and sets theoryUnderstood immediately, no agent call", async () => {
@@ -399,6 +411,103 @@ describe("LessonEngine", () => {
       expect(recovery).toBeDefined();
       expect(recovery?.attemptNumber).toBe(2);
       expect(state.rewardHistory.find((e) => e.reason === "first_try_correct")).toBeUndefined();
+    });
+  });
+
+  // Plan 04-01 (REWARD-03, REWARD-04, D-01/D-02/D-03/D-04): Reward Advisor
+  // live per-answer wiring — one call per answer (not per event), only when
+  // rewardEvents.length > 0, cross-checked against actually-granted reasons
+  // before praiseRu is surfaced, amounts/rewardHistory unaffected either way.
+  describe("Plan 04-01: Reward Advisor wiring (REWARD-03, REWARD-04)", () => {
+    it("an answer producing multiple simultaneous reward events results in exactly ONE callRewardAdvisor call, receiving the full delta.rewardEvents array", async () => {
+      const store = new StateStore(initialState());
+      const engine = new LessonEngine(lesson, store);
+
+      // First correct answer on ex001 fires honest_attempt + first_try_correct
+      // simultaneously — two reward events from one answer.
+      await engine.handleAnswer("eq-1a-ex001", "He is working");
+
+      expect(rewardAdvisorSpy).toHaveBeenCalledTimes(1);
+      const callArg = rewardAdvisorSpy.mock.calls[0][0] as { rewardEvents: unknown[] };
+      expect(callArg.rewardEvents.length).toBeGreaterThanOrEqual(2);
+    });
+
+    it("an answer producing zero reward events does NOT call callRewardAdvisor at all", async () => {
+      const store = new StateStore(initialState());
+      const engine = new LessonEngine(lesson, store);
+
+      // First incorrect attempt: honest_attempt fires (1 event) -> advisor called.
+      await engine.handleAnswer("eq-1a-ex001", "is work");
+      rewardAdvisorSpy.mockClear();
+
+      // Second incorrect attempt on the SAME exercise: honest_attempt already
+      // granted (deduped), not correct (no first_try/correct_after_hint),
+      // streak resets to 0 both times (no streak_bonus) -> zero reward events.
+      await engine.handleAnswer("eq-1a-ex001", "is work");
+
+      expect(rewardAdvisorSpy).not.toHaveBeenCalled();
+    });
+
+    it("cross-check gate (REWARD-03): agent suggests a reason NOT present in this answer's actual rewardEvents -> resulting dispatch's praiseRu is undefined", async () => {
+      rewardAdvisorSpy.mockResolvedValueOnce({
+        suggestedReasons: ["streak_bonus"], // not granted for a first-ever correct answer
+        celebrationRu: "Невероятная серия!",
+        source: "agent",
+      });
+      const store = new StateStore(initialState());
+      const engine = new LessonEngine(lesson, store);
+
+      const result = await engine.handleAnswer("eq-1a-ex001", "He is working");
+
+      expect(result.praiseRu).toBeUndefined();
+    });
+
+    it("trusted match: agent suggests a reason that DOES match one of this answer's granted rewardEvents -> praiseRu equals the agent's celebrationRu", async () => {
+      rewardAdvisorSpy.mockResolvedValueOnce({
+        suggestedReasons: ["first_try_correct"],
+        celebrationRu: "Отлично, с первой попытки!",
+        source: "agent",
+      });
+      const store = new StateStore(initialState());
+      const engine = new LessonEngine(lesson, store);
+
+      const result = await engine.handleAnswer("eq-1a-ex001", "He is working");
+
+      expect(result.praiseRu).toBe("Отлично, с первой попытки!");
+    });
+
+    it("agent unavailable (REWARD-04): reward amounts/currentRewards total are unaffected, praiseRu is undefined", async () => {
+      rewardAdvisorSpy.mockResolvedValueOnce({
+        suggestedReasons: [],
+        celebrationRu: undefined,
+        source: "core",
+      });
+      const store = new StateStore(initialState());
+      const engine = new LessonEngine(lesson, store);
+
+      const result = await engine.handleAnswer("eq-1a-ex001", "He is working");
+
+      const state = store.getState();
+      expect(state.currentRewards).toBe(6); // identical to the pre-Phase-4 Phase 2 test's expected total
+      expect(result.praiseRu).toBeUndefined();
+    });
+
+    it("single-dispatch invariant (Pitfall 3 precedent): an answer with reward events firing still results in exactly the same save() count as before this plan", async () => {
+      const setItemSpy = vi.spyOn(Storage.prototype, "setItem");
+
+      const storeIncorrect = new StateStore(initialState());
+      const engineIncorrect = new LessonEngine(lesson, storeIncorrect);
+      setItemSpy.mockClear();
+      await engineIncorrect.handleAnswer("eq-1a-ex001", "is work");
+      expect(setItemSpy).toHaveBeenCalledTimes(1);
+
+      const storeCorrect = new StateStore(initialState());
+      const engineCorrect = new LessonEngine(lesson, storeCorrect);
+      setItemSpy.mockClear();
+      await engineCorrect.handleAnswer("eq-1a-ex001", "He is working");
+      expect(setItemSpy).toHaveBeenCalledTimes(2);
+
+      setItemSpy.mockRestore();
     });
   });
 
