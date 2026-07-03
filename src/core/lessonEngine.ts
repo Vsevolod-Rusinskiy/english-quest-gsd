@@ -11,6 +11,7 @@ import type { MatchingPair } from "../ui/exercise-renderers/matching";
 import { evaluateAttempt } from "./progress/evaluateAttempt";
 import { callAnswerChecker } from "./agents/answerChecker";
 import { callTheoryTutor } from "./agents/theoryTutor";
+import { callRewardAdvisor } from "./agents/rewardAdvisor";
 
 export type AnswerPayload = string | MatchingPair[] | string[];
 
@@ -21,6 +22,18 @@ export type AnswerPayload = string | MatchingPair[] | string[];
 // no longer shown at that point.
 export interface TheoryStepResult {
   explanation: { textRu: string; exampleRu: string } | null;
+}
+
+// Plan 04-01 (REWARD-03, REWARD-04, D-04, A3): praiseRu is TRANSIENT
+// per-dispatch metadata, never persisted to ProgressStateSchema (mirrors
+// currentExplanation's precedent in main.ts) — it is returned directly from
+// handleAnswer rather than threaded through the store's exercise_attempt
+// dispatch/reducer, since the store's Action union stays unchanged and no
+// new schema field is needed. undefined when this answer produced zero
+// reward events, when the agent failed/was never called, or when none of
+// its suggestedReasons matched a reason the core actually granted.
+export interface HandleAnswerResult extends CheckResult {
+  praiseRu?: string;
 }
 
 export class LessonEngine {
@@ -150,7 +163,7 @@ export class LessonEngine {
     return { explanation: theoryUnderstood ? null : explanation };
   }
 
-  async handleAnswer(exerciseId: string, answer: AnswerPayload): Promise<CheckResult> {
+  async handleAnswer(exerciseId: string, answer: AnswerPayload): Promise<HandleAnswerResult> {
     const exercise = this.exercises.find((e) => e.exerciseId === exerciseId);
     if (!exercise) {
       throw new Error(`Unknown exerciseId: ${exerciseId}`);
@@ -226,6 +239,33 @@ export class LessonEngine {
     const priorAttempts = state.exerciseStats[exerciseId]?.attempts ?? 0;
     const delta = evaluateAttempt(state, exercise, result, priorAttempts, this.exercises);
 
+    // Plan 04-01 (REWARD-03, REWARD-04, D-01/D-02/D-03): one Reward Advisor
+    // call per answer (never per event) — only when this answer produced at
+    // least one reward event. The core (not the agent) remains the sole
+    // source of truth for which rewards actually happened: the agent's
+    // suggestedReasons are cross-checked against delta.rewardEvents (this
+    // answer's ALREADY core-decided grants) before praiseRu is ever
+    // surfaced — an agent hallucinating an ungranted reason (e.g.
+    // suggesting streak_bonus when no streak fired) results in
+    // praiseRu:undefined, identical to an agent-failure outcome. This
+    // mirrors the "agent proposes, core validates before use" framing
+    // already established by answerChecker.ts's confidence-threshold gate.
+    // Amounts/rewardHistory writes below are entirely untouched by this gate.
+    let praiseRu: string | undefined;
+    if (delta.rewardEvents.length > 0) {
+      const advisorResult = await callRewardAdvisor({
+        rewardEvents: delta.rewardEvents,
+        attemptNumber: priorAttempts + 1,
+        rewardHistory: state.rewardHistory,
+        currentCorrectStreak: state.currentCorrectStreak,
+      });
+      const grantedReasons = new Set(delta.rewardEvents.map((e) => e.reason));
+      const trustedReasons = advisorResult.suggestedReasons.filter((r) => grantedReasons.has(r));
+      if (advisorResult.source === "agent" && trustedReasons.length > 0) {
+        praiseRu = advisorResult.celebrationRu;
+      }
+    }
+
     // Plan 03 (PROGRESS-04, D-02): a review-pass answer dequeues the completed
     // item REGARDLESS of correctness — same single exercise_attempt dispatch,
     // no separate action type. Determined BEFORE the dispatch since the
@@ -257,6 +297,6 @@ export class LessonEngine {
     if (result.isCorrect && !wasReviewPass) {
       this.store.dispatch({ type: "advance_position" });
     }
-    return result;
+    return { ...result, praiseRu };
   }
 }

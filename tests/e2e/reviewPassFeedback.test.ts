@@ -2,7 +2,25 @@ import { describe, it, expect, beforeEach, vi } from "vitest";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { mountApp } from "../../src/main";
+import { PROGRESS_KEY } from "../../src/core/state/persistence";
 import * as answerCheckerModule from "../../src/core/agents/answerChecker";
+import * as rewardAdvisorModule from "../../src/core/agents/rewardAdvisor";
+
+// Plan 04-01: handleAnswer now awaits an additional Reward Advisor call
+// before its dispatch(es) — this widens the async gap between
+// submitButton.click() and the render actually reflecting the new exercise,
+// enough that a bare "Верно!" text substring check can pass on STALE DOM
+// still showing the previous render's leftover banner. Wait on the
+// PERSISTED currentExerciseIndex (the authoritative signal that
+// handleAnswer's dispatch(es) actually completed for THIS submit) instead.
+function waitForPersistedIndex(expectedIndex: number): Promise<void> {
+  return vi.waitFor(() => {
+    const raw = localStorage.getItem(PROGRESS_KEY);
+    expect(raw).toBeTruthy();
+    const blob = JSON.parse(raw as string);
+    expect(blob.data.currentPosition.currentExerciseIndex).toBe(expectedIndex);
+  });
+}
 
 // WR-02 regression (e2e): drives the real app through the DOM to reach the
 // review pass, then answers a review item INCORRECTLY and proves the child
@@ -57,6 +75,12 @@ describe("review-pass feedback banner visibility (e2e, WR-02)", () => {
     const spy = vi
       .spyOn(answerCheckerModule, "callAnswerChecker")
       .mockResolvedValue({ isCorrect: false, source: "core", errorType: "unknown" });
+    // Plan 04-01 (REWARD-03/04): every correct answer below now triggers a
+    // live Reward Advisor call whenever a reward event fires — mock it to
+    // the no-praise fallback so this WR-02 DOM test stays fast and offline.
+    const rewardSpy = vi
+      .spyOn(rewardAdvisorModule, "callRewardAdvisor")
+      .mockResolvedValue({ suggestedReasons: [], celebrationRu: undefined, source: "core" });
 
     await mountApp(root);
 
@@ -72,8 +96,9 @@ describe("review-pass feedback banner visibility (e2e, WR-02)", () => {
     // ex001-ex009: correct, no review trigger.
     for (let i = 1; i <= 9; i++) {
       submitTextAnswer(root, correctAnswerFor(`eq-1a-ex00${i}`));
-      await vi.waitFor(() => expect(root.textContent).toContain("Верно!"));
+      await waitForPersistedIndex(i);
     }
+    expect(root.textContent).toContain("Верно!");
 
     // ex010 (food_vocabulary): wrong twice -> 2nd error flips topic to
     // needs_review and enqueues the whole food_vocabulary set, including
@@ -83,13 +108,15 @@ describe("review-pass feedback banner visibility (e2e, WR-02)", () => {
     submitTextAnswer(root, "definitely-wrong-answer");
     await vi.waitFor(() => expect(root.textContent).toContain("Не совсем"));
     submitTextAnswer(root, correctAnswerFor("eq-1a-ex010"));
-    await vi.waitFor(() => expect(root.textContent).toContain("Верно!"));
+    await waitForPersistedIndex(10);
+    expect(root.textContent).toContain("Верно!");
 
     // ex011-ex018: correct, advances main sequence.
     for (let i = 11; i <= 18; i++) {
       submitTextAnswer(root, correctAnswerFor(`eq-1a-ex0${i}`));
-      await vi.waitFor(() => expect(root.textContent).toContain("Верно!"));
+      await waitForPersistedIndex(i);
     }
+    expect(root.textContent).toContain("Верно!");
 
     // ex019 (matching): complete the main sequence.
     const leftButtons = Array.from(root.querySelectorAll<HTMLButtonElement>("button.match-left"));
@@ -105,7 +132,8 @@ describe("review-pass feedback banner visibility (e2e, WR-02)", () => {
       (btn) => btn.textContent === "Проверить",
     ) as HTMLButtonElement;
     matchSubmit.click();
-    await vi.waitFor(() => expect(root.textContent).toContain("Верно!"));
+    await waitForPersistedIndex(19);
+    expect(root.textContent).toContain("Верно!");
 
     // Now in the review pass — answer the FIRST review item incorrectly.
     expect(root.textContent).toContain("Повторение");
@@ -128,5 +156,6 @@ describe("review-pass feedback banner visibility (e2e, WR-02)", () => {
     continueButton.click();
     expect(root.textContent).not.toContain("Не совсем");
     spy.mockRestore();
+    rewardSpy.mockRestore();
   });
 });

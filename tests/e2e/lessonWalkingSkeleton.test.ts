@@ -3,6 +3,7 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { mountApp } from "../../src/main";
 import * as theoryTutorModule from "../../src/core/agents/theoryTutor";
+import * as rewardAdvisorModule from "../../src/core/agents/rewardAdvisor";
 
 // End-to-end walking-skeleton test (Task 1, RED until Task 5 wires main.ts).
 // Mounts the real app against the real public/Lesson-1A.json content, then drives the
@@ -16,6 +17,13 @@ const lessonFixture = readFileSync(resolve(process.cwd(), "public/Lesson-1A.json
 
 describe("lesson walking skeleton (e2e)", () => {
   let root: HTMLElement;
+  // Plan 04-01 (REWARD-03/04): a correct text-input answer below now
+  // triggers a live Reward Advisor call whenever a reward event fires —
+  // mock it to the no-praise fallback so this pre-existing e2e stays
+  // offline/fast; Reward Advisor's own behavior is covered by
+  // tests/core/agents/rewardAdvisor.test.ts and lessonEngine.test.ts's
+  // dedicated wiring tests.
+  let rewardAdvisorSpy: ReturnType<typeof vi.spyOn>;
 
   beforeEach(() => {
     localStorage.clear();
@@ -28,6 +36,14 @@ describe("lesson walking skeleton (e2e)", () => {
       "fetch",
       vi.fn(async () => new Response(lessonFixture, { status: 200 })),
     );
+
+    rewardAdvisorSpy = vi
+      .spyOn(rewardAdvisorModule, "callRewardAdvisor")
+      .mockResolvedValue({ suggestedReasons: [], celebrationRu: undefined, source: "core" });
+  });
+
+  afterEach(() => {
+    rewardAdvisorSpy.mockRestore();
   });
 
   it("renders theory, advances to first text-input exercise, and shows progress", async () => {

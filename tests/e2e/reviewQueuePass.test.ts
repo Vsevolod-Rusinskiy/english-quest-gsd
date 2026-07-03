@@ -7,6 +7,7 @@ import { StateStore } from "../../src/core/state/store";
 import { initialState } from "../../src/core/state/initialState";
 import { load, save } from "../../src/core/state/persistence";
 import * as answerCheckerModule from "../../src/core/agents/answerChecker";
+import * as rewardAdvisorModule from "../../src/core/agents/rewardAdvisor";
 
 // Review-pass end-to-end traversal (Task 3, PROGRESS-04 headline proof): drives a
 // real LessonEngine + StateStore against the real public/Lesson-1A.json so a topic
@@ -99,16 +100,27 @@ describe("review-pass traversal (e2e)", () => {
   // behavior is covered by tests/core/agents/answerChecker.test.ts and
   // tests/core/lessonEngine.test.ts's dedicated wiring tests.
   let answerCheckerSpy: ReturnType<typeof vi.spyOn>;
+  // Plan 04-01 (REWARD-03/04): every correct/incorrect answer in this suite
+  // now triggers a live Reward Advisor call whenever a reward event fires —
+  // mock it to the no-praise fallback so this pre-existing Phase 2
+  // review-pass suite stays offline/fast; Reward Advisor's own behavior is
+  // covered by tests/core/agents/rewardAdvisor.test.ts and
+  // tests/core/lessonEngine.test.ts's dedicated wiring tests.
+  let rewardAdvisorSpy: ReturnType<typeof vi.spyOn>;
 
   beforeEach(() => {
     localStorage.clear();
     answerCheckerSpy = vi
       .spyOn(answerCheckerModule, "callAnswerChecker")
       .mockResolvedValue({ isCorrect: false, source: "core", errorType: "unknown" });
+    rewardAdvisorSpy = vi
+      .spyOn(rewardAdvisorModule, "callRewardAdvisor")
+      .mockResolvedValue({ suggestedReasons: [], celebrationRu: undefined, source: "core" });
   });
 
   afterEach(() => {
     answerCheckerSpy.mockRestore();
+    rewardAdvisorSpy.mockRestore();
   });
 
   it("queue populated then consumed: reviewQueue is non-empty at main-pass end, then every queued item is consumed and the lesson completes", async () => {
