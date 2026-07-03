@@ -320,7 +320,7 @@ describe("LessonEngine", () => {
     it("getCurrentExerciseId (review pass): with currentExerciseIndex past the last main exercise and reviewQueue non-empty, returns reviewQueue[0]", () => {
       const store = new StateStore({
         ...initialState(),
-        currentPosition: { theoryUnderstood: true, currentExerciseIndex: 19, reviewPassIndex: 0 },
+        currentPosition: { theoryUnderstood: true, currentExerciseIndex: 19, reviewPassIndex: 0, simplifyRoundCount: 0 },
         reviewQueue: ["eq-1a-ex010", "eq-1a-ex011"],
       });
       const engine = new LessonEngine(lesson, store);
@@ -333,7 +333,7 @@ describe("LessonEngine", () => {
     it("isInReviewPass / complete: true iff currentExerciseIndex >= totalExercises && reviewQueue.length > 0; queue exhausted -> lesson complete", () => {
       const store = new StateStore({
         ...initialState(),
-        currentPosition: { theoryUnderstood: true, currentExerciseIndex: 19, reviewPassIndex: 0 },
+        currentPosition: { theoryUnderstood: true, currentExerciseIndex: 19, reviewPassIndex: 0, simplifyRoundCount: 0 },
         reviewQueue: [],
       });
       const engine = new LessonEngine(lesson, store);
@@ -346,7 +346,7 @@ describe("LessonEngine", () => {
     it("dequeue on correct: answering the current review exercise correctly removes it from reviewQueue in one dispatch", async () => {
       const store = new StateStore({
         ...initialState(),
-        currentPosition: { theoryUnderstood: true, currentExerciseIndex: 19, reviewPassIndex: 0 },
+        currentPosition: { theoryUnderstood: true, currentExerciseIndex: 19, reviewPassIndex: 0, simplifyRoundCount: 0 },
         reviewQueue: ["eq-1a-ex010", "eq-1a-ex011"],
       });
       const engine = new LessonEngine(lesson, store);
@@ -362,7 +362,7 @@ describe("LessonEngine", () => {
     it("dequeue on incorrect (D-02): answering the current review exercise incorrectly ALSO removes it and is NOT immediately re-added", async () => {
       const store = new StateStore({
         ...initialState(),
-        currentPosition: { theoryUnderstood: true, currentExerciseIndex: 19, reviewPassIndex: 0 },
+        currentPosition: { theoryUnderstood: true, currentExerciseIndex: 19, reviewPassIndex: 0, simplifyRoundCount: 0 },
         reviewQueue: ["eq-1a-ex010", "eq-1a-ex011"],
         // Pre-seed topicStats so this single wrong answer does not itself
         // re-trigger a fresh entered_needs_review enqueue for food_vocabulary.
@@ -382,7 +382,7 @@ describe("LessonEngine", () => {
     it("persist/resume (PERSIST-02): reviewPassIndex and shrunken reviewQueue survive save()/load()", async () => {
       const store = new StateStore({
         ...initialState(),
-        currentPosition: { theoryUnderstood: true, currentExerciseIndex: 19, reviewPassIndex: 0 },
+        currentPosition: { theoryUnderstood: true, currentExerciseIndex: 19, reviewPassIndex: 0, simplifyRoundCount: 0 },
         reviewQueue: ["eq-1a-ex010", "eq-1a-ex011"],
       });
       const engine = new LessonEngine(lesson, store);
@@ -401,7 +401,7 @@ describe("LessonEngine", () => {
     it("no array mutation (Pitfall 4): engine.exercises.length stays === totalExercises throughout a review pass", async () => {
       const store = new StateStore({
         ...initialState(),
-        currentPosition: { theoryUnderstood: true, currentExerciseIndex: 19, reviewPassIndex: 0 },
+        currentPosition: { theoryUnderstood: true, currentExerciseIndex: 19, reviewPassIndex: 0, simplifyRoundCount: 0 },
         reviewQueue: ["eq-1a-ex010", "eq-1a-ex011"],
       });
       const engine = new LessonEngine(lesson, store);

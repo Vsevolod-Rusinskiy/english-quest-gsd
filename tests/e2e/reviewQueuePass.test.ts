@@ -264,7 +264,7 @@ describe("review-pass traversal (e2e)", () => {
     // reviewQueue, reaches mastered and fires weak_topic_closed once.
     const store = new StateStore({
       ...initialState(lesson.lessonId),
-      currentPosition: { theoryUnderstood: true, currentExerciseIndex: 19, reviewPassIndex: 0 },
+      currentPosition: { theoryUnderstood: true, currentExerciseIndex: 19, reviewPassIndex: 0, simplifyRoundCount: 0 },
       reviewQueue: ["eq-1a-ex010", "eq-1a-ex011", "eq-1a-ex012"],
       topicStats: {
         food_vocabulary: { status: "needs_review", attempts: 2, correct: 0, errors: 2, correctStreak: 0 },

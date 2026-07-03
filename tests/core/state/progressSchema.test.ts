@@ -4,6 +4,7 @@ import {
   TopicStatusSchema,
   RewardEventSchema,
   RewardReasonSchema,
+  CurrentPositionSchema,
 } from "../../../src/core/state/progressSchema";
 import { load, save, PROGRESS_KEY } from "../../../src/core/state/persistence";
 import { initialState } from "../../../src/core/state/initialState";
@@ -144,6 +145,46 @@ describe("progressSchema", () => {
       save(state);
       const loaded = load();
       expect(loaded).toEqual(state);
+    });
+
+    it("seeds simplifyRoundCount: 0 in currentPosition (Plan 02, D-11)", () => {
+      const state = initialState();
+      expect(state.currentPosition.simplifyRoundCount).toBe(0);
+    });
+  });
+
+  describe("CurrentPositionSchema: simplifyRoundCount (Plan 02, D-11, Open Question 2)", () => {
+    it("accepts a currentPosition with simplifyRoundCount: 2 and round-trips it", () => {
+      const result = CurrentPositionSchema.safeParse({
+        theoryUnderstood: false,
+        currentExerciseIndex: 0,
+        reviewPassIndex: 0,
+        simplifyRoundCount: 2,
+      });
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.data.simplifyRoundCount).toBe(2);
+      }
+    });
+
+    it("rejects a currentPosition missing simplifyRoundCount (required, resets via load() like reviewPassIndex)", () => {
+      const result = CurrentPositionSchema.safeParse({
+        theoryUnderstood: false,
+        currentExerciseIndex: 0,
+        reviewPassIndex: 0,
+        // simplifyRoundCount deliberately absent
+      });
+      expect(result.success).toBe(false);
+    });
+
+    it("a stored blob whose currentPosition is missing simplifyRoundCount fails ProgressStateSchema.safeParse and resets via load()", () => {
+      const legacyBlob = {
+        ...initialState("lesson-1a"),
+        currentPosition: { theoryUnderstood: true, currentExerciseIndex: 3, reviewPassIndex: 0 },
+      };
+      localStorage.setItem(PROGRESS_KEY, JSON.stringify({ schemaVersion: 1, data: legacyBlob }));
+      const loaded = load("lesson-1a");
+      expect(loaded).toEqual(initialState("lesson-1a"));
     });
   });
 });

@@ -41,6 +41,15 @@ export const CurrentPositionSchema = z.object({
   // "Review-pass cursor model" decision) but kept in the schema for
   // forward-compatibility per the plan's explicit discretion clause.
   reviewPassIndex: z.number(),
+  // Phase 3 Plan 02 (THEORY-03, D-11, RESEARCH.md Open Question 2): counts
+  // how many "не понятно" taps have occurred in the CURRENT theory step.
+  // Required (not optional/default) so a legacy blob missing it resets via
+  // load() rather than resuming mid-simplify-loop into an undefined round
+  // count (same discipline as reviewPassIndex above) — a page reload
+  // mid-loop must not silently reset the round back to 1. The actual
+  // explanation TEXT stays transient/in-memory in main.ts (not persisted
+  // here); only the round COUNT is durable state.
+  simplifyRoundCount: z.number(),
 });
 
 export const TopicStatusSchema = z.enum(["not_started", "in_progress", "needs_review", "mastered"]);
