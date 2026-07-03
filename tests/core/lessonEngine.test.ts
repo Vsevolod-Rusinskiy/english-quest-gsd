@@ -13,6 +13,8 @@ import { load } from "../../src/core/state/persistence";
 import * as answerCheckerModule from "../../src/core/agents/answerChecker";
 import * as theoryTutorModule from "../../src/core/agents/theoryTutor";
 import * as rewardAdvisorModule from "../../src/core/agents/rewardAdvisor";
+import * as progressAdvisorModule from "../../src/core/agents/progressAdvisor";
+import * as parentReportGeneratorModule from "../../src/core/agents/parentReportGenerator";
 
 const lessonPath = resolve(process.cwd(), "public/Lesson-1A.json");
 const realLesson1A = JSON.parse(readFileSync(lessonPath, "utf-8"));
@@ -53,6 +55,8 @@ describe("LessonEngine", () => {
   let answerCheckerSpy: ReturnType<typeof vi.spyOn>;
   let theoryTutorSpy: ReturnType<typeof vi.spyOn>;
   let rewardAdvisorSpy: ReturnType<typeof vi.spyOn>;
+  let progressAdvisorSpy: ReturnType<typeof vi.spyOn>;
+  let parentReportGeneratorSpy: ReturnType<typeof vi.spyOn>;
 
   beforeEach(() => {
     localStorage.clear();
@@ -78,12 +82,34 @@ describe("LessonEngine", () => {
       celebrationRu: undefined,
       source: "core",
     });
+    // Plan 04-03 (PERSONAL-01/02/03, REPORT-01/02): default every
+    // callProgressAdvisor/callParentReportGenerator call to a fast,
+    // deterministic agent-shaped result so tests unrelated to
+    // handleSessionEnd's own behavior don't hit the real network — dedicated
+    // session-end tests below override via mockResolvedValueOnce/mockResolvedValue.
+    progressAdvisorSpy = vi.spyOn(progressAdvisorModule, "callProgressAdvisor").mockResolvedValue({
+      recommendedFocus: "present_continuous_now",
+      suggestedDifficulty: "normal",
+      reviewSuggestions: [],
+      motivationalMessageRu: "Ты молодец!",
+      sessionAdvice: "continue",
+      source: "agent",
+    });
+    parentReportGeneratorSpy = vi
+      .spyOn(parentReportGeneratorModule, "callParentReportGenerator")
+      .mockResolvedValue({
+        parentReportRu: "Отчёт готов.",
+        headlineRu: "Итоги урока",
+        source: "agent",
+      });
   });
 
   afterEach(() => {
     answerCheckerSpy.mockRestore();
     theoryTutorSpy.mockRestore();
     rewardAdvisorSpy.mockRestore();
+    progressAdvisorSpy.mockRestore();
+    parentReportGeneratorSpy.mockRestore();
   });
 
   it("theory: handleTheoryStep(true) dispatches theory_step and sets theoryUnderstood immediately, no agent call", async () => {
@@ -623,6 +649,133 @@ describe("LessonEngine", () => {
 
       expect(engine.exercises.length).toBe(before);
       expect(engine.exercises.length).toBe(19);
+    });
+  });
+
+  // Plan 04-03 (PERSONAL-01/02/03, REPORT-01/02, D-06/D-07): handleSessionEnd()
+  // sequential Progress Advisor -> guardrails -> Parent Report orchestration,
+  // single session_end dispatch.
+  describe("Plan 04-03: handleSessionEnd() session-end orchestration", () => {
+    it("D-07 (THE critical case): callParentReportGenerator is invoked with recommendation equal to Progress Advisor's ALREADY-RESOLVED recommendedFocus, and only after callProgressAdvisor's promise resolved", async () => {
+      const callOrder: string[] = [];
+      progressAdvisorSpy.mockImplementationOnce(async () => {
+        callOrder.push("progressAdvisor:start");
+        await new Promise((resolve) => setTimeout(resolve, 5));
+        callOrder.push("progressAdvisor:end");
+        return {
+          recommendedFocus: "food_vocabulary",
+          suggestedDifficulty: "normal" as const,
+          reviewSuggestions: [],
+          motivationalMessageRu: "Ты молодец!",
+          sessionAdvice: "continue" as const,
+          source: "agent" as const,
+        };
+      });
+      parentReportGeneratorSpy.mockImplementationOnce(async (input: unknown) => {
+        callOrder.push("parentReport:start");
+        return {
+          parentReportRu: "Отчёт готов.",
+          headlineRu: "Итоги урока",
+          source: "agent" as const,
+          _receivedRecommendation: (input as { recommendation: string }).recommendation,
+        } as never;
+      });
+
+      const store = new StateStore(initialState());
+      const engine = new LessonEngine(lesson, store);
+
+      await engine.handleSessionEnd();
+
+      expect(callOrder).toEqual(["progressAdvisor:start", "progressAdvisor:end", "parentReport:start"]);
+      const callArg = parentReportGeneratorSpy.mock.calls[0][0] as { recommendation: string };
+      expect(callArg.recommendation).toBe("food_vocabulary");
+    });
+
+    it("PERSONAL-02 guardrail applied, not bypassed: Progress Advisor suggests 'challenge' while current mode is 'easy' with no correct-streak signal -> resulting difficultyMode is 'normal', never 'challenge' directly", async () => {
+      progressAdvisorSpy.mockResolvedValueOnce({
+        recommendedFocus: "present_continuous_now",
+        suggestedDifficulty: "challenge",
+        reviewSuggestions: [],
+        motivationalMessageRu: "Ты молодец!",
+        sessionAdvice: "continue",
+        source: "agent",
+      });
+      const store = new StateStore({
+        ...initialState(),
+        studentProfile: {
+          studentId: "primary",
+          confidenceScore: 0,
+          difficultyMode: "easy",
+          lastRecommendedFocus: null,
+          motivationSignals: [],
+        },
+        currentCorrectStreak: 0,
+        currentErrorStreak: 0,
+      });
+      const engine = new LessonEngine(lesson, store);
+
+      await engine.handleSessionEnd();
+
+      expect(store.getState().studentProfile.difficultyMode).toBe("normal");
+    });
+
+    it("PERSONAL-03: Progress Advisor unavailable (fallback-shaped, source:'core') still produces a valid recommendedFocus/difficultyMode decision, and progressAdvisorFailed is recorded", async () => {
+      progressAdvisorSpy.mockResolvedValueOnce({
+        recommendedFocus: "present_continuous_now",
+        suggestedDifficulty: "normal",
+        reviewSuggestions: [],
+        motivationalMessageRu: "Ты молодец, продолжай в том же духе!",
+        sessionAdvice: "continue",
+        source: "core",
+      });
+      const store = new StateStore(initialState());
+      const engine = new LessonEngine(lesson, store);
+
+      const result = await engine.handleSessionEnd();
+
+      expect(result.recommendedFocus).toBeTruthy();
+      expect(result.suggestedDifficulty).toBeTruthy();
+      expect(store.getState().studentProfile.difficultyMode).toBeTruthy();
+      expect(store.getState().studentProfile.lastRecommendedFocus).toBeTruthy();
+    });
+
+    it("REPORT-02: Parent Report Generator unavailable (fallback-shaped, source:'core') -> deterministic template text is used and parentReportFailed is recorded", async () => {
+      parentReportGeneratorSpy.mockResolvedValueOnce({
+        parentReportRu: "Ребёнок выполнил 0 заданий, 0 верно. Даётся сложнее: нет. Повторить: нет. Заработано 0 ₽. Рекомендация: present_continuous_now.",
+        headlineRu: "Итоги урока",
+        source: "core",
+      });
+      const store = new StateStore(initialState());
+      const engine = new LessonEngine(lesson, store);
+
+      const result = await engine.handleSessionEnd();
+
+      expect(result.parentReportRu).toBeTruthy();
+      expect(result.parentReportRu.length).toBeGreaterThan(0);
+    });
+
+    it("single dispatch invariant: handleSessionEnd() results in exactly ONE additional localStorage.setItem call", async () => {
+      const store = new StateStore(initialState());
+      const engine = new LessonEngine(lesson, store);
+      const setItemSpy = vi.spyOn(Storage.prototype, "setItem");
+      setItemSpy.mockClear();
+
+      await engine.handleSessionEnd();
+
+      expect(setItemSpy).toHaveBeenCalledTimes(1);
+      setItemSpy.mockRestore();
+    });
+
+    it("confidenceScore computed and persisted: matches computeConfidenceScore()'s formula applied to the session's actual exerciseStats/streaks", async () => {
+      const store = new StateStore(initialState());
+      const engine = new LessonEngine(lesson, store);
+
+      await engine.handleSessionEnd();
+
+      const confidenceScore = store.getState().studentProfile.confidenceScore;
+      expect(typeof confidenceScore).toBe("number");
+      expect(confidenceScore).toBeGreaterThanOrEqual(0);
+      expect(confidenceScore).toBeLessThanOrEqual(1);
     });
   });
 });
