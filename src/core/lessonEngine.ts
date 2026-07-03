@@ -12,6 +12,11 @@ import { evaluateAttempt } from "./progress/evaluateAttempt";
 import { callAnswerChecker } from "./agents/answerChecker";
 import { callTheoryTutor } from "./agents/theoryTutor";
 import { callRewardAdvisor } from "./agents/rewardAdvisor";
+import { callProgressAdvisor } from "./agents/progressAdvisor";
+import { callParentReportGenerator } from "./agents/parentReportGenerator";
+import { computeConfidenceScore } from "./personalization/confidenceScore";
+import { applyDifficultyGuardrails } from "./personalization/difficultyGuardrails";
+import type { DifficultyMode } from "./state/progressSchema";
 
 export type AnswerPayload = string | MatchingPair[] | string[];
 
@@ -34,6 +39,19 @@ export interface TheoryStepResult {
 // its suggestedReasons matched a reason the core actually granted.
 export interface HandleAnswerResult extends CheckResult {
   praiseRu?: string;
+}
+
+// Plan 04-03 (PERSONAL-01/02/03, REPORT-01/02, D-05/A3): the transient,
+// render-facing result of handleSessionEnd() — mirrors TheoryStepResult's
+// precedent (returned directly to the caller, never persisted verbatim; only
+// confidenceScore/difficultyMode/lastRecommendedFocus/motivationSignals are
+// durable studentProfile fields, written via the session_end dispatch).
+export interface SessionEndResult {
+  recommendedFocus: string;
+  motivationalMessageRu: string;
+  suggestedDifficulty: DifficultyMode;
+  parentReportRu: string;
+  headlineRu: string;
 }
 
 export class LessonEngine {
@@ -301,5 +319,110 @@ export class LessonEngine {
       this.store.dispatch({ type: "advance_position" });
     }
     return { ...result, praiseRu };
+  }
+
+  // Plan 04-03 (PERSONAL-01/02/03, REPORT-01/02, D-06/D-07): the session-end
+  // orchestrator. Progress Advisor resolves FIRST (agent success or
+  // fallback — either way produces a FINAL core-decided recommendedFocus/
+  // suggestedDifficulty via applyDifficultyGuardrails, the ONLY writer of
+  // difficultyMode), and ONLY THEN is Parent Report Generator called,
+  // receiving that FINAL recommendation. Exactly ONE session_end dispatch —
+  // never Promise.all, never two dispatches for one user-visible event
+  // (single-dispatch invariant, Pitfall 3 precedent).
+  async handleSessionEnd(): Promise<SessionEndResult> {
+    const state = this.store.getState();
+
+    // Step 1 (PERSONAL-03): the core's OWN threshold-rule-derived weakest
+    // topic — the topicStats entry with the highest error count (lowest
+    // correct/attempts ratio), or a fixed generic string if topicStats is
+    // empty. Used verbatim as Progress Advisor's fallback input, never
+    // fabricated by the wrapper itself.
+    const topicEntries = Object.entries(state.topicStats);
+    let fallbackRecommendedFocus = "Продолжай практиковаться";
+    if (topicEntries.length > 0) {
+      const worst = topicEntries.reduce((worstEntry, entry) => {
+        const [, stat] = entry;
+        const [, worstStat] = worstEntry;
+        const ratio = stat.attempts > 0 ? stat.correct / stat.attempts : 0;
+        const worstRatio = worstStat.attempts > 0 ? worstStat.correct / worstStat.attempts : 0;
+        return ratio < worstRatio ? entry : worstEntry;
+      });
+      fallbackRecommendedFocus = worst[0];
+    }
+
+    // Step 2/3: Progress Advisor resolves FIRST — sequential await, never
+    // Promise.all (D-07/anti-pattern).
+    const advisorResult = await callProgressAdvisor({
+      topicStats: state.topicStats,
+      wordStats: state.wordStats,
+      exerciseTypeStats: state.exerciseTypeStats,
+      currentDifficultyMode: state.studentProfile.difficultyMode,
+      fallbackRecommendedFocus,
+    });
+
+    // Step 4 (PERSONAL-02): applyDifficultyGuardrails is the ONLY function
+    // permitted to decide difficultyMode's next value — advisorResult.
+    // suggestedDifficulty is one input, never assigned directly anywhere else.
+    const finalDifficulty = applyDifficultyGuardrails(
+      state.studentProfile.difficultyMode,
+      advisorResult.suggestedDifficulty,
+      { correctStreak: state.currentCorrectStreak, recentErrors: state.currentErrorStreak },
+    );
+
+    // Step 5: confidenceScore (SPEC.md §12 formula, pure core computation).
+    const exerciseStatValues = Object.values(state.exerciseStats);
+    const totalAttempts = exerciseStatValues.reduce((sum, s) => sum + s.attempts, 0);
+    const totalCorrect = exerciseStatValues.reduce((sum, s) => sum + s.correct, 0);
+    const correctRatio = totalAttempts > 0 ? totalCorrect / totalAttempts : 0;
+    const confidenceScore = computeConfidenceScore({
+      correctRatio,
+      streak: state.currentCorrectStreak,
+      errorsInARow: state.currentErrorStreak,
+    });
+
+    // Step 6: Parent Report snapshot.
+    const exercisesCompleted = Object.keys(state.exerciseStats).length;
+    const correctCount = exerciseStatValues.filter((s) => s.lastAttemptCorrect).length;
+    const strugglingTopics = Object.entries(state.topicStats)
+      .filter(([, stat]) => stat.status === "needs_review")
+      .map(([topic]) => topic);
+    const reviewTopics = state.reviewQueue;
+    const rublesEarned = state.currentRewards;
+
+    // Step 7: Parent Report Generator — called ONLY after Progress Advisor's
+    // promise (steps 3-4) fully resolved, receiving the FINAL recommendation
+    // (never the raw agent suggestion).
+    const reportResult = await callParentReportGenerator({
+      exercisesCompleted,
+      correctCount,
+      strugglingTopics,
+      reviewTopics,
+      rublesEarned,
+      recommendation: advisorResult.recommendedFocus,
+    });
+
+    // Step 8: ONE session_end dispatch.
+    this.store.dispatch({
+      type: "session_end",
+      confidenceScore,
+      difficultyMode: finalDifficulty,
+      recommendedFocus: advisorResult.recommendedFocus,
+      motivationalMessageRu: advisorResult.motivationalMessageRu,
+      parentReportRu: reportResult.parentReportRu,
+      headlineRu: reportResult.headlineRu,
+      progressAdvisorSource: advisorResult.source,
+      progressAdvisorFailed: advisorResult.source === "core",
+      parentReportSource: reportResult.source,
+      parentReportFailed: reportResult.source === "core",
+    });
+
+    // Step 9: transient render-facing result.
+    return {
+      recommendedFocus: advisorResult.recommendedFocus,
+      motivationalMessageRu: advisorResult.motivationalMessageRu,
+      suggestedDifficulty: finalDifficulty,
+      parentReportRu: reportResult.parentReportRu,
+      headlineRu: reportResult.headlineRu,
+    };
   }
 }

@@ -1,6 +1,13 @@
 // In-memory StateStore with dispatch/subscribe, save-on-dispatch (D-03).
 // save() is called ONLY here — never from UI input listeners (Pitfall 3).
-import type { ProgressState, TopicStat, RewardEvent, WordStat, ExerciseTypeStat } from "./progressSchema";
+import type {
+  ProgressState,
+  TopicStat,
+  RewardEvent,
+  WordStat,
+  ExerciseTypeStat,
+  DifficultyMode,
+} from "./progressSchema";
 import { save } from "./persistence";
 
 export type Action =
@@ -60,7 +67,32 @@ export type Action =
       source: "core" | "agent";
       agentFailed: boolean;
     }
-  | { type: "advance_position" };
+  | { type: "advance_position" }
+  | {
+      type: "session_end";
+      // Plan 04-03 (PERSONAL-01/02/03, REPORT-01/02, D-06/D-07): the ONE
+      // dispatch produced by LessonEngine.handleSessionEnd() — Progress
+      // Advisor resolves FIRST (agent success or fallback), guardrails
+      // (applyDifficultyGuardrails) are the ONLY writer of difficultyMode,
+      // and Parent Report Generator is called ONLY AFTER that resolution,
+      // receiving the FINAL recommendedFocus. Durable studentProfile fields
+      // (confidenceScore/difficultyMode/lastRecommendedFocus/
+      // motivationSignals) are written by the reduce branch below;
+      // motivationalMessageRu/parentReportRu/headlineRu are carried on this
+      // action for completeness but are NOT persisted into
+      // ProgressStateSchema (Assumption A3: transient, in-memory only) —
+      // handleSessionEnd() returns them directly to its caller instead.
+      confidenceScore: number;
+      difficultyMode: DifficultyMode;
+      recommendedFocus: string;
+      motivationalMessageRu: string;
+      parentReportRu: string;
+      headlineRu: string;
+      progressAdvisorSource: "core" | "agent";
+      progressAdvisorFailed: boolean;
+      parentReportSource: "core" | "agent";
+      parentReportFailed: boolean;
+    };
 
 export type Listener = (state: ProgressState) => void;
 
@@ -151,6 +183,25 @@ export class StateStore {
             currentExerciseIndex: state.currentPosition.currentExerciseIndex + 1,
           },
         };
+      case "session_end": {
+        // Plan 04-03 (PERSONAL-01/02/03): ONE dispatch writes the durable
+        // studentProfile fields. motivationSignals (A4 discretion, mirrors
+        // Plan 02's simple string-tag shape) is derived here from the
+        // session's final streak counters — a simple, low-risk tag list.
+        const motivationSignals: string[] = [];
+        if (state.currentCorrectStreak >= 3) motivationSignals.push("streak");
+        if (state.currentErrorStreak >= 2) motivationSignals.push("errors_in_a_row");
+        return {
+          ...state,
+          studentProfile: {
+            ...state.studentProfile,
+            confidenceScore: action.confidenceScore,
+            difficultyMode: action.difficultyMode,
+            lastRecommendedFocus: action.recommendedFocus,
+            motivationSignals,
+          },
+        };
+      }
       default:
         return state;
     }
