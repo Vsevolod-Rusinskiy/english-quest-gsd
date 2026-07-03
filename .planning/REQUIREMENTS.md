@@ -45,8 +45,8 @@ Requirements for initial release (single lesson `Lesson-1A.json`). Each maps to 
 
 - [x] **REWARD-01**: Ядро начисляет фиксированные суммы рублей по правилам (`honest_attempt`, `first_try_correct`, `correct_after_hint`, `fixed_mistake`, `streak_bonus`, `weak_topic_closed`) с лимитами на упражнение
 - [x] **REWARD-02**: Ядро ведёт леджер начислений `rewardHistory` (`rewardEventId`, `reason`, `amount`, `attemptNumber`, `createdAt`)
-- [ ] **REWARD-03**: Агент Reward Advisor предлагает причины начисления и текст похвалы; ядро проверяет предложение и начисляет сумму само
-- [ ] **REWARD-04**: При недоступности Reward Advisor ядро само применяет reward-правила без текста похвалы от агента
+- [x] **REWARD-03**: Агент Reward Advisor предлагает причины начисления и текст похвалы; ядро проверяет предложение и начисляет сумму само
+- [x] **REWARD-04**: При недоступности Reward Advisor ядро само применяет reward-правила без текста похвалы от агента
 
 ### Parent Report (REPORT)
 
@@ -131,8 +131,8 @@ Populated during roadmap creation — see `.planning/ROADMAP.md`.
 | PERSONAL-03 | Phase 4 | Pending |
 | REWARD-01 | Phase 2 | Complete |
 | REWARD-02 | Phase 2 | Complete |
-| REWARD-03 | Phase 4 | Pending |
-| REWARD-04 | Phase 4 | Pending |
+| REWARD-03 | Phase 4 | Complete |
+| REWARD-04 | Phase 4 | Complete |
 | REPORT-01 | Phase 4 | Pending |
 | REPORT-02 | Phase 4 | Pending |
 | PERSIST-01 | Phase 1 | Complete |

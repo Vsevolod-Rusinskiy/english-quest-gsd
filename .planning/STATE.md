@@ -2,18 +2,18 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-current_phase: 4
-current_phase_name: Progress Advisor, Reward Advisor & Parent Report
+current_phase: 04
+current_phase_name: progress-advisor-reward-advisor-parent-report
 status: executing
-stopped_at: Phase 4 context gathered
-last_updated: "2026-07-03T06:21:14.039Z"
+stopped_at: Phase 04 Plan 01 (Reward Advisor) complete
+last_updated: "2026-07-03T07:03:16.904Z"
 last_activity: 2026-07-03
-last_activity_desc: Phase 03 complete, transitioned to Phase 4
+last_activity_desc: Phase 04 execution started
 progress:
   total_phases: 5
   completed_phases: 3
-  total_plans: 8
-  completed_plans: 8
+  total_plans: 11
+  completed_plans: 9
   percent: 60
 ---
 
@@ -24,14 +24,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-07-02)
 
 **Core value:** Проверить механику обучения целиком: детерминированная проверка ответов + LLM-агенты там, где нужна интерпретация, персонализация по прогрессу, повторение слабых тем, начисление бонусов — без единого «сломанного» состояния, даже если агент недоступен.
-**Current focus:** Phase 03 — agent-gateway-answer-checker-theory-tutor
+**Current focus:** Phase 04 — progress-advisor-reward-advisor-parent-report
 
 ## Current Position
 
-Phase: 4 — Progress Advisor, Reward Advisor & Parent Report
-Plan: Not started
+Phase: 04 (progress-advisor-reward-advisor-parent-report) — EXECUTING
+Plan: 2 of 3
 Status: Ready to execute
-Last activity: 2026-07-03 — Phase 03 complete, transitioned to Phase 4
+Last activity: 2026-07-03 — Phase 04 execution started
 
 Progress: [░░░░░░░░░░] 0%
 
@@ -58,6 +58,7 @@ Progress: [░░░░░░░░░░] 0%
 
 *Updated after each plan completion*
 | Phase 03 P02 | 22min | 3 tasks | 16 files |
+| Phase 04 P01 | 10min | 2 tasks | 9 files |
 
 ## Accumulated Context
 
@@ -72,6 +73,8 @@ Recent decisions affecting current work:
 - Roadmap: UI polish deliberately last (Phase 5) — renderers are stateless and depend only on the finalized state shape from Phases 1-4
 - [Phase ?]: Theory Tutor reuses the Plan 01 Agent Gateway unchanged - a second, differently-shaped agent contract on the same callAgent<T>() proves D-05's shared-gateway design generalizes
 - [Phase ?]: Theory Tutor's fallback re-serves the caller-supplied fallbackLevel verbatim on agent failure, never fabricating new simplified text (D-11)
+- [Phase ?]: praiseRu returned transiently from handleAnswer (never dispatched/persisted), matching D-04/A3's transient-display-text framing
+- [Phase ?]: Reward Advisor cross-check gate implemented as Set intersection against granted rewardEvents, discarding ungranted suggestions identically to an agent failure (REWARD-03)
 
 ### Pending Todos
 
@@ -94,6 +97,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-07-03T06:21:14.031Z
-Stopped at: Phase 4 context gathered
-Resume file: .planning/phases/04-progress-advisor-reward-advisor-parent-report/04-CONTEXT.md
+Last session: 2026-07-03T07:03:16.900Z
+Stopped at: Phase 04 Plan 01 (Reward Advisor) complete
+Resume file: .planning/phases/04-progress-advisor-reward-advisor-parent-report/04-02-PLAN.md

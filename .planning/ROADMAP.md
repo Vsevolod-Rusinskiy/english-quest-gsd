@@ -111,11 +111,11 @@ Plans:
   3. Reward events still get correct fixed amounts even when the Reward Advisor is down; when it's up, its suggested reason/praise text is only used if it matches a reward the core already decided to grant
   4. After the lesson, the parent sees a short report (exercises completed, correct count, struggling topics, review topics, rubles earned, one recommendation); if Parent Report Generator is unavailable, the same fields render via a template with no agent text
 
-**Plans**: 0/3 plans complete
+**Plans**: 1/3 plans executed
 Plans:
 **Wave 1**
 
-- [ ] 04-01-PLAN.md — Reward Advisor: live per-answer agent call folded into the existing exercise_attempt dispatch, cross-checked against already-granted reward reasons (REWARD-03/04)
+- [x] 04-01-PLAN.md — Reward Advisor: live per-answer agent call folded into the existing exercise_attempt dispatch, cross-checked against already-granted reward reasons (REWARD-03/04)
 
 **Wave 2** *(blocked on Wave 1 completion — shares store.ts/lessonEngine.ts)*
 
@@ -151,5 +151,5 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 | 1. Deterministic Core, Lesson Rendering & Persistence | 3/3 | Complete    | 2026-07-02 |
 | 2. Progress Tracking, Review Queue & Reward Engine | 3/3 | Complete    | 2026-07-02 |
 | 3. Agent Gateway, Answer Checker & Theory Tutor | 2/2 | Complete    | 2026-07-03 |
-| 4. Progress Advisor, Reward Advisor & Parent Report | 0/3 | Not started | - |
+| 4. Progress Advisor, Reward Advisor & Parent Report | 1/3 | In Progress|  |
 | 5. Kid-Friendly Visual Design | 0/TBD | Not started | - |
