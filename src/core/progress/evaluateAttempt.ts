@@ -5,7 +5,13 @@
 // exercise_attempt dispatch (Pitfall 3 — exactly one save/render per answer).
 import type { Exercise } from "../lesson/lessonSchema";
 import type { CheckResult } from "../answer-checking/checkTextInput";
-import type { ProgressState, TopicStat, RewardEvent } from "../state/progressSchema";
+import type {
+  ProgressState,
+  TopicStat,
+  RewardEvent,
+  WordStat,
+  ExerciseTypeStat,
+} from "../state/progressSchema";
 import { nextTopicStatus } from "./topicStatusMachine";
 import { enqueueReviewItems } from "./reviewQueue";
 import { computeRewardEvents } from "../rewards/rewardEngine";
@@ -15,6 +21,15 @@ export interface EvaluateAttemptResult {
   reviewQueueAdditions: string[];
   rewardEvents: RewardEvent[];
   nextCorrectStreak: number;
+  // Phase 4 Plan 02 (D-11/D-12, PERSONAL-01): per-word/per-exercise-type
+  // deltas for the Progress Advisor's input, computed the same call as the
+  // existing topicUpdates so LessonEngine folds everything into ONE dispatch.
+  wordUpdates: Record<string, WordStat>;
+  exerciseTypeUpdates: Record<string, ExerciseTypeStat>;
+  // Session-global counter mirroring nextCorrectStreak's shape but tracking
+  // consecutive INCORRECT answers (RESEARCH.md Open Question 1, resolved) —
+  // feeds the confidenceScore formula's errorsInARow.
+  nextErrorStreak: number;
 }
 
 const DEFAULT_TOPIC_STAT: TopicStat = {
@@ -23,6 +38,17 @@ const DEFAULT_TOPIC_STAT: TopicStat = {
   correct: 0,
   errors: 0,
   correctStreak: 0,
+};
+
+const DEFAULT_WORD_STAT: WordStat = {
+  attempts: 0,
+  correct: 0,
+  errors: 0,
+};
+
+const DEFAULT_EXERCISE_TYPE_STAT: ExerciseTypeStat = {
+  attempts: 0,
+  correct: 0,
 };
 
 export function evaluateAttempt(
@@ -74,6 +100,37 @@ export function evaluateAttempt(
     }
   }
 
+  // D-12/Pitfall 4 (THE critical case): loop ALL targetWords entries, never
+  // targetWords[0] only — the real eq-1a-ex019 matching exercise has 8.
+  // Mirrors the topicImpact loop's exact accumulator-first-fallback-to-state
+  // discipline (read from the in-progress accumulator first, falling back to
+  // the pre-dispatch state snapshot only on the word's first iteration) so a
+  // schema-legal duplicate word within one exercise's targetWords accumulates
+  // correctly instead of dropping the first occurrence.
+  const wordUpdates: Record<string, WordStat> = {};
+  for (const word of exercise.targetWords) {
+    const prev = wordUpdates[word] ?? state.wordStats[word] ?? DEFAULT_WORD_STAT;
+    wordUpdates[word] = {
+      attempts: prev.attempts + 1,
+      correct: prev.correct + (isCorrect ? 1 : 0),
+      errors: prev.errors + (isCorrect ? 0 : 1),
+    };
+  }
+
+  // exerciseTypeStats: a simple (non-looped) single-key update, same
+  // fallback-on-read convention as topicStats/wordStats (Pitfall 5).
+  const exerciseTypeUpdates: Record<string, ExerciseTypeStat> = {};
+  const prevTypeStat = state.exerciseTypeStats[exercise.type] ?? DEFAULT_EXERCISE_TYPE_STAT;
+  exerciseTypeUpdates[exercise.type] = {
+    attempts: prevTypeStat.attempts + 1,
+    correct: prevTypeStat.correct + (isCorrect ? 1 : 0),
+  };
+
+  // Session-global "consecutive incorrect" counter — mirrors
+  // computeRewardEvents' existing nextCorrectStreak computation exactly, but
+  // tracks the opposite direction (increments on incorrect, resets on correct).
+  const nextErrorStreak = isCorrect ? 0 : state.currentErrorStreak + 1;
+
   const { rewardEvents, nextCorrectStreak } = computeRewardEvents({
     exerciseId: exercise.exerciseId,
     isCorrect,
@@ -91,5 +148,8 @@ export function evaluateAttempt(
     reviewQueueAdditions: additionsOnly,
     rewardEvents,
     nextCorrectStreak,
+    wordUpdates,
+    exerciseTypeUpdates,
+    nextErrorStreak,
   };
 }

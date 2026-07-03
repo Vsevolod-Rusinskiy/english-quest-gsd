@@ -2,7 +2,13 @@ import type { ProgressState } from "./progressSchema";
 
 export function initialState(lessonId?: string): ProgressState {
   return {
-    studentProfile: { studentId: "primary" },
+    studentProfile: {
+      studentId: "primary",
+      confidenceScore: 0,
+      difficultyMode: "normal",
+      lastRecommendedFocus: null,
+      motivationSignals: [],
+    },
     lessonId,
     lessonHistory: [],
     exerciseStats: {},
@@ -17,5 +23,8 @@ export function initialState(lessonId?: string): ProgressState {
     reviewQueue: [],
     topicStats: {},
     currentCorrectStreak: 0,
+    wordStats: {},
+    exerciseTypeStats: {},
+    currentErrorStreak: 0,
   };
 }

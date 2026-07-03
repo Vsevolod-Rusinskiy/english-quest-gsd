@@ -1,6 +1,6 @@
 // In-memory StateStore with dispatch/subscribe, save-on-dispatch (D-03).
 // save() is called ONLY here — never from UI input listeners (Pitfall 3).
-import type { ProgressState, TopicStat, RewardEvent } from "./progressSchema";
+import type { ProgressState, TopicStat, RewardEvent, WordStat, ExerciseTypeStat } from "./progressSchema";
 import { save } from "./persistence";
 
 export type Action =
@@ -36,6 +36,15 @@ export type Action =
       reviewQueueAdditions: string[];
       rewardEvents: RewardEvent[];
       nextCorrectStreak: number;
+      // Phase 4 Plan 02 (PERSONAL-01, D-11/D-12): wordStats/exerciseTypeStats
+      // deltas fold into this SAME dispatch alongside topicUpdates — no new
+      // action type, same single-dispatch-per-answer invariant.
+      wordUpdates: Record<string, WordStat>;
+      exerciseTypeUpdates: Record<string, ExerciseTypeStat>;
+      // Session-global "consecutive incorrect" counter, mirrors
+      // nextCorrectStreak's exact shape/reset semantics (RESEARCH.md Open
+      // Question 1, resolved) — feeds the confidenceScore formula.
+      nextErrorStreak: number;
       // Phase 2 Plan 03 (PROGRESS-04, D-02): set when this answer was for the
       // CURRENT review-pass item — the reduce branch removes it from
       // reviewQueue as part of this SAME dispatch (dequeue whether correct
@@ -129,6 +138,9 @@ export class StateStore {
           rewardHistory: [...state.rewardHistory, ...action.rewardEvents],
           currentRewards: state.currentRewards + addedRewardTotal,
           currentCorrectStreak: action.nextCorrectStreak,
+          wordStats: { ...state.wordStats, ...action.wordUpdates },
+          exerciseTypeStats: { ...state.exerciseTypeStats, ...action.exerciseTypeUpdates },
+          currentErrorStreak: action.nextErrorStreak,
         };
       }
       case "advance_position":
