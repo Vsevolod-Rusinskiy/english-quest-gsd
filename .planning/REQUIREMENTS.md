@@ -25,8 +25,8 @@ Requirements for initial release (single lesson `Lesson-1A.json`). Each maps to 
 
 - [x] **CHECK-01**: Ядро нормализует текстовый ответ (нижний регистр, trim, схлопывание пробелов, удаление финальной пунктуации) и точно сравнивает с `acceptedAnswers`
 - [x] **CHECK-02**: Для `single-choice`/`matching`/`order-builder` ядро детерминированно сравнивает выбор/сборку с ожидаемым результатом без вызова агента
-- [ ] **CHECK-03**: При неоднозначном `text-input` ответе (нет точного совпадения) вызывается агент Answer Checker и возвращает вердикт и типизированную ошибку (`errorType`)
-- [ ] **CHECK-04**: При недоступности/сбое Answer Checker — один повтор, затем детерминированный fallback (строгое сравнение, `errorType: unknown`)
+- [x] **CHECK-03**: При неоднозначном `text-input` ответе (нет точного совпадения) вызывается агент Answer Checker и возвращает вердикт и типизированную ошибку (`errorType`)
+- [x] **CHECK-04**: При недоступности/сбое Answer Checker — один повтор, затем детерминированный fallback (строгое сравнение, `errorType: unknown`)
 
 ### Progress & Weak Topics (PROGRESS)
 
@@ -120,8 +120,8 @@ Populated during roadmap creation — see `.planning/ROADMAP.md`.
 | EXERCISE-05 | Phase 1 | Complete |
 | CHECK-01 | Phase 1 | Complete |
 | CHECK-02 | Phase 1 | Complete |
-| CHECK-03 | Phase 3 | Pending |
-| CHECK-04 | Phase 3 | Pending |
+| CHECK-03 | Phase 3 | Complete |
+| CHECK-04 | Phase 3 | Complete |
 | PROGRESS-01 | Phase 2 | Complete |
 | PROGRESS-02 | Phase 2 | Complete |
 | PROGRESS-03 | Phase 2 | Complete |
