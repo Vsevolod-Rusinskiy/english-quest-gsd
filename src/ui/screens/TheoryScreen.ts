@@ -49,11 +49,13 @@ export function renderTheoryScreen(options: TheoryScreenOptions): HTMLElement {
 
   const understoodButton = document.createElement("button");
   understoodButton.type = "button";
+  understoodButton.className = "theory-toggle";
   understoodButton.textContent = "Понятно";
   understoodButton.addEventListener("click", () => onUnderstoodChoice(true));
 
   const notUnderstoodButton = document.createElement("button");
   notUnderstoodButton.type = "button";
+  notUnderstoodButton.className = "theory-toggle";
   notUnderstoodButton.textContent = "Не понятно";
   notUnderstoodButton.addEventListener("click", () => onUnderstoodChoice(false));
 

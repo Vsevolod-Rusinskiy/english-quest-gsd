@@ -116,6 +116,14 @@ body {
   margin-top: var(--space-lg);
 }
 
+/* Theory toggle buttons (Понятно/Не понятно) — dedicated className so they
+   are structurally distinguishable from primary CTAs, but no visual nuance
+   beyond the base button rule is required (D-04/UI-SPEC): confirm the 44px
+   floor explicitly here, never the 52px CTA-only exception. */
+.theory-toggle {
+  min-height: 44px;
+}
+
 button {
   font-family: inherit;
   font-size: 14px;
