@@ -6,8 +6,14 @@ import { LessonEngine, type SessionEndResult } from "./core/lessonEngine";
 import type { ProgressState } from "./core/state/progressSchema";
 import { renderTheoryScreen, type TheoryExplanation } from "./ui/screens/TheoryScreen";
 import { renderExerciseScreen, renderFeedbackBanner } from "./ui/screens/ExerciseScreen";
-import { renderProgressIndicator, renderReviewProgressIndicator } from "./ui/components/ProgressIndicator";
+import {
+  renderProgressIndicator,
+  renderReviewProgressIndicator,
+  renderProgressIndicatorComplete,
+} from "./ui/components/ProgressIndicator";
 import { renderSessionEndScreen } from "./ui/screens/SessionEndScreen";
+import { renderThinkingIndicator } from "./ui/components/ThinkingIndicator";
+import { renderRewardToast } from "./ui/components/RewardToast";
 
 export async function mountApp(root: HTMLElement): Promise<void> {
   // Halt on failure per D-06 — loadLesson renders the FatalError state itself.
@@ -54,6 +60,14 @@ export async function mountApp(root: HTMLElement): Promise<void> {
     title.textContent = lesson.unitTitle;
     topBar.appendChild(title);
 
+    // Ruble balance chip (UI-02): live top-bar read of state.currentRewards —
+    // same field SessionEndScreen already reads (line ~263 below), a second
+    // read site, no new state.
+    const rubleChip = document.createElement("span");
+    rubleChip.className = "ruble-balance";
+    rubleChip.textContent = `${state.currentRewards} ₽`;
+    topBar.appendChild(rubleChip);
+
     if (state.currentPosition.theoryUnderstood) {
       if (engine.isReviewPass()) {
         // Capture the review-pass total the first time it's observed, before
@@ -65,12 +79,23 @@ export async function mountApp(root: HTMLElement): Promise<void> {
         const consumed = reviewPassTotal - state.reviewQueue.length;
         topBar.appendChild(renderReviewProgressIndicator(consumed + 1, reviewPassTotal));
       } else {
-        topBar.appendChild(
-          renderProgressIndicator(
-            state.currentPosition.currentExerciseIndex + 1,
-            engine.totalExercises,
-          ),
-        );
+        // D-12 Gap 2 fix: reuse engine.getCurrentExercise() — the SAME
+        // completion signal the main-content block computes below — as the
+        // single "is the main sequence complete" check, instead of
+        // unconditionally computing currentExerciseIndex + 1 (which
+        // overshoots to totalExercises + 1 once the index has already
+        // advanced past the last exercise on the final correct answer).
+        const topBarExercise = engine.getCurrentExercise();
+        if (!topBarExercise) {
+          topBar.appendChild(renderProgressIndicatorComplete(engine.totalExercises));
+        } else {
+          topBar.appendChild(
+            renderProgressIndicator(
+              state.currentPosition.currentExerciseIndex + 1,
+              engine.totalExercises,
+            ),
+          );
+        }
       }
     }
     root.appendChild(topBar);
@@ -93,12 +118,17 @@ export async function mountApp(root: HTMLElement): Promise<void> {
           // dispatch can race in during this window.
           const buttons = theoryNode.querySelectorAll<HTMLButtonElement>(".theory-buttons button");
           buttons.forEach((btn) => (btn.disabled = true));
+          // Phase 5 (D-09): shared thinking-indicator, same component reused
+          // at all 3 agent-wait call sites.
+          const thinkingEl = renderThinkingIndicator();
+          theoryNode.appendChild(thinkingEl);
 
           let result;
           try {
             unsubscribeRender();
             result = await engine.handleTheoryStep(understood);
           } finally {
+            thinkingEl.remove();
             unsubscribeRender = store.subscribe(render);
             buttons.forEach((btn) => (btn.disabled = false));
           }
@@ -136,6 +166,19 @@ export async function mountApp(root: HTMLElement): Promise<void> {
               ".submit-row button",
             );
             if (submitButton) submitButton.disabled = true;
+            // Phase 5 (D-09): shared thinking-indicator, same component
+            // reused at all 3 agent-wait call sites.
+            const thinkingEl = renderThinkingIndicator();
+            exerciseNode.appendChild(thinkingEl);
+
+            // Phase 5 (D-10, 05-PATTERNS.md correction — HandleAnswerResult
+            // has NO rewardAmount field): capture currentRewards immediately
+            // before the try block so the reward-toast trigger below can
+            // diff against the post-await value. Safe here because
+            // handleAnswer is the ONLY call site that can change
+            // currentRewards between these two reads within this single
+            // dispatch window (Pitfall 3's established invariant).
+            const rewardsBefore = store.getState().currentRewards;
 
             let result;
             try {
@@ -150,7 +193,15 @@ export async function mountApp(root: HTMLElement): Promise<void> {
               // theory/submit handlers (Pitfall 3).
               unsubscribeRender();
               result = await engine.handleAnswer(exercise.exerciseId, answer);
+
+              const rewardsDelta = store.getState().currentRewards - rewardsBefore;
+              if (rewardsDelta > 0) {
+                const toastEl = renderRewardToast(rewardsDelta);
+                document.body.appendChild(toastEl);
+                setTimeout(() => toastEl.remove(), 1950);
+              }
             } finally {
+              thinkingEl.remove();
               unsubscribeRender = store.subscribe(render);
               if (submitButton) submitButton.disabled = false;
             }
@@ -172,6 +223,12 @@ export async function mountApp(root: HTMLElement): Promise<void> {
               // Main-pass correct answer advances currentExerciseIndex — a
               // DIFFERENT exercise is now current, so the DOM must be rebuilt.
               render(store.getState());
+              // D-12 Gap 1 fix: this render() is the ONE render `feedback`
+              // was captured for (feedbackAppliesHere's atIndex === index - 1
+              // clause matches it) — null it out immediately after so no
+              // LATER render (not caused by a new submit) can show this
+              // stale banner again.
+              feedback = null;
             } else if (inReviewPass && result.isCorrect) {
               // Correct review-pass answers still advance automatically — no
               // extra confirmation step needed, matching prior behavior.
@@ -180,6 +237,9 @@ export async function mountApp(root: HTMLElement): Promise<void> {
               // feedbackAppliesHere check has no matching screen to attach
               // a banner to for a review-pass advance, same as before.)
               render(store.getState());
+              // D-12 Gap 1 fix: same one-shot consumption as the main-pass
+              // correct branch above.
+              feedback = null;
             } else if (inReviewPass) {
               // Incorrect review-pass answer: the item already dequeued
               // (dispatch above is unconditional per D-02), but the DOM must
@@ -272,12 +332,17 @@ export async function mountApp(root: HTMLElement): Promise<void> {
             // Same unsubscribe/thinking-cue/resubscribe shape as onSubmit/
             // onUnderstoodChoice (D-08's session-end thinking-cue).
             showResultsButton.disabled = true;
+            // Phase 5 (D-09): shared thinking-indicator, same component
+            // reused at all 3 agent-wait call sites.
+            const thinkingEl = renderThinkingIndicator();
+            main.appendChild(thinkingEl);
 
             let result: SessionEndResult;
             try {
               unsubscribeRender();
               result = await engine.handleSessionEnd();
             } finally {
+              thinkingEl.remove();
               unsubscribeRender = store.subscribe(render);
               showResultsButton.disabled = false;
             }

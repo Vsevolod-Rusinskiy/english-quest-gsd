@@ -1,21 +1,29 @@
-/* Phase 1 baseline treatment ONLY — functional, minimally styled.
-   Full kid-friendly / Roblox-inspired visual identity is Phase 5's job.
-   See 01-UI-SPEC.md for the design contract this file implements literally. */
+/* Phase 5: kid-friendly, blocky, bright visual identity (Roblox-inspired,
+   no Roblox branding/assets). See 05-UI-SPEC.md for the design contract
+   this file implements literally — token VALUES changed, token NAMES and
+   structural roles carried forward unchanged from Phase 1. */
 
 :root {
-  /* Spacing scale (multiples of 4) */
+  /* Spacing scale (multiples of 4/8) */
   --space-xs: 4px;
   --space-sm: 8px;
   --space-md: 16px;
   --space-lg: 24px;
   --space-xl: 32px;
+  --space-2xl: 48px;
+  --space-3xl: 64px;
 
-  /* Color — functional only, no brand palette */
-  --color-bg: #ffffff;
-  --color-bg-secondary: #f3f4f6;
-  --color-accent: #2563eb;
-  --color-error: #dc2626;
-  --color-success: #16a34a;
+  /* Color — bright, saturated, primary-color-forward (D-01/D-02/D-03) */
+  --color-bg: #fff8e7;
+  --color-bg-secondary: #dceeff;
+  --color-accent: #2e7df7;
+  --color-accent-dark: #1e5fc7;
+  --color-error: #e8544a;
+  --color-error-dark: #c23b32;
+  --color-success: #3dbb5e;
+  --color-success-dark: #2c9647;
+  --color-highlight: #ffc93c;
+  --color-highlight-dark: #d9a615;
   --color-text: #111827;
 }
 
@@ -43,22 +51,23 @@ body {
   margin: 0 auto;
 }
 
-/* Typography roles per UI-SPEC */
+/* Typography roles per 05-UI-SPEC.md — sizes/weights bumped, Phase 1's
+   ratios/roles kept intact (D-08 floor respected). */
 .heading {
-  font-size: 20px;
-  font-weight: 600;
+  font-size: 22px;
+  font-weight: 700;
   line-height: 1.2;
 }
 
 .display {
-  font-size: 28px;
-  font-weight: 600;
+  font-size: 32px;
+  font-weight: 700;
   line-height: 1.2;
 }
 
 .label {
   font-size: 14px;
-  font-weight: 600;
+  font-weight: 700;
   line-height: 1.2;
 }
 
@@ -70,6 +79,17 @@ body {
   gap: var(--space-md);
   padding: var(--space-md);
   background: var(--color-bg-secondary);
+}
+
+/* Ruble balance chip (UI-02, NEW) */
+.ruble-balance {
+  display: inline-flex;
+  align-items: center;
+  background: var(--color-highlight);
+  border: 3px solid var(--color-highlight-dark);
+  border-radius: 14px;
+  padding: var(--space-xs) var(--space-sm);
+  font-weight: 700;
 }
 
 /* Lesson title block */
@@ -86,7 +106,7 @@ body {
 .theory-screen {
   background: var(--color-bg-secondary);
   padding: var(--space-lg);
-  border-radius: 8px;
+  border-radius: 14px;
 }
 
 .theory-buttons {
@@ -98,13 +118,13 @@ body {
 button {
   font-family: inherit;
   font-size: 14px;
-  font-weight: 600;
+  font-weight: 700;
   line-height: 1.2;
   min-height: 44px;
   min-width: 44px;
   padding: var(--space-sm) var(--space-md);
   border: none;
-  border-radius: 6px;
+  border-radius: 14px;
   background: var(--color-bg-secondary);
   color: var(--color-text);
   cursor: pointer;
@@ -121,11 +141,35 @@ button:disabled {
   cursor: not-allowed;
 }
 
+/* Primary CTA exception (D-06): "Проверить" / "Показать итоги" /
+   session-end continue only — a larger touch target + the "chunky 3D
+   button" zero-blur offset-shadow technique (05-UI-SPEC.md Shape
+   Language). Scoped narrowly so option chips/theory toggles keep the
+   44px floor (RESEARCH.md Pitfall 3). */
+.submit-row button.accent,
+.show-results-button,
+.continue-button {
+  min-height: 52px;
+  padding: 0 var(--space-lg);
+  border: 3px solid var(--color-accent-dark);
+  box-shadow: 0 4px 0 var(--color-accent-dark);
+  transition:
+    transform 100ms ease-out,
+    box-shadow 100ms ease-out;
+}
+
+.submit-row button.accent:active,
+.show-results-button:active,
+.continue-button:active {
+  transform: translateY(4px);
+  box-shadow: 0 0 0 var(--color-accent-dark);
+}
+
 /* Exercise task card */
 .task-card {
   background: var(--color-bg);
   border: 1px solid var(--color-bg-secondary);
-  border-radius: 8px;
+  border-radius: 14px;
   padding: var(--space-lg);
 }
 
@@ -137,7 +181,7 @@ button:disabled {
   width: 100%;
   margin: var(--space-md) 0;
   border: 1px solid var(--color-bg-secondary);
-  border-radius: 6px;
+  border-radius: 14px;
 }
 
 .submit-row {
@@ -148,18 +192,121 @@ button:disabled {
 .feedback-banner {
   margin-top: var(--space-md);
   padding: var(--space-md);
-  border-radius: 6px;
-  border: 2px solid transparent;
+  border-radius: 14px;
+  border: 3px solid transparent;
 }
 
 .feedback-banner.correct {
   border-color: var(--color-success);
   color: var(--color-success);
+  animation: bounce-in 350ms ease-out;
 }
 
 .feedback-banner.incorrect {
   border-color: var(--color-error);
   color: var(--color-error);
+  animation: gentle-shake 300ms ease-in-out;
+}
+
+@keyframes bounce-in {
+  0% {
+    transform: scale(0.9);
+  }
+  60% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes gentle-shake {
+  0% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-4px);
+  }
+  50% {
+    transform: translateX(4px);
+  }
+  75% {
+    transform: translateX(-2px);
+  }
+  100% {
+    transform: translateX(0);
+  }
+}
+
+/* Shared thinking-indicator (D-09) — one component, reused at all 3
+   agent-wait call sites in main.ts. */
+.thinking-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  margin-top: var(--space-sm);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-text);
+  animation: pulse 1000ms ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0% {
+    opacity: 0.4;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.4;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .thinking-indicator {
+    animation: none;
+    opacity: 0.7;
+  }
+}
+
+/* Reward toast (D-10) — brief celebration of an already-decided reward
+   event, never new reward logic. */
+.reward-toast {
+  position: fixed;
+  bottom: var(--space-2xl);
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--color-highlight);
+  border: 3px solid var(--color-highlight-dark);
+  border-radius: 14px;
+  padding: var(--space-sm) var(--space-lg);
+  font-weight: 700;
+  animation: reward-toast-in 250ms ease-out;
+}
+
+@keyframes reward-toast-in {
+  from {
+    transform: translateX(-50%) translateY(16px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Session-end hero spacing (D-11/UI-SPEC's "hero section" note) —
+   activates --space-2xl/--space-3xl for the celebratory lesson-complete
+   moment. SessionEndScreen.ts's structure is unchanged, only this CSS
+   rule is new. */
+.session-end-screen {
+  padding-top: var(--space-3xl);
+}
+
+.session-end-screen .child-section,
+.session-end-screen .parent-section {
+  padding: var(--space-2xl) 0;
 }
 
 /* Fatal error screen (D-06) */
@@ -169,7 +316,7 @@ button:disabled {
 }
 
 .fatal-error h1 {
-  font-size: 20px;
-  font-weight: 600;
+  font-size: 22px;
+  font-weight: 700;
   color: var(--color-error);
 }

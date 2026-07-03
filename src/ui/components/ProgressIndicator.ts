@@ -17,3 +17,13 @@ export function renderReviewProgressIndicator(current: number, total: number): H
   el.textContent = `Повторение: ${current} из ${total}`;
   return el;
 }
+
+// Completion variant (Phase 5, D-12 Gap 2 fix): accepts only `total` — no
+// current/overshoot risk by construction, never renders "N+1 из N" at
+// lesson-complete.
+export function renderProgressIndicatorComplete(total: number): HTMLElement {
+  const el = document.createElement("div");
+  el.className = "label progress-indicator progress-indicator-complete";
+  el.textContent = `Задание ${total} из ${total}`;
+  return el;
+}
