@@ -35,6 +35,7 @@ export interface DifficultyGuardrailSignals {
   recentErrors: number;
 }
 
+const ORDER: DifficultyMode[] = ["easy", "normal", "challenge"];
 const RANK: Record<DifficultyMode, number> = { easy: 0, normal: 1, challenge: 2 };
 
 export function applyDifficultyGuardrails(
@@ -56,14 +57,12 @@ export function applyDifficultyGuardrails(
     if (signals.correctStreak < 3) {
       return current;
     }
-    const nextRank = currentRank + 1;
-    return (Object.keys(RANK) as DifficultyMode[]).find((mode) => RANK[mode] === nextRank)!;
+    return ORDER[currentRank + 1];
   }
 
   // Downward: gate is 2-recent-errors (rule c). Cap to exactly one step.
   if (signals.recentErrors < 2) {
     return current;
   }
-  const nextRank = currentRank - 1;
-  return (Object.keys(RANK) as DifficultyMode[]).find((mode) => RANK[mode] === nextRank)!;
+  return ORDER[currentRank - 1];
 }

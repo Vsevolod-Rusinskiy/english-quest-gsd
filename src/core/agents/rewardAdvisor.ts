@@ -68,9 +68,14 @@ export async function callRewardAdvisor(input: RewardAdvisorInput): Promise<Rewa
   if (result.source === "agent") {
     // UNFILTERED against rewardEvents — the cross-check against actually-
     // granted reasons happens in lessonEngine.ts (Task 2), not here.
+    // An empty/whitespace-only celebrationRu from a genuine agent response
+    // is normalized to undefined, same as "no praise" — otherwise a caller
+    // using `praiseRu ?? fallback` would treat "" as present (only null/
+    // undefined fall through `??`) and could render an empty praise bubble.
+    const celebrationRu = result.data.celebrationRu.trim().length > 0 ? result.data.celebrationRu : undefined;
     return {
       suggestedReasons: result.data.suggestedReasons,
-      celebrationRu: result.data.celebrationRu,
+      celebrationRu,
       source: "agent",
     };
   }

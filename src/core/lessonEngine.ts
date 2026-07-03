@@ -382,7 +382,17 @@ export class LessonEngine {
 
     // Step 6: Parent Report snapshot.
     const exercisesCompleted = Object.keys(state.exerciseStats).length;
+    // Deliberately "currently correct" (final-outcome-per-exercise), not a
+    // lifetime sum of every correct attempt — a parent reading "N верно"
+    // expects "N exercises are correctly answered by the end of the
+    // session," not an inflated count of every retry that happened to land
+    // right along the way.
     const correctCount = exerciseStatValues.filter((s) => s.lastAttemptCorrect).length;
+    // Lifetime-cumulative (topicStats persists across sessions), not
+    // session-scoped — a topic can appear here even if untouched this
+    // session, since there is no session-start snapshot to diff against.
+    // Acceptable for this single-lesson MVP; revisit if multi-lesson history
+    // makes stale struggling-topic reports confusing.
     const strugglingTopics = Object.entries(state.topicStats)
       .filter(([, stat]) => stat.status === "needs_review")
       .map(([topic]) => topic);

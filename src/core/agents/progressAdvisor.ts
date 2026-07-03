@@ -61,6 +61,11 @@ export async function callProgressAdvisor(input: ProgressAdvisorInput): Promise<
     recommendedFocus: input.fallbackRecommendedFocus,
     suggestedDifficulty: input.currentDifficultyMode,
     reviewSuggestions: [],
+    // Fixed, content-free encouragement — carries no personalized claim (no
+    // topic/score/recommendation is asserted), so unlike recommendedFocus or
+    // a parent report this doesn't violate PERSONAL-03's "never fabricate a
+    // recommendation" rule; it's exempt the same way a generic "OK" banner
+    // would be.
     motivationalMessageRu: "Ты молодец, продолжай в том же духе!",
     sessionAdvice: "continue",
   };

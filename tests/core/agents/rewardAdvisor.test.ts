@@ -59,6 +59,26 @@ describe("callRewardAdvisor (REWARD-03, REWARD-04, RELY-01, RELY-02)", () => {
     expect(result.celebrationRu).toBe("Отлично, с первой попытки!");
   });
 
+  it("agent success with empty-string celebrationRu -> normalized to undefined, not passed through as a rendered empty praise (WR-03)", async () => {
+    const create = createMock().mockResolvedValueOnce(
+      toolUseMessage({
+        suggestedReasons: ["first_try_correct"],
+        celebrationRu: "",
+      }),
+    );
+
+    const result = await callRewardAdvisor({
+      rewardEvents: sampleRewardEvents,
+      attemptNumber: 1,
+      rewardHistory: [],
+      currentCorrectStreak: 0,
+      client: fakeClient(create),
+    });
+
+    expect(result.source).toBe("agent");
+    expect(result.celebrationRu).toBeUndefined();
+  });
+
   it("agent failure (both attempts) -> resolves to {suggestedReasons: [], celebrationRu: undefined, source: 'core'}, never throws (REWARD-04)", async () => {
     const create = createMock().mockRejectedValue(new Error("network down"));
 
