@@ -38,6 +38,35 @@ describe("persistence", () => {
     expect(load()).toEqual(initialState());
   });
 
+  it("returns initialState() for a pre-Phase-4-shaped blob missing wordStats/exerciseTypeStats/currentErrorStreak/new studentProfile fields (RESEARCH.md Pitfall 1)", () => {
+    const phase3Blob = {
+      studentProfile: { studentId: "primary" },
+      lessonId: "lesson-1a",
+      lessonHistory: [],
+      exerciseStats: {},
+      currentPosition: {
+        theoryUnderstood: true,
+        currentExerciseIndex: 3,
+        reviewPassIndex: 0,
+        simplifyRoundCount: 0,
+      },
+      currentRewards: 5,
+      rewardHistory: [],
+      reviewQueue: [],
+      topicStats: {},
+      currentCorrectStreak: 0,
+      // wordStats, exerciseTypeStats, currentErrorStreak deliberately absent
+      // (Phase 3 shape) — studentProfile also deliberately missing
+      // confidenceScore/difficultyMode/lastRecommendedFocus/motivationSignals.
+    };
+    localStorage.setItem(
+      PROGRESS_KEY,
+      JSON.stringify({ schemaVersion: 1, data: phase3Blob }),
+    );
+    const loaded = load("lesson-1a");
+    expect(loaded).toEqual(initialState("lesson-1a"));
+  });
+
   it("returns initialState() when schemaVersion does not match", () => {
     localStorage.setItem(
       PROGRESS_KEY,

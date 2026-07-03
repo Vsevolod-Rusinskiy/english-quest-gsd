@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
-import { ExerciseSchema, type Exercise } from "../../../src/core/lesson/lessonSchema";
+import { ExerciseSchema, LessonSchema, type Exercise } from "../../../src/core/lesson/lessonSchema";
 import { evaluateAttempt } from "../../../src/core/progress/evaluateAttempt";
 import { initialState } from "../../../src/core/state/initialState";
 import type { ProgressState } from "../../../src/core/state/progressSchema";
@@ -10,6 +10,14 @@ const multiTopicFixturePath = resolve(process.cwd(), "tests/fixtures/multi-topic
 const multiTopicExercise = ExerciseSchema.parse(
   JSON.parse(readFileSync(multiTopicFixturePath, "utf-8")),
 ) as Exercise;
+
+const lessonPath = resolve(process.cwd(), "public/Lesson-1A.json");
+const realLesson = LessonSchema.parse(JSON.parse(readFileSync(lessonPath, "utf-8")));
+const realExercises = realLesson.sections.flatMap((s) => s.exercises);
+// eq-1a-ex019: the real 8-word matching exercise (Pitfall 4 — THE critical case).
+const eightWordExercise = realExercises.find((e) => e.exerciseId === "eq-1a-ex019")!;
+// eq-1a-ex010: the real 1-word text-input exercise (targetWords: ["meat"]).
+const oneWordExercise = realExercises.find((e) => e.exerciseId === "eq-1a-ex010")!;
 
 const singleTopicExercise: Exercise = {
   exerciseId: "ex-single",
@@ -43,7 +51,29 @@ const duplicateTopicExercise: Exercise = {
   answerCheck: { mode: "normalizedText", correctAnswers: ["yes"], acceptedAnswers: ["yes"] },
 };
 
-const allExercises: Exercise[] = [multiTopicExercise, singleTopicExercise, duplicateTopicExercise];
+const duplicateWordExercise: Exercise = {
+  exerciseId: "ex-dup-word",
+  catalogRef: "cat-ref-dup-word",
+  catalogItemRef: "1",
+  sourceRef: { sourceBook: "Workbook", unit: "1A", page: "1", exerciseNumber: "1" },
+  type: "text-input",
+  skill: "vocabulary",
+  prompt: "test prompt",
+  // D-12/Pitfall 4 (Test 6): nothing in the schema forbids a duplicate word
+  // within a single exercise's targetWords, mirroring WR-01's topicImpact case.
+  targetWords: ["bread", "bread"],
+  targetGrammar: [],
+  hint: { firstError: "hint1", parentExplanation: "explain" },
+  topicImpact: [],
+  answerCheck: { mode: "normalizedText", correctAnswers: ["yes"], acceptedAnswers: ["yes"] },
+};
+
+const allExercises: Exercise[] = [
+  multiTopicExercise,
+  singleTopicExercise,
+  duplicateTopicExercise,
+  duplicateWordExercise,
+];
 
 describe("evaluateAttempt", () => {
   it("D-01 topic loop: an incorrect answer on a 2-topicImpact exercise increments errors on BOTH topics", () => {
@@ -214,5 +244,102 @@ describe("evaluateAttempt", () => {
     // the second iteration re-read the same stale pre-dispatch snapshot.
     expect(delta.topicUpdates["grammar_x"].attempts).toBe(2);
     expect(delta.topicUpdates["grammar_x"].errors).toBe(2);
+  });
+
+  it("Pitfall 4 (THE critical case): the real 8-word eq-1a-ex019 matching exercise updates wordUpdates for ALL 8 targetWords, never just targetWords[0]", () => {
+    const state: ProgressState = initialState();
+
+    const delta = evaluateAttempt(
+      state,
+      eightWordExercise,
+      { isCorrect: true, source: "core" },
+      0,
+      allExercises,
+    );
+
+    const expectedWords = [
+      "knife",
+      "fork",
+      "napkin",
+      "glass",
+      "prawns",
+      "fried eggs",
+      "strawberries",
+      "salt and pepper",
+    ];
+    expect(Object.keys(delta.wordUpdates)).toEqual(expect.arrayContaining(expectedWords));
+    expect(Object.keys(delta.wordUpdates)).toHaveLength(8);
+    for (const word of expectedWords) {
+      expect(delta.wordUpdates[word]).toEqual({ attempts: 1, correct: 1, errors: 0 });
+    }
+  });
+
+  it("evaluateAttempt wordStats, single-word case: the real 1-word eq-1a-ex010 exercise produces exactly one wordUpdates entry", () => {
+    const state: ProgressState = initialState();
+
+    const delta = evaluateAttempt(
+      state,
+      oneWordExercise,
+      { isCorrect: false, source: "core" },
+      0,
+      allExercises,
+    );
+
+    expect(Object.keys(delta.wordUpdates)).toEqual(["meat"]);
+    expect(delta.wordUpdates["meat"]).toEqual({ attempts: 1, correct: 0, errors: 1 });
+  });
+
+  it("evaluateAttempt exerciseTypeStats: a text-input exercise attempt increments exerciseTypeUpdates['text-input'].attempts/.correct relative to pre-existing state", () => {
+    let state: ProgressState = initialState();
+    state = {
+      ...state,
+      exerciseTypeStats: { "text-input": { attempts: 3, correct: 2 } },
+    };
+
+    const delta = evaluateAttempt(
+      state,
+      singleTopicExercise, // type: "text-input"
+      { isCorrect: true, source: "core" },
+      0,
+      allExercises,
+    );
+
+    expect(delta.exerciseTypeUpdates["text-input"]).toEqual({ attempts: 4, correct: 3 });
+  });
+
+  it("accumulator-first-fallback-to-state discipline (D-12): a duplicate word within one exercise's targetWords accumulates both increments instead of dropping the first", () => {
+    const state: ProgressState = initialState();
+
+    const delta = evaluateAttempt(
+      state,
+      duplicateWordExercise,
+      { isCorrect: false, source: "core" },
+      0,
+      allExercises,
+    );
+
+    expect(delta.wordUpdates["bread"]).toEqual({ attempts: 2, correct: 0, errors: 2 });
+  });
+
+  it("evaluateAttempt returns nextErrorStreak: increments on incorrect, resets to 0 on correct (mirrors nextCorrectStreak)", () => {
+    const state: ProgressState = { ...initialState(), currentErrorStreak: 1 };
+
+    const incorrectDelta = evaluateAttempt(
+      state,
+      singleTopicExercise,
+      { isCorrect: false, source: "core" },
+      0,
+      allExercises,
+    );
+    expect(incorrectDelta.nextErrorStreak).toBe(2);
+
+    const correctDelta = evaluateAttempt(
+      state,
+      singleTopicExercise,
+      { isCorrect: true, source: "core" },
+      0,
+      allExercises,
+    );
+    expect(correctDelta.nextErrorStreak).toBe(0);
   });
 });

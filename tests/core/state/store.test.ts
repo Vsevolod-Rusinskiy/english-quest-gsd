@@ -47,6 +47,9 @@ describe("StateStore.reduce — enriched exercise_attempt (Pitfall 3)", () => {
       reviewQueueAdditions: ["eq-1a-ex002"],
       rewardEvents,
       nextCorrectStreak: 1,
+      wordUpdates: {},
+      exerciseTypeUpdates: {},
+      nextErrorStreak: 0,
       source: "core",
       agentFailed: false,
     });
@@ -79,6 +82,9 @@ describe("StateStore.reduce — enriched exercise_attempt (Pitfall 3)", () => {
       reviewQueueAdditions: [],
       rewardEvents: [],
       nextCorrectStreak: 0,
+      wordUpdates: {},
+      exerciseTypeUpdates: {},
+      nextErrorStreak: 1,
       source: "core",
       agentFailed: false,
     });
@@ -98,6 +104,9 @@ describe("StateStore.reduce — enriched exercise_attempt (Pitfall 3)", () => {
       reviewQueueAdditions: ["eq-1a-ex002", "eq-1a-ex003"],
       rewardEvents: [],
       nextCorrectStreak: 0,
+      wordUpdates: {},
+      exerciseTypeUpdates: {},
+      nextErrorStreak: 1,
       source: "core",
       agentFailed: false,
     });
@@ -119,6 +128,9 @@ describe("StateStore.reduce — enriched exercise_attempt (Pitfall 3)", () => {
       reviewQueueAdditions: [],
       rewardEvents: [],
       nextCorrectStreak: 0,
+      wordUpdates: {},
+      exerciseTypeUpdates: {},
+      nextErrorStreak: 1,
       source: "agent",
       agentFailed: true,
     });
@@ -136,6 +148,9 @@ describe("StateStore.reduce — enriched exercise_attempt (Pitfall 3)", () => {
       reviewQueueAdditions: [],
       rewardEvents: [],
       nextCorrectStreak: 1,
+      wordUpdates: {},
+      exerciseTypeUpdates: {},
+      nextErrorStreak: 0,
       source: "core",
       agentFailed: false,
     });
