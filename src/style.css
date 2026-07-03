@@ -21,7 +21,10 @@
   --color-error: #e8544a;
   --color-error-dark: #c23b32;
   --color-success: #3dbb5e;
-  --color-success-dark: #2c9647;
+  /* CR-01 fix: darkened from #2c9647 (3.57:1 on --color-bg, fails WCAG AA)
+     to hit 4.70:1 — used for feedback-banner TEXT specifically; the
+     brighter --color-success stays for borders/backgrounds. */
+  --color-success-dark: #238038;
   --color-highlight: #ffc93c;
   --color-highlight-dark: #d9a615;
   --color-text: #111827;
@@ -141,7 +144,9 @@ button {
 
 button.accent,
 button.selected {
-  background: var(--color-accent);
+  /* WR-01: --color-accent (#2e7df7) only gives white text 3.89:1, failing
+     WCAG AA for 14px bold — --color-accent-dark hits 5.97:1. */
+  background: var(--color-accent-dark);
   color: #ffffff;
 }
 
@@ -236,13 +241,15 @@ button:disabled {
 
 .feedback-banner.correct {
   border-color: var(--color-success);
-  color: var(--color-success);
+  /* CR-01: text uses the -dark variant for WCAG AA contrast (4.5:1+); the
+     brighter --color-success stays on the border only. */
+  color: var(--color-success-dark);
   animation: bounce-in 350ms ease-out;
 }
 
 .feedback-banner.incorrect {
   border-color: var(--color-error);
-  color: var(--color-error);
+  color: var(--color-error-dark);
   animation: gentle-shake 300ms ease-in-out;
 }
 

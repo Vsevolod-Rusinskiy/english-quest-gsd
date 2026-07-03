@@ -255,4 +255,34 @@ describe("main.ts render()/onSubmit (Phase 5 Plan 01)", () => {
     expect(toast).toBeTruthy();
     expect(toast?.textContent).toBe(`+${delta} ₽`);
   });
+
+  // Test F (WR-02 gap fix): praiseRu wiring end-to-end through a real
+  // handleAnswer() call — not just FeedbackBanner.test.ts's isolated
+  // hand-passed-string unit test. Mocks callRewardAdvisor to return a
+  // source:"agent" response whose suggestedReasons actually matches a
+  // reward event the first exercise's first-try-correct answer grants
+  // (honest_attempt + first_try_correct), proving the cross-check gate in
+  // lessonEngine.ts lets a genuinely-granted reason through to the DOM.
+  it("renders Reward Advisor's praiseRu in the feedback banner when its suggested reason matches an actually-granted reward (WR-02)", async () => {
+    rewardAdvisorSpy.mockResolvedValue({
+      suggestedReasons: ["first_try_correct"],
+      celebrationRu: "Отличная работа с первой попытки!",
+      source: "agent",
+    });
+
+    await mountApp(root);
+    await advanceThroughTheory();
+
+    const firstExercise = allExercises[0];
+    const input = root.querySelector('input[type="text"]') as HTMLInputElement;
+    input.value = firstExercise.answerCheck.correctAnswers[0];
+    input.dispatchEvent(new Event("input"));
+    submitButton().click();
+
+    await vi.waitFor(() => expect(root.textContent).toContain("Задание 2 из 19"));
+
+    const praise = root.querySelector(".praise-text");
+    expect(praise).toBeTruthy();
+    expect(praise?.textContent).toBe("Отличная работа с первой попытки!");
+  });
 });

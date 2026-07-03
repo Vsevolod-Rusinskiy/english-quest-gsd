@@ -267,7 +267,14 @@ export async function mountApp(root: HTMLElement): Promise<void> {
               continueButton.type = "button";
               continueButton.className = "continue-button";
               continueButton.textContent = "Продолжить";
-              continueButton.addEventListener("click", () => render(store.getState()));
+              continueButton.addEventListener("click", () => {
+                // WR-03: null feedback here too, matching the other 3
+                // consumption sites' "null right after use" invariant —
+                // defense-in-depth against a future review-queue change
+                // that could re-present this exerciseId immediately.
+                feedback = null;
+                render(store.getState());
+              });
               main.appendChild(continueButton);
             } else {
               // WR-03: incorrect main-pass answer keeps the SAME exercise on
