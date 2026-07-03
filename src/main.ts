@@ -4,7 +4,7 @@ import { load as loadProgress } from "./core/state/persistence";
 import { StateStore } from "./core/state/store";
 import { LessonEngine } from "./core/lessonEngine";
 import type { ProgressState } from "./core/state/progressSchema";
-import { renderTheoryScreen } from "./ui/screens/TheoryScreen";
+import { renderTheoryScreen, type TheoryExplanation } from "./ui/screens/TheoryScreen";
 import { renderExerciseScreen, renderFeedbackBanner } from "./ui/screens/ExerciseScreen";
 import { renderProgressIndicator, renderReviewProgressIndicator } from "./ui/components/ProgressIndicator";
 
@@ -22,6 +22,12 @@ export async function mountApp(root: HTMLElement): Promise<void> {
   // later, not-yet-answered exercise.
   let feedback: { atIndex: number; exerciseId: string; isCorrect: boolean; hint?: string } | null =
     null;
+
+  // Phase 3 Plan 02 (THEORY-03, D-11, RESEARCH.md Open Question 2): the
+  // currently-active theory explanation text — transient/in-memory, NOT
+  // persisted (only simplifyRoundCount lives in state). null on the initial
+  // pre-simplify view (TheoryScreen falls back to explanationLevels[0]).
+  let currentExplanation: TheoryExplanation | null = null;
 
   // Review-pass progress-indicator denominator (PROGRESS-04, D-02, T-02-05):
   // reviewQueue shrinks as items dequeue, so the total is captured once, the
@@ -65,14 +71,35 @@ export async function mountApp(root: HTMLElement): Promise<void> {
     main.className = "main-content";
 
     if (!state.currentPosition.theoryUnderstood) {
-      main.appendChild(
-        renderTheoryScreen({
-          theory: lesson.theory,
-          onUnderstoodChoice: (understood) => {
-            void engine.handleTheoryStep(understood);
-          },
-        }),
-      );
+      const theoryNode = renderTheoryScreen({
+        theory: lesson.theory,
+        currentExplanation,
+        onUnderstoodChoice: async (understood) => {
+          // Phase 3 Plan 02 (RESEARCH.md Pitfall 2): handleTheoryStep is
+          // async (rounds 2-3 await callTheoryTutor over the network).
+          // Thinking cue — disable both theory buttons the instant the tap
+          // begins, before the await, so the up-to-16s worst case (D-07's 8s
+          // timeout x2) never reads as a frozen/broken UI. Re-enabled in a
+          // finally. Unsubscribe/resubscribe around the await mirrors the
+          // submit handler's established pattern (Pitfall 3) — no other
+          // dispatch can race in during this window.
+          const buttons = theoryNode.querySelectorAll<HTMLButtonElement>(".theory-buttons button");
+          buttons.forEach((btn) => (btn.disabled = true));
+
+          let result;
+          try {
+            unsubscribeRender();
+            result = await engine.handleTheoryStep(understood);
+          } finally {
+            unsubscribeRender = store.subscribe(render);
+            buttons.forEach((btn) => (btn.disabled = false));
+          }
+
+          currentExplanation = result.explanation;
+          render(store.getState());
+        },
+      });
+      main.appendChild(theoryNode);
     } else {
       const index = state.currentPosition.currentExerciseIndex;
       // Plan 03 (PROGRESS-04, D-02): serve via getCurrentExercise() so the

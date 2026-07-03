@@ -65,6 +65,10 @@ describe("review-pass feedback banner visibility (e2e, WR-02)", () => {
     );
     understoodButton?.click();
 
+    // Plan 02 (THEORY-03): onUnderstoodChoice is now async — wait for the
+    // first exercise screen to render before the submit-answer loop begins.
+    await vi.waitFor(() => expect(root.textContent).toContain("Задание 1 из 19"));
+
     // ex001-ex009: correct, no review trigger.
     for (let i = 1; i <= 9; i++) {
       submitTextAnswer(root, correctAnswerFor(`eq-1a-ex00${i}`));

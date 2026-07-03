@@ -37,6 +37,10 @@ describe("full lesson traversal (e2e)", () => {
     expect(understoodButton).toBeTruthy();
     understoodButton?.click();
 
+    // Plan 02 (THEORY-03): onUnderstoodChoice is now async — wait for the
+    // first exercise screen to render before driving the traversal loop.
+    await vi.waitFor(() => expect(root.textContent).toContain("Задание 1 из 19"));
+
     for (let i = 0; i < allExercises.length; i++) {
       const exercise = allExercises[i];
       expect(root.textContent).toContain(`Задание ${i + 1} из 19`);

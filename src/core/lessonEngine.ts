@@ -14,6 +14,15 @@ import { callTheoryTutor } from "./agents/theoryTutor";
 
 export type AnswerPayload = string | MatchingPair[] | string[];
 
+// Phase 3 Plan 02 (THEORY-03, D-11, RESEARCH.md Open Question 2): the
+// explanation TEXT for the round just served — transient, NOT persisted in
+// state (only simplifyRoundCount is). null once theoryUnderstood becomes
+// true (soft transition or explicit "понятно"), since the theory screen is
+// no longer shown at that point.
+export interface TheoryStepResult {
+  explanation: { textRu: string; exampleRu: string } | null;
+}
+
 export class LessonEngine {
   readonly lesson: Lesson;
   readonly store: StateStore;
@@ -77,7 +86,7 @@ export class LessonEngine {
   //     SOFT TRANSITION — theoryUnderstood becomes true regardless of the
   //     last answer, the first exercise renders next.
   // Exactly one theory_step dispatch per call (single-dispatch invariant).
-  async handleTheoryStep(understood: boolean): Promise<void> {
+  async handleTheoryStep(understood: boolean): Promise<TheoryStepResult> {
     if (understood) {
       this.store.dispatch({
         type: "theory_step",
@@ -86,7 +95,7 @@ export class LessonEngine {
         source: "core",
         agentFailed: false,
       });
-      return;
+      return { explanation: null };
     }
 
     const state = this.store.getState();
@@ -97,9 +106,15 @@ export class LessonEngine {
     let nextCount: number;
     let source: "core" | "agent" = "core";
     let agentFailed = false;
+    // The text to show for the round just served (Open Question 2:
+    // transient, returned to the caller, never persisted in state).
+    let explanation: { textRu: string; exampleRu: string } = {
+      textRu: simpleLevel?.textRu ?? "",
+      exampleRu: simpleLevel?.exampleRu ?? "",
+    };
 
     if (simplifyRoundCount === 0) {
-      // Round 1: core-only, no agent call (D-11).
+      // Round 1: core-only, no agent call (D-11) — pre-written "simple" level.
       nextCount = 1;
     } else {
       // Rounds 2-3: call Theory Tutor via the shared gateway. On failure the
@@ -117,6 +132,7 @@ export class LessonEngine {
       nextCount = simplifyRoundCount + 1;
       source = tutorResult.source;
       agentFailed = tutorResult.source === "core";
+      explanation = { textRu: tutorResult.explanationRu, exampleRu: tutorResult.exampleRu };
     }
 
     // Soft transition: reaching maxSimplifyRounds advances to practice
@@ -130,6 +146,8 @@ export class LessonEngine {
       source,
       agentFailed,
     });
+
+    return { explanation: theoryUnderstood ? null : explanation };
   }
 
   async handleAnswer(exerciseId: string, answer: AnswerPayload): Promise<CheckResult> {
