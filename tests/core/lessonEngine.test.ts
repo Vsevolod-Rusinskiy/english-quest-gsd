@@ -652,6 +652,57 @@ describe("LessonEngine", () => {
     });
   });
 
+  // Plan 03 (05-03, gap closure): getCurrentSection() resolves the parent
+  // Section for the current exercise (main pass or review pass), reusing
+  // getCurrentExerciseId()'s existing resolution logic rather than
+  // duplicating its main-pass/review-pass branching.
+  describe("Plan 03 (05-03): getCurrentSection()", () => {
+    it("main pass: returns the Section object containing exercises[currentExerciseIndex]", () => {
+      const store = new StateStore(initialState());
+      const engine = new LessonEngine(lesson, store);
+
+      const section = engine.getCurrentSection();
+
+      expect(section).not.toBeNull();
+      expect(section?.exercises.some((e) => e.exerciseId === "eq-1a-ex001")).toBe(true);
+    });
+
+    it("review pass: with reviewQueue[0] as the current exercise id, returns the Section that exercise originally belongs to", () => {
+      const store = new StateStore({
+        ...initialState(),
+        currentPosition: {
+          theoryUnderstood: true,
+          currentExerciseIndex: 19,
+          reviewPassIndex: 0,
+          simplifyRoundCount: 0,
+        },
+        reviewQueue: ["eq-1a-ex010", "eq-1a-ex011"],
+      });
+      const engine = new LessonEngine(lesson, store);
+
+      const section = engine.getCurrentSection();
+
+      expect(section).not.toBeNull();
+      expect(section?.exercises.some((e) => e.exerciseId === "eq-1a-ex010")).toBe(true);
+    });
+
+    it("lesson complete (getCurrentExerciseId() null): returns null", () => {
+      const store = new StateStore({
+        ...initialState(),
+        currentPosition: {
+          theoryUnderstood: true,
+          currentExerciseIndex: 19,
+          reviewPassIndex: 0,
+          simplifyRoundCount: 0,
+        },
+        reviewQueue: [],
+      });
+      const engine = new LessonEngine(lesson, store);
+
+      expect(engine.getCurrentSection()).toBeNull();
+    });
+  });
+
   // Plan 04-03 (PERSONAL-01/02/03, REPORT-01/02, D-06/D-07): handleSessionEnd()
   // sequential Progress Advisor -> guardrails -> Parent Report orchestration,
   // single session_end dispatch.

@@ -10,21 +10,23 @@ export type AnswerPayload = string | MatchingPair[] | string[];
 
 export interface RenderExerciseOptions {
   exercise: Exercise;
+  instructionRu: string;
+  instructionEn: string;
   onSubmit: (answer: AnswerPayload) => void;
 }
 
 export function renderExercise(options: RenderExerciseOptions): HTMLElement {
-  const { exercise, onSubmit } = options;
+  const { exercise, instructionRu, instructionEn, onSubmit } = options;
 
   switch (exercise.type) {
     case "text-input":
-      return renderTextInput({ exercise, onSubmit });
+      return renderTextInput({ exercise, instructionRu, instructionEn, onSubmit });
     case "single-choice":
-      return renderSingleChoice({ exercise, onSubmit });
+      return renderSingleChoice({ exercise, instructionRu, instructionEn, onSubmit });
     case "matching":
-      return renderMatching({ exercise, onSubmit });
+      return renderMatching({ exercise, instructionRu, instructionEn, onSubmit });
     case "order-builder":
-      return renderOrderBuilder({ exercise, onSubmit });
+      return renderOrderBuilder({ exercise, instructionRu, instructionEn, onSubmit });
     default: {
       const _exhaustive: never = exercise;
       throw new Error(`Unhandled exercise type: ${JSON.stringify(_exhaustive)}`);

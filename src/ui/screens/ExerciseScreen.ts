@@ -7,12 +7,14 @@ import { renderFeedbackBanner } from "../components/FeedbackBanner";
 
 export interface ExerciseScreenOptions {
   exercise: Exercise;
+  instructionRu: string;
+  instructionEn: string;
   onSubmit: (answer: AnswerPayload) => void;
 }
 
 export function renderExerciseScreen(options: ExerciseScreenOptions): HTMLElement {
-  const { exercise, onSubmit } = options;
-  return renderExercise({ exercise, onSubmit });
+  const { exercise, instructionRu, instructionEn, onSubmit } = options;
+  return renderExercise({ exercise, instructionRu, instructionEn, onSubmit });
 }
 
 export { renderFeedbackBanner };

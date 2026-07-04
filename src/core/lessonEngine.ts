@@ -1,7 +1,7 @@
 // Theory -> exercise orchestrator (Phase 1 slice + Phase 2 progress/reward wiring
 // + Phase 3 Answer Checker wiring). Cites THEORY-01, THEORY-02, EXERCISE-01..05,
 // CHECK-01, CHECK-02, CHECK-03, CHECK-04, PROGRESS-01/02/03, REWARD-01/02, RELY-03.
-import type { Lesson, Exercise } from "./lesson/lessonSchema";
+import type { Lesson, Exercise, Section } from "./lesson/lessonSchema";
 import type { StateStore } from "./state/store";
 import { checkTextInput, type CheckResult } from "./answer-checking/checkTextInput";
 import { checkSingleChoice } from "./answer-checking/checkSingleChoice";
@@ -103,6 +103,18 @@ export class LessonEngine {
     const id = this.getCurrentExerciseId();
     if (id === null) return null;
     return this.exercises.find((e) => e.exerciseId === id) ?? null;
+  }
+
+  // Plan 03 (05-03, gap closure, UI-02): resolves the parent Section for the
+  // current exercise (main pass or review pass) so its instructionRu/
+  // instructionEn can be threaded into the task card. Reuses
+  // getCurrentExerciseId()'s already-correct main-pass/review-pass branching
+  // (does not duplicate that resolution) — same section-scan pattern as
+  // getCurrentExercise() above, one level up (Section instead of Exercise).
+  getCurrentSection(): Section | null {
+    const id = this.getCurrentExerciseId();
+    if (id === null) return null;
+    return this.lesson.sections.find((s) => s.exercises.some((e) => e.exerciseId === id)) ?? null;
   }
 
   // Phase 3 Plan 02 (THEORY-03, D-11): full round-sequencing implementation.
