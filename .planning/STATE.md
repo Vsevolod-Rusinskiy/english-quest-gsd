@@ -5,15 +5,15 @@ milestone_name: milestone
 current_phase: 05
 current_phase_name: kid-friendly-visual-design
 status: verifying
-stopped_at: Phase 5 UI-SPEC approved
-last_updated: "2026-07-03T20:19:31.287Z"
+stopped_at: "Completed 05-03-PLAN.md (gap closure: RU+EN task-card instructions)"
+last_updated: "2026-07-04T06:33:33.729Z"
 last_activity: 2026-07-03
 last_activity_desc: Phase 05 execution started
 progress:
   total_phases: 5
   completed_phases: 5
-  total_plans: 13
-  completed_plans: 13
+  total_plans: 14
+  completed_plans: 14
   percent: 100
 ---
 
@@ -29,9 +29,9 @@ See: .planning/PROJECT.md (updated 2026-07-02)
 ## Current Position
 
 Phase: 05 (kid-friendly-visual-design) — EXECUTING
-Plan: 2 of 2
-Status: Phase complete — ready for verification
-Last activity: 2026-07-03 — Phase 05 execution started
+Plan: 3 of 3 (gap closure)
+Status: Phase complete — gap closure done, ready for re-verification
+Last activity: 2026-07-04 — Completed 05-03-PLAN.md (RU+EN task-card instructions gap closure)
 
 Progress: [░░░░░░░░░░] 0%
 
@@ -63,6 +63,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 04 P03 | 35min | 3 tasks | 8 files |
 | Phase 05 P01 | 12min | 2 tasks | 9 files |
 | Phase 05 P02 | 22min | 3 tasks | 7 files |
+| Phase 05 P03 | 25min | 2 tasks | 9 files |
 
 ## Accumulated Context
 
@@ -86,6 +87,7 @@ Recent decisions affecting current work:
 - [Phase ?]: Theory toggle buttons get a dedicated .theory-toggle className, keeping the CTA-only 52px/shadow treatment isolated to submit-row/show-results/continue buttons
 - [Phase ?]: During Task 3's mandatory human-verify checkpoint (live browser walkthrough), 2 real gaps were found and fixed in-flight: Reward Advisor's praiseRu was computed/cross-checked but never rendered anywhere in the UI (wired into FeedbackBanner), and SessionEndScreen had zero visual treatment (added .child-section/.parent-section card styling)
 - [Phase ?]: Chip/option unselected-state styling (.option/.match-left/.match-right/.bank-chip/.sequence-chip) is CSS-only - no exercise-renderer TS changes needed since selection/pairing already applies Plan 01's shared button.accent/.selected rule
+- [Phase ?]: 05-03: getCurrentSection() built as a thin wrapper on getCurrentExerciseId(), keeping exactly one place that resolves current-exercise identity across main/review pass
 
 ### Pending Todos
 
@@ -108,6 +110,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-07-03T20:19:31.282Z
-Stopped at: Phase 5 UI-SPEC approved
-Resume file: .planning/phases/05-kid-friendly-visual-design/05-UI-SPEC.md
+Last session: 2026-07-04T06:33:33.725Z
+Stopped at: Completed 05-03-PLAN.md (gap closure: RU+EN task-card instructions)
+Resume file: None
