@@ -21,10 +21,10 @@ current_phase_name: kid-friendly-visual-design
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-07-02)
+See: .planning/PROJECT.md (updated 2026-07-04)
 
 **Core value:** Проверить механику обучения целиком: детерминированная проверка ответов + LLM-агенты там, где нужна интерпретация, персонализация по прогрессу, повторение слабых тем, начисление бонусов — без единого «сломанного» состояния, даже если агент недоступен.
-**Current focus:** Phase 05 — kid-friendly-visual-design
+**Current focus:** Planning next milestone (v1.0 shipped 2026-07-04)
 
 ## Current Position
 
@@ -94,9 +94,9 @@ None yet.
 
 ### Blockers/Concerns
 
-- [Phase 1] `single-choice`/`order-builder` have no real content in `Lesson-1A.json` (only `text-input`×18 + `matching`×1) — schema/checkers/renderers verified via hand-authored fixtures and live-browser testing, but real lesson content for these 2 types doesn't exist yet; needs content authoring before full end-to-end confidence
-- [Phase 1] Minor UI polish gaps deferred to Phase 5: (a) feedback banner from previous exercise stays visible until next submit instead of clearing on exercise-advance; (b) progress indicator overshoots to "N+1 из N" at lesson-complete instead of clamping/switching to a completion state. Logged in `01-UAT.md` Gaps section, non-blocking.
-- [Phase 3] App calls a third-party LLM router (`api.llmrouter.ru`), not Anthropic directly — API key lives in `.env` → bundled into the built JS at compile time (browser-direct, no proxy). Safe for local dev / in-person demo only. **Must not deploy `dist/` publicly without first adding a proxy** (Cloudflare Workers or equivalent) — the bundled key would be extractable via devtools. See `03-CONTEXT.md` D-03.
+- [v1.0] `single-choice`/`order-builder` have no real content in `Lesson-1A.json` (only `text-input`×18 + `matching`×1) — schema/checkers/renderers verified via hand-authored fixtures and live-browser testing, but real lesson content for these 2 types doesn't exist yet; needs content authoring before full end-to-end confidence (tracked as `CONTENT-01`, v2 scope)
+- [v1.0] App calls a third-party LLM router (`api.llmrouter.ru`), not Anthropic directly — API key lives in `.env` → bundled into the built JS at compile time (browser-direct, no proxy). Safe for local dev / in-person demo only. **Must not deploy `dist/` publicly without first adding a proxy** (Cloudflare Workers or equivalent) — the bundled key would be extractable via devtools. See `03-CONTEXT.md` D-03 (archived, see `.planning/milestones/v1.0-phases/`).
+- [v1.0, new] Live LLM router calls returned 401 (auth failure) during Phase 5's manual verification session — every agent call that session silently fell back to the deterministic path (working as designed, but worth re-confirming the router key/config before a demo that needs to show real agent-generated text, not just fallback).
 
 ## Deferred Items
 
@@ -104,8 +104,8 @@ Items acknowledged and carried forward from previous milestone close:
 
 | Category | Item | Status | Deferred At |
 |----------|------|--------|-------------|
-| UI polish | Feedback banner not cleared on exercise-advance (01-UAT.md Gap 1) | Open | Phase 1 → Phase 5 |
-| UI polish | Progress indicator overshoots at lesson-complete (01-UAT.md Gap 2) | Open | Phase 1 → Phase 5 |
+| UI polish | Feedback banner not cleared on exercise-advance (01-UAT.md Gap 1) | Resolved | Phase 1 → fixed in Phase 5 (D-12) |
+| UI polish | Progress indicator overshoots at lesson-complete (01-UAT.md Gap 2) | Resolved | Phase 1 → fixed in Phase 5 (D-12) |
 
 ## Session Continuity
 
