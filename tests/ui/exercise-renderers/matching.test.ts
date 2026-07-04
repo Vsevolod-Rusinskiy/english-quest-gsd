@@ -14,9 +14,12 @@ if (!ex019 || ex019.type !== "matching") {
 }
 const exercise = ex019;
 
+const instructionRu = "Тестовая инструкция";
+const instructionEn = "Test instruction";
+
 describe("renderMatching", () => {
   it("renders two columns: left items (image placeholders) and right options (word labels)", () => {
-    const el = renderMatching({ exercise, onSubmit: () => {} });
+    const el = renderMatching({ exercise, instructionRu, instructionEn, onSubmit: () => {} });
     const leftButtons = Array.from(el.querySelectorAll("button.match-left"));
     const rightButtons = Array.from(el.querySelectorAll("button.match-right"));
 
@@ -31,7 +34,7 @@ describe("renderMatching", () => {
   });
 
   it("supports tap-to-pair: tapping a left item then a right item marks both accent + inert", () => {
-    const el = renderMatching({ exercise, onSubmit: () => {} });
+    const el = renderMatching({ exercise, instructionRu, instructionEn, onSubmit: () => {} });
     const leftButtons = Array.from(el.querySelectorAll<HTMLButtonElement>("button.match-left"));
     const rightButtons = Array.from(el.querySelectorAll<HTMLButtonElement>("button.match-right"));
 
@@ -49,7 +52,7 @@ describe("renderMatching", () => {
   });
 
   it("keeps Проверить inert until all pairs are made", () => {
-    const el = renderMatching({ exercise, onSubmit: () => {} });
+    const el = renderMatching({ exercise, instructionRu, instructionEn, onSubmit: () => {} });
     const leftButtons = Array.from(el.querySelectorAll<HTMLButtonElement>("button.match-left"));
     const rightButtons = Array.from(el.querySelectorAll<HTMLButtonElement>("button.match-right"));
     const submitButton = Array.from(el.querySelectorAll("button")).find(
@@ -73,7 +76,12 @@ describe("renderMatching", () => {
 
   it("emits AnswerSubmitted with the full correct pair list for ex019", () => {
     let submitted: { leftId: string; rightId: string }[] | undefined;
-    const el = renderMatching({ exercise, onSubmit: (pairs) => (submitted = pairs) });
+    const el = renderMatching({
+      exercise,
+      instructionRu,
+      instructionEn,
+      onSubmit: (pairs) => (submitted = pairs),
+    });
     const leftButtons = Array.from(el.querySelectorAll<HTMLButtonElement>("button.match-left"));
     const rightButtons = Array.from(el.querySelectorAll<HTMLButtonElement>("button.match-right"));
 
@@ -95,6 +103,20 @@ describe("renderMatching", () => {
         rightId: exercise.rightOptions[i].id,
       });
     }
+  });
+
+  it("renders instructionRu then instructionEn as .instruction-line elements before the prompt paragraph (05-03 gap closure)", () => {
+    const el = renderMatching({ exercise, instructionRu, instructionEn, onSubmit: () => {} });
+    const children = Array.from(el.children);
+    const instructionLines = Array.from(el.querySelectorAll(".instruction-line"));
+    const promptIndex = children.findIndex((c) => c.textContent === exercise.prompt);
+
+    expect(instructionLines).toHaveLength(2);
+    expect(instructionLines[0].textContent).toBe(instructionRu);
+    expect(instructionLines[1].textContent).toBe(instructionEn);
+    expect(children.indexOf(instructionLines[0])).toBeLessThan(promptIndex);
+    expect(children.indexOf(instructionLines[1])).toBeLessThan(promptIndex);
+    expect(children.indexOf(instructionLines[0])).toBeLessThan(children.indexOf(instructionLines[1]));
   });
 
   it("uses createElement/textContent only, never innerHTML", () => {

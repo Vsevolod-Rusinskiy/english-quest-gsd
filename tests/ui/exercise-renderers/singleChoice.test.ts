@@ -8,16 +8,19 @@ const fixturePath = resolve(process.cwd(), "tests/fixtures/single-choice.fixture
 const rawFixture = JSON.parse(readFileSync(fixturePath, "utf-8"));
 const exercise = SingleChoiceExerciseSchema.parse(rawFixture);
 
+const instructionRu = "Тестовая инструкция";
+const instructionEn = "Test instruction";
+
 describe("renderSingleChoice", () => {
   it("renders one tappable button per option", () => {
-    const el = renderSingleChoice({ exercise, onSubmit: () => {} });
+    const el = renderSingleChoice({ exercise, instructionRu, instructionEn, onSubmit: () => {} });
     const buttons = Array.from(el.querySelectorAll("button.option"));
     expect(buttons).toHaveLength(exercise.options.length);
     expect(buttons.map((b) => b.textContent)).toEqual(exercise.options.map((o) => o.labelEn));
   });
 
   it("selects exactly one option on tap (accent-marked), clearing the previous selection", () => {
-    const el = renderSingleChoice({ exercise, onSubmit: () => {} });
+    const el = renderSingleChoice({ exercise, instructionRu, instructionEn, onSubmit: () => {} });
     const buttons = Array.from(el.querySelectorAll<HTMLButtonElement>("button.option"));
 
     buttons[0].click();
@@ -30,7 +33,7 @@ describe("renderSingleChoice", () => {
   });
 
   it("keeps Проверить inert until an option is selected", () => {
-    const el = renderSingleChoice({ exercise, onSubmit: () => {} });
+    const el = renderSingleChoice({ exercise, instructionRu, instructionEn, onSubmit: () => {} });
     const buttons = Array.from(el.querySelectorAll<HTMLButtonElement>("button.option"));
     const submitButton = Array.from(el.querySelectorAll("button")).find(
       (b) => b.textContent === "Проверить",
@@ -43,7 +46,12 @@ describe("renderSingleChoice", () => {
 
   it("emits AnswerSubmitted with the selected optionId on submit", () => {
     let submitted: string | undefined;
-    const el = renderSingleChoice({ exercise, onSubmit: (id) => (submitted = id) });
+    const el = renderSingleChoice({
+      exercise,
+      instructionRu,
+      instructionEn,
+      onSubmit: (id) => (submitted = id),
+    });
     const buttons = Array.from(el.querySelectorAll<HTMLButtonElement>("button.option"));
     const submitButton = Array.from(el.querySelectorAll("button")).find(
       (b) => b.textContent === "Проверить",
@@ -53,6 +61,20 @@ describe("renderSingleChoice", () => {
     submitButton.click();
 
     expect(submitted).toBe(exercise.options[1].id);
+  });
+
+  it("renders instructionRu then instructionEn as .instruction-line elements before the prompt paragraph (05-03 gap closure)", () => {
+    const el = renderSingleChoice({ exercise, instructionRu, instructionEn, onSubmit: () => {} });
+    const children = Array.from(el.children);
+    const instructionLines = Array.from(el.querySelectorAll(".instruction-line"));
+    const promptIndex = children.findIndex((c) => c.textContent === exercise.prompt);
+
+    expect(instructionLines).toHaveLength(2);
+    expect(instructionLines[0].textContent).toBe(instructionRu);
+    expect(instructionLines[1].textContent).toBe(instructionEn);
+    expect(children.indexOf(instructionLines[0])).toBeLessThan(promptIndex);
+    expect(children.indexOf(instructionLines[1])).toBeLessThan(promptIndex);
+    expect(children.indexOf(instructionLines[0])).toBeLessThan(children.indexOf(instructionLines[1]));
   });
 
   it("uses createElement/textContent only, never innerHTML", () => {

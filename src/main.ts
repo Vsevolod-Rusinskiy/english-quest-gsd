@@ -159,8 +159,16 @@ export async function mountApp(root: HTMLElement): Promise<void> {
         // per-answer (dequeue IS the advance), so an index-based key would
         // never match the next review item's re-render.
         const feedbackKey = exercise.exerciseId;
+        // Plan 03 (05-03, gap closure, UI-02): resolve the current exercise's
+        // parent Section so its bilingual instructionRu/instructionEn can be
+        // threaded into the task card — the single shared render call site
+        // covers both the main pass and the review pass (same
+        // getCurrentExercise()-derived exercise above).
+        const section = engine.getCurrentSection();
         const exerciseNode = renderExerciseScreen({
           exercise,
+          instructionRu: section?.instructionRu ?? "",
+          instructionEn: section?.instructionEn ?? "",
           onSubmit: async (answer) => {
             // Plan 03 (RESEARCH.md Pitfall 2): handleAnswer is now async (it
             // may await callAnswerChecker over the network). "Thinking" cue —

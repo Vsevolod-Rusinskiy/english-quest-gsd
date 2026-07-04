@@ -7,14 +7,26 @@ import type { OrderBuilderExercise } from "../../core/lesson/lessonSchema";
 
 export interface OrderBuilderOptions {
   exercise: OrderBuilderExercise;
+  instructionRu: string;
+  instructionEn: string;
   onSubmit: (sequence: string[]) => void;
 }
 
 export function renderOrderBuilder(options: OrderBuilderOptions): HTMLElement {
-  const { exercise, onSubmit } = options;
+  const { exercise, instructionRu, instructionEn, onSubmit } = options;
 
   const container = document.createElement("div");
   container.className = "task-card";
+
+  const instructionRuLine = document.createElement("p");
+  instructionRuLine.className = "instruction-line";
+  instructionRuLine.textContent = instructionRu;
+  container.appendChild(instructionRuLine);
+
+  const instructionEnLine = document.createElement("p");
+  instructionEnLine.className = "instruction-line";
+  instructionEnLine.textContent = instructionEn;
+  container.appendChild(instructionEnLine);
 
   const prompt = document.createElement("p");
   prompt.textContent = exercise.prompt;

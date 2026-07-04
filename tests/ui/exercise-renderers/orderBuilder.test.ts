@@ -8,9 +8,12 @@ const fixturePath = resolve(process.cwd(), "tests/fixtures/order-builder.fixture
 const rawFixture = JSON.parse(readFileSync(fixturePath, "utf-8"));
 const exercise = OrderBuilderExerciseSchema.parse(rawFixture);
 
+const instructionRu = "Тестовая инструкция";
+const instructionEn = "Test instruction";
+
 describe("renderOrderBuilder", () => {
   it("renders the word bank (Слова:) with all wordBank chips, and an empty sequence area (Твой ответ:)", () => {
-    const el = renderOrderBuilder({ exercise, onSubmit: () => {} });
+    const el = renderOrderBuilder({ exercise, instructionRu, instructionEn, onSubmit: () => {} });
     expect(el.textContent).toContain("Слова:");
     expect(el.textContent).toContain("Твой ответ:");
 
@@ -23,7 +26,7 @@ describe("renderOrderBuilder", () => {
   });
 
   it("tapping bank chips in order appends to the sequence and shrinks the bank", () => {
-    const el = renderOrderBuilder({ exercise, onSubmit: () => {} });
+    const el = renderOrderBuilder({ exercise, instructionRu, instructionEn, onSubmit: () => {} });
     const bankChips = () => Array.from(el.querySelectorAll<HTMLButtonElement>("button.bank-chip"));
     const sequenceChips = () =>
       Array.from(el.querySelectorAll<HTMLButtonElement>("button.sequence-chip"));
@@ -44,7 +47,7 @@ describe("renderOrderBuilder", () => {
   });
 
   it("tapping a sequence chip removes it and returns it to the bank", () => {
-    const el = renderOrderBuilder({ exercise, onSubmit: () => {} });
+    const el = renderOrderBuilder({ exercise, instructionRu, instructionEn, onSubmit: () => {} });
     const bankChips = () => Array.from(el.querySelectorAll<HTMLButtonElement>("button.bank-chip"));
     const sequenceChips = () =>
       Array.from(el.querySelectorAll<HTMLButtonElement>("button.sequence-chip"));
@@ -62,7 +65,7 @@ describe("renderOrderBuilder", () => {
   });
 
   it("keeps Проверить inert until at least one word is placed, then emits the sequence on submit", () => {
-    const el = renderOrderBuilder({ exercise, onSubmit: () => {} });
+    const el = renderOrderBuilder({ exercise, instructionRu, instructionEn, onSubmit: () => {} });
     const submitButton = Array.from(el.querySelectorAll("button")).find(
       (b) => b.textContent === "Проверить",
     ) as HTMLButtonElement;
@@ -75,7 +78,12 @@ describe("renderOrderBuilder", () => {
 
   it("submit emits the current assembled sequence array", () => {
     let submitted: string[] | undefined;
-    const el = renderOrderBuilder({ exercise, onSubmit: (seq) => (submitted = seq) });
+    const el = renderOrderBuilder({
+      exercise,
+      instructionRu,
+      instructionEn,
+      onSubmit: (seq) => (submitted = seq),
+    });
     const bankChips = () => Array.from(el.querySelectorAll<HTMLButtonElement>("button.bank-chip"));
 
     const expectedSequence: string[] = [];
@@ -90,6 +98,20 @@ describe("renderOrderBuilder", () => {
     submitButton.click();
 
     expect(submitted).toEqual(expectedSequence);
+  });
+
+  it("renders instructionRu then instructionEn as .instruction-line elements before the prompt paragraph (05-03 gap closure)", () => {
+    const el = renderOrderBuilder({ exercise, instructionRu, instructionEn, onSubmit: () => {} });
+    const children = Array.from(el.children);
+    const instructionLines = Array.from(el.querySelectorAll(".instruction-line"));
+    const promptIndex = children.findIndex((c) => c.textContent === exercise.prompt);
+
+    expect(instructionLines).toHaveLength(2);
+    expect(instructionLines[0].textContent).toBe(instructionRu);
+    expect(instructionLines[1].textContent).toBe(instructionEn);
+    expect(children.indexOf(instructionLines[0])).toBeLessThan(promptIndex);
+    expect(children.indexOf(instructionLines[1])).toBeLessThan(promptIndex);
+    expect(children.indexOf(instructionLines[0])).toBeLessThan(children.indexOf(instructionLines[1]));
   });
 
   it("has no draggable attributes/drag event wiring (D-05: no drag-and-drop)", () => {

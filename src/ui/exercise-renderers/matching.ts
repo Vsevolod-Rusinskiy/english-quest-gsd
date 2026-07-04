@@ -12,14 +12,26 @@ export interface MatchingPair {
 
 export interface MatchingOptions {
   exercise: MatchingExercise;
+  instructionRu: string;
+  instructionEn: string;
   onSubmit: (pairs: MatchingPair[]) => void;
 }
 
 export function renderMatching(options: MatchingOptions): HTMLElement {
-  const { exercise, onSubmit } = options;
+  const { exercise, instructionRu, instructionEn, onSubmit } = options;
 
   const container = document.createElement("div");
   container.className = "task-card";
+
+  const instructionRuLine = document.createElement("p");
+  instructionRuLine.className = "instruction-line";
+  instructionRuLine.textContent = instructionRu;
+  container.appendChild(instructionRuLine);
+
+  const instructionEnLine = document.createElement("p");
+  instructionEnLine.className = "instruction-line";
+  instructionEnLine.textContent = instructionEn;
+  container.appendChild(instructionEnLine);
 
   const prompt = document.createElement("p");
   prompt.textContent = exercise.prompt;

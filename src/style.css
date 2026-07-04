@@ -187,6 +187,17 @@ button:disabled {
   padding: var(--space-lg);
 }
 
+/* Task-card bilingual instruction lines (05-03 gap closure, UI-02) — Body
+   size per 05-UI-SPEC.md's Typography Bilingual text note: both languages
+   render at Body (16px/400/1.5), sequential lines, no visual hierarchy
+   between RU/EN. */
+.instruction-line {
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 1.5;
+  margin: 0 0 var(--space-sm) 0;
+}
+
 .task-card input[type="text"] {
   font-size: 16px;
   font-family: inherit;
