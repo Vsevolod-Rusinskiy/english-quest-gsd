@@ -2,12 +2,12 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-current_phase: 05
-status: verifying
+current_phase: 0
+status: Awaiting next milestone
 stopped_at: "Completed 05-03-PLAN.md (gap closure: RU+EN task-card instructions)"
-last_updated: "2026-07-04T06:39:58.079Z"
+last_updated: "2026-07-04T06:46:39.126Z"
 last_activity: 2026-07-04
-last_activity_desc: Phase 05 complete
+last_activity_desc: Milestone v1.0 completed and archived
 progress:
   total_phases: 5
   completed_phases: 5
@@ -28,12 +28,10 @@ See: .planning/PROJECT.md (updated 2026-07-02)
 
 ## Current Position
 
-Phase: 05
-Plan: Not started
-Status: Phase complete — gap closure done, ready for re-verification
-Last activity: 2026-07-04 — Phase 05 complete
-
-Progress: [░░░░░░░░░░] 0%
+Phase: Milestone v1.0 complete
+Plan: —
+Status: Awaiting next milestone
+Last activity: 2026-07-04 — Milestone v1.0 completed and archived
 
 ## Performance Metrics
 
@@ -114,3 +112,7 @@ Items acknowledged and carried forward from previous milestone close:
 Last session: 2026-07-04T06:33:33.725Z
 Stopped at: Completed 05-03-PLAN.md (gap closure: RU+EN task-card instructions)
 Resume file: None
+
+## Operator Next Steps
+
+- Start the next milestone with /gsd-new-milestone
