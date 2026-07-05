@@ -1,0 +1,9 @@
+name = "english-quest-llm-proxy"
+main = "src/index.ts"
+compatibility_date = "2026-06-01"
+
+[vars]
+# Non-secret upstream origin. The real key (LLM_API_KEY) is NEVER declared
+# here — set it via `wrangler secret put LLM_API_KEY` (prod) or worker/.dev.vars
+# (local `wrangler dev`), both gitignored / secret-managed.
+LLM_UPSTREAM_URL = "https://REDACTED-UPSTREAM-HOST"

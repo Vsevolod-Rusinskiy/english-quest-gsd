@@ -1,0 +1,7 @@
+# Template for local `wrangler dev` secrets. Copy this file to `.dev.vars`
+# (gitignored — never commit the real key) and fill in the real router key.
+#
+# LLM_API_KEY is the real api.llmrouter.ru key. The Worker injects it
+# server-side into every forwarded /v1/messages request; it never reaches
+# the browser bundle.
+LLM_API_KEY=your-real-router-key-here
