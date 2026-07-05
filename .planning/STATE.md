@@ -4,10 +4,10 @@ milestone: v1.0
 milestone_name: milestone
 current_phase: 0
 status: Awaiting next milestone
-stopped_at: "Completed 05-03-PLAN.md (gap closure: RU+EN task-card instructions)"
-last_updated: "2026-07-04T06:46:39.126Z"
-last_activity: 2026-07-04
-last_activity_desc: Milestone v1.0 completed and archived
+stopped_at: "Completed quick task 260705-rl5 (Cloudflare Workers LLM key-proxy)"
+last_updated: "2026-07-05T17:01:30.000Z"
+last_activity: 2026-07-05
+last_activity_desc: "Quick task 260705-rl5: Cloudflare Workers LLM key-proxy (fixes CORS-preflight-401 blocker, removes browser-bundled API key)"
 progress:
   total_phases: 5
   completed_phases: 5
@@ -95,8 +95,14 @@ None yet.
 ### Blockers/Concerns
 
 - [v1.0] `single-choice`/`order-builder` have no real content in `Lesson-1A.json` (only `text-input`×18 + `matching`×1) — schema/checkers/renderers verified via hand-authored fixtures and live-browser testing, but real lesson content for these 2 types doesn't exist yet; needs content authoring before full end-to-end confidence (tracked as `CONTENT-01`, v2 scope)
-- [v1.0] App calls a third-party LLM router (`api.llmrouter.ru`), not Anthropic directly — API key lives in `.env` → bundled into the built JS at compile time (browser-direct, no proxy). Safe for local dev / in-person demo only. **Must not deploy `dist/` publicly without first adding a proxy** (Cloudflare Workers or equivalent) — the bundled key would be extractable via devtools. See `03-CONTEXT.md` D-03 (archived, see `.planning/milestones/v1.0-phases/`).
-- [v1.0, diagnosed 2026-07-04] Live LLM router calls from the browser fail with a **CORS preflight rejection**, not an auth/key problem: every real request shows `OPTIONS https://api.llmrouter.ru/v1/messages → 401` immediately followed by `POST ... net::ERR_FAILED` (the browser blocks the real request because the preflight itself was rejected). The router appears to require auth on the OPTIONS preflight, which a CORS-compliant server should answer without checking auth. This explains why Phase 3's "verified live via curl" check passed — `curl` never sends a CORS preflight, only real browsers do for cross-origin requests with custom headers. The fallback path worked correctly throughout (as designed), but no live agent-success response has ever actually been observed from a real browser. **Before any demo that needs to show live agent text:** either ask the router provider whether they support CORS preflight for direct browser calls, or build the Cloudflare Workers proxy (already the documented "proper" path for public deployment) — a server-to-server proxy call sidesteps CORS entirely.
+- [v1.0, resolved 2026-07-05 in quick task 260705-rl5] ~~App calls a third-party LLM router (`api.llmrouter.ru`), not Anthropic directly — API key lives in `.env` → bundled into the built JS at compile time (browser-direct, no proxy)~~. A Cloudflare Worker key-proxy (`worker/`) now holds the real key server-side only; the browser bundle no longer contains it. See `03-CONTEXT.md` D-03 (archived) — exposure closed structurally. **Still needs a manual `wrangler login` + `wrangler deploy` step (user's Cloudflare credentials) before the deployed Worker is live** — see `260705-rl5-SUMMARY.md`.
+- [v1.0, diagnosed 2026-07-04, resolved 2026-07-05 in quick task 260705-rl5] ~~Live LLM router calls from the browser fail with a **CORS preflight rejection**~~ — the same Worker proxy answers the `OPTIONS` preflight itself (no auth required, as a CORS-compliant server should) and forwards `POST /v1/messages` server-to-server, sidestepping CORS entirely. Structurally fixed; **not yet observed live** because the Worker hasn't been deployed to Cloudflare yet (local `wrangler dev` testable now, `wrangler deploy` is a manual follow-up). Once deployed, this will be the first time a real (non-fallback) agent response is observable from a real browser.
+
+### Quick Tasks Completed
+
+| # | Description | Date | Commit | Directory |
+|---|-------------|------|--------|-----------|
+| 260705-rl5 | Build a Cloudflare Workers proxy for the Anthropic API key so agent calls go through a server-to-server proxy instead of direct browser calls to api.llmrouter.ru | 2026-07-05 | b376335 | [260705-rl5-build-a-cloudflare-workers-proxy-for-the](./quick/260705-rl5-build-a-cloudflare-workers-proxy-for-the/) |
 
 ## Deferred Items
 
@@ -109,8 +115,8 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-07-04T06:33:33.725Z
-Stopped at: Completed 05-03-PLAN.md (gap closure: RU+EN task-card instructions)
+Last session: 2026-07-05T17:01:30.000Z
+Stopped at: Completed quick task 260705-rl5 (Cloudflare Workers LLM key-proxy)
 Resume file: None
 
 ## Operator Next Steps
