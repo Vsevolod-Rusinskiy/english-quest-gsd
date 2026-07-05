@@ -3,6 +3,8 @@ node_modules/
 dist/
 .env
 .env.local
+.dev.vars
+worker/.dev.vars
 .claude/scheduled_tasks.lock
 .claude/settings.local.json
 .planning/research/.cache/
