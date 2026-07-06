@@ -23,7 +23,7 @@ const DEFAULT_UPSTREAM_URL = "https://api.llmrouter.ru";
 // Headers the @anthropic-ai/sdk browser client sends that the CORS preflight
 // must allow, plus content-type for the POST body itself.
 const ALLOWED_REQUEST_HEADERS =
-  "content-type, x-api-key, authorization, anthropic-version, anthropic-beta, x-stainless-arch, x-stainless-lang, x-stainless-os, x-stainless-package-version, x-stainless-retry-count, x-stainless-runtime, x-stainless-runtime-version, x-stainless-timeout";
+  "content-type, x-api-key, authorization, anthropic-version, anthropic-beta, anthropic-dangerous-direct-browser-access, x-stainless-arch, x-stainless-lang, x-stainless-os, x-stainless-package-version, x-stainless-retry-count, x-stainless-runtime, x-stainless-runtime-version, x-stainless-timeout";
 
 function corsHeaders(): HeadersInit {
   return {
