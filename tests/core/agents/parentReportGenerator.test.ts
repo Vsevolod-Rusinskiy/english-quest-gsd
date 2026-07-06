@@ -7,6 +7,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { callParentReportGenerator } from "../../../src/core/agents/parentReportGenerator";
 import type { AgentClient, AgentResponse } from "../../../src/core/agents/callAgent";
+import { topicLabel } from "../../../src/core/topics/topicLabels";
 
 function toolUseMessage(input: unknown): AgentResponse {
   return {
@@ -67,8 +68,8 @@ describe("callParentReportGenerator (REPORT-01, REPORT-02, RELY-01, RELY-02)", (
     expect(result.source).toBe("core");
     expect(result.parentReportRu).toContain(String(baseInput.exercisesCompleted));
     expect(result.parentReportRu).toContain(String(baseInput.correctCount));
-    expect(result.parentReportRu).toContain(baseInput.strugglingTopics[0]);
-    expect(result.parentReportRu).toContain(baseInput.reviewTopics[0]);
+    expect(result.parentReportRu).toContain(topicLabel(baseInput.strugglingTopics[0]));
+    expect(result.parentReportRu).toContain(topicLabel(baseInput.reviewTopics[0]));
     expect(result.parentReportRu).toContain(String(baseInput.rublesEarned));
     expect(result.parentReportRu).toContain(baseInput.recommendation);
     expect(result.headlineRu).toBe("Итоги урока");

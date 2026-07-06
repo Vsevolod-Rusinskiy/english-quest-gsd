@@ -15,6 +15,7 @@ import {
   ParentReportGeneratorResponseSchema,
   type ParentReportGeneratorResponse,
 } from "./parentReportGeneratorSchema";
+import { topicLabel } from "../topics/topicLabels";
 
 export interface ParentReportInput {
   exercisesCompleted: number;
@@ -44,14 +45,16 @@ const SYSTEM_PROMPT = [
 ].join(" ");
 
 function buildTemplateReport(input: ParentReportInput): string {
-  const strugglingText = input.strugglingTopics.length > 0 ? input.strugglingTopics.join(", ") : "нет";
-  const reviewText = input.reviewTopics.length > 0 ? input.reviewTopics.join(", ") : "нет";
+  const strugglingText =
+    input.strugglingTopics.length > 0 ? input.strugglingTopics.map(topicLabel).join(", ") : "нет";
+  const reviewText =
+    input.reviewTopics.length > 0 ? input.reviewTopics.map(topicLabel).join(", ") : "нет";
   return (
     `Ребёнок выполнил ${input.exercisesCompleted} заданий, ${input.correctCount} верно. ` +
     `Даётся сложнее: ${strugglingText}. ` +
     `Повторить: ${reviewText}. ` +
     `Заработано ${input.rublesEarned} ₽. ` +
-    `Рекомендация: ${input.recommendation}.`
+    `Рекомендация: ${topicLabel(input.recommendation)}.`
   );
 }
 

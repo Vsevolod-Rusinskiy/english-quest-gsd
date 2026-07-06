@@ -7,6 +7,7 @@
 // convention repo-wide, T-04-09). No visual polish this phase — Phase 5
 // owns that (RESEARCH.md Specific Ideas).
 import type { DifficultyMode } from "../../core/state/progressSchema";
+import { topicLabel } from "../../core/topics/topicLabels";
 
 export interface SessionEndScreenProps {
   recommendedFocus: string;
@@ -29,7 +30,7 @@ export function renderSessionEndScreen(props: SessionEndScreenProps): HTMLElemen
   childSection.appendChild(motivational);
 
   const focus = document.createElement("p");
-  focus.textContent = `Следующий фокус: ${props.recommendedFocus}`;
+  focus.textContent = `Следующий фокус: ${topicLabel(props.recommendedFocus)}`;
   childSection.appendChild(focus);
 
   const rubles = document.createElement("p");
