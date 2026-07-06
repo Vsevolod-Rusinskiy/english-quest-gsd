@@ -58,7 +58,12 @@ export interface CallAgentOptions<T> {
 }
 
 const MODEL = "claude-haiku-4-5"; // D-02
-const TIMEOUT_MS = 8000; // D-07
+// D-07: raised 8000 -> 12000 (SMOKE-FIX-02) after live smoke-testing showed
+// real Worker latency of ~6.4-7s, too close to the old 8s ceiling and
+// causing avoidable fallbacks / 40-60s session-end waits. 12s gives headroom
+// for the first attempt to usually succeed; worst-case two-attempt total
+// becomes 24s, still safely bounded by the deterministic fallback path.
+const TIMEOUT_MS = 12000;
 
 export async function callAgent<T>(
   opts: CallAgentOptions<T>,
