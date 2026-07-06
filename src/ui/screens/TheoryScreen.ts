@@ -19,15 +19,44 @@ export interface TheoryScreenOptions {
   currentExplanation?: TheoryExplanation | null;
 }
 
+// SMOKE-FIX-03: splits presentational text on sentence-boundary punctuation
+// (. ! ?) followed by whitespace, keeping the terminating punctuation on
+// each piece. Purely a render-time concern — Lesson-1A.json's theory.rule /
+// explanationLevels[].textRu data shape is unchanged. Operates on already-
+// Zod-validated strings (lesson data or agent/fallback text validated
+// upstream), so this introduces no new injection surface (T-nxg-02). Falls
+// back to the single trimmed string when no sentence boundary is found.
+function splitSentences(text: string): string[] {
+  const matches = text.match(/[^.!?]+[.!?]+(\s+|$)|[^.!?]+$/g);
+  if (!matches) {
+    const trimmed = text.trim();
+    return trimmed.length > 0 ? [trimmed] : [];
+  }
+  return matches.map((sentence) => sentence.trim()).filter((sentence) => sentence.length > 0);
+}
+
+function appendSentenceParagraphs(
+  container: HTMLElement,
+  text: string,
+  firstParagraphClassName?: string,
+): void {
+  const sentences = splitSentences(text);
+  sentences.forEach((sentence, index) => {
+    const paragraph = document.createElement("p");
+    if (index === 0 && firstParagraphClassName) {
+      paragraph.className = firstParagraphClassName;
+    }
+    paragraph.textContent = sentence;
+    container.appendChild(paragraph);
+  });
+}
+
 export function renderTheoryScreen(options: TheoryScreenOptions): HTMLElement {
   const { theory, onUnderstoodChoice, currentExplanation } = options;
   const container = document.createElement("div");
   container.className = "theory-screen";
 
-  const rule = document.createElement("p");
-  rule.className = "display";
-  rule.textContent = theory.rule;
-  container.appendChild(rule);
+  appendSentenceParagraphs(container, theory.rule, "display");
 
   const firstLevel = theory.explanationLevels[0];
   const activeExplanation: TheoryExplanation | null =
@@ -35,9 +64,7 @@ export function renderTheoryScreen(options: TheoryScreenOptions): HTMLElement {
     (firstLevel ? { textRu: firstLevel.textRu, exampleRu: firstLevel.exampleRu } : null);
 
   if (activeExplanation) {
-    const explanationText = document.createElement("p");
-    explanationText.textContent = activeExplanation.textRu;
-    container.appendChild(explanationText);
+    appendSentenceParagraphs(container, activeExplanation.textRu);
 
     const example = document.createElement("p");
     example.textContent = activeExplanation.exampleRu;
