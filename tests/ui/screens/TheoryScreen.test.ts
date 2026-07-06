@@ -8,17 +8,68 @@ const lessonPath = resolve(process.cwd(), "public/Lesson-1A.json");
 const realLesson1A = JSON.parse(readFileSync(lessonPath, "utf-8"));
 const lesson = LessonSchema.parse(realLesson1A);
 
+function splitSentencesForTest(text: string): string[] {
+  const matches = text.match(/[^.!?]+[.!?]+(\s+|$)|[^.!?]+$/g);
+  if (!matches) return [text.trim()].filter((s) => s.length > 0);
+  return matches.map((s) => s.trim()).filter((s) => s.length > 0);
+}
+
 describe("TheoryScreen", () => {
-  it("renders theory.rule and explanationLevels[0].exampleRu and both buttons via textContent", () => {
+  it("renders theory.rule and explanationLevels[0].exampleRu (each sentence recoverable) and both buttons via textContent", () => {
     const onUnderstoodChoice = vi.fn();
     const el = renderTheoryScreen({ theory: lesson.theory, onUnderstoodChoice });
 
-    expect(el.textContent).toContain(lesson.theory.rule);
+    for (const sentence of splitSentencesForTest(lesson.theory.rule)) {
+      expect(el.textContent).toContain(sentence);
+    }
     expect(el.textContent).toContain(lesson.theory.explanationLevels[0].exampleRu);
 
     const buttonTexts = Array.from(el.querySelectorAll("button")).map((b) => b.textContent);
     expect(buttonTexts).toContain("Понятно");
     expect(buttonTexts).toContain("Не понятно");
+  });
+
+  it("renders a multi-sentence explanation as more than one <p>, with the full text recoverable from textContent", () => {
+    const onUnderstoodChoice = vi.fn();
+    const multiSentence = {
+      textRu: "Первое предложение. Второе предложение! Третье предложение?",
+      exampleRu: "I love pizza.",
+    };
+    const el = renderTheoryScreen({
+      theory: lesson.theory,
+      onUnderstoodChoice,
+      currentExplanation: multiSentence,
+    });
+
+    const paragraphs = Array.from(el.querySelectorAll("p"));
+    // theory.rule paragraph(s) + explanation sentence paragraphs + example paragraph
+    const explanationParagraphs = paragraphs.filter(
+      (p) => p.textContent && multiSentence.textRu.includes(p.textContent.trim()),
+    );
+    expect(explanationParagraphs.length).toBeGreaterThan(1);
+
+    for (const sentence of splitSentencesForTest(multiSentence.textRu)) {
+      expect(el.textContent).toContain(sentence);
+    }
+  });
+
+  it("renders a single-sentence explanation as exactly one explanation <p>", () => {
+    const onUnderstoodChoice = vi.fn();
+    const singleSentence = {
+      textRu: "Одно простое предложение без границ.",
+      exampleRu: "I eat.",
+    };
+    const el = renderTheoryScreen({
+      theory: lesson.theory,
+      onUnderstoodChoice,
+      currentExplanation: singleSentence,
+    });
+
+    const paragraphs = Array.from(el.querySelectorAll("p"));
+    const explanationParagraphs = paragraphs.filter(
+      (p) => p.textContent && p.textContent.trim() === singleSentence.textRu.trim(),
+    );
+    expect(explanationParagraphs.length).toBe(1);
   });
 
   it("clicking Понятно calls onUnderstoodChoice(true)", () => {
