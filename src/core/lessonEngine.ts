@@ -16,6 +16,7 @@ import { callProgressAdvisor } from "./agents/progressAdvisor";
 import { callParentReportGenerator } from "./agents/parentReportGenerator";
 import { computeConfidenceScore } from "./personalization/confidenceScore";
 import { applyDifficultyGuardrails } from "./personalization/difficultyGuardrails";
+import { applyRecommendedFocusGuardrail } from "./personalization/recommendedFocusGuardrail";
 import type { DifficultyMode } from "./state/progressSchema";
 
 export type AnswerPayload = string | MatchingPair[] | string[];
@@ -381,6 +382,17 @@ export class LessonEngine {
       { correctStreak: state.currentCorrectStreak, recentErrors: state.currentErrorStreak },
     );
 
+    // PERSONAL-03 (T-ogs-01/T-ogs-02): applyRecommendedFocusGuardrail is the
+    // core-side trust gate for the agent's recommendedFocus — the SAME
+    // fallbackRecommendedFocus already passed into callProgressAdvisor above
+    // is reused here (not a second/different fallback), so every downstream
+    // consumer only ever sees a validated topic-id or that deterministic
+    // fallback, never raw agent prose.
+    const finalRecommendedFocus = applyRecommendedFocusGuardrail(
+      advisorResult.recommendedFocus,
+      fallbackRecommendedFocus,
+    );
+
     // Step 5: confidenceScore (SPEC.md §12 formula, pure core computation).
     const exerciseStatValues = Object.values(state.exerciseStats);
     const totalAttempts = exerciseStatValues.reduce((sum, s) => sum + s.attempts, 0);
@@ -420,7 +432,7 @@ export class LessonEngine {
       strugglingTopics,
       reviewTopics,
       rublesEarned,
-      recommendation: advisorResult.recommendedFocus,
+      recommendation: finalRecommendedFocus,
     });
 
     // Step 8: ONE session_end dispatch.
@@ -428,7 +440,7 @@ export class LessonEngine {
       type: "session_end",
       confidenceScore,
       difficultyMode: finalDifficulty,
-      recommendedFocus: advisorResult.recommendedFocus,
+      recommendedFocus: finalRecommendedFocus,
       motivationalMessageRu: advisorResult.motivationalMessageRu,
       parentReportRu: reportResult.parentReportRu,
       headlineRu: reportResult.headlineRu,
@@ -440,7 +452,7 @@ export class LessonEngine {
 
     // Step 9: transient render-facing result.
     return {
-      recommendedFocus: advisorResult.recommendedFocus,
+      recommendedFocus: finalRecommendedFocus,
       motivationalMessageRu: advisorResult.motivationalMessageRu,
       suggestedDifficulty: finalDifficulty,
       parentReportRu: reportResult.parentReportRu,

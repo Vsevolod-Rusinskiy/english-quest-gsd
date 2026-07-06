@@ -823,6 +823,37 @@ describe("LessonEngine", () => {
       setItemSpy.mockRestore();
     });
 
+    it("PERSONAL-03 (T-ogs-01/T-ogs-02): a hallucinated non-topic-id recommendedFocus from Progress Advisor is replaced by the deterministic fallback everywhere it flows — session_end dispatch, callParentReportGenerator's recommendation input, and the returned SessionEndResult", async () => {
+      const hallucinated =
+        "present_simple_question_order with question formation in real contexts (building on the strong foundation in present continuous)";
+      progressAdvisorSpy.mockResolvedValueOnce({
+        recommendedFocus: hallucinated,
+        suggestedDifficulty: "normal",
+        reviewSuggestions: [],
+        motivationalMessageRu: "Ты молодец!",
+        sessionAdvice: "continue",
+        source: "agent",
+      });
+      const store = new StateStore(initialState());
+      const engine = new LessonEngine(lesson, store);
+
+      const result = await engine.handleSessionEnd();
+
+      // No topicStats yet in a fresh initialState(), so the core's own
+      // fallbackRecommendedFocus computation (lessonEngine.ts Step 1) resolves
+      // to the generic "Продолжай практиковаться" string.
+      const fallback = "Продолжай практиковаться";
+      expect(store.getState().studentProfile.lastRecommendedFocus).toBe(fallback);
+      expect(store.getState().studentProfile.lastRecommendedFocus).not.toBe(hallucinated);
+
+      const callArg = parentReportGeneratorSpy.mock.calls[0][0] as { recommendation: string };
+      expect(callArg.recommendation).toBe(fallback);
+      expect(callArg.recommendation).not.toBe(hallucinated);
+
+      expect(result.recommendedFocus).toBe(fallback);
+      expect(result.recommendedFocus).not.toBe(hallucinated);
+    });
+
     it("confidenceScore computed and persisted: matches computeConfidenceScore()'s formula applied to the session's actual exerciseStats/streaks", async () => {
       const store = new StateStore(initialState());
       const engine = new LessonEngine(lesson, store);
