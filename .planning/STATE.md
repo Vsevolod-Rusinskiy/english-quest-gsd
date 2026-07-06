@@ -4,10 +4,10 @@ milestone: v1.0
 milestone_name: milestone
 current_phase: 0
 status: Awaiting next milestone
-stopped_at: "Completed quick task 260705-rl5 (Cloudflare Workers LLM key-proxy)"
-last_updated: "2026-07-05T17:01:30.000Z"
-last_activity: 2026-07-05
-last_activity_desc: "Quick task 260705-rl5: Cloudflare Workers LLM key-proxy (fixes CORS-preflight-401 blocker, removes browser-bundled API key)"
+stopped_at: "Completed quick task 260706-nxg (fixed 3 live smoke-test findings)"
+last_updated: "2026-07-06T17:25:00.000Z"
+last_activity: 2026-07-06
+last_activity_desc: "Quick task 260706-nxg: fixed topic-id leak into user/parent-facing text, raised callAgent timeout 8s->12s, split TheoryScreen text into per-sentence paragraphs"
 progress:
   total_phases: 5
   completed_phases: 5
@@ -97,12 +97,14 @@ None yet.
 - [v1.0] `single-choice`/`order-builder` have no real content in `Lesson-1A.json` (only `text-input`×18 + `matching`×1) — schema/checkers/renderers verified via hand-authored fixtures and live-browser testing, but real lesson content for these 2 types doesn't exist yet; needs content authoring before full end-to-end confidence (tracked as `CONTENT-01`, v2 scope)
 - [v1.0, resolved+deployed 2026-07-06 in quick task 260705-rl5] ~~App calls a third-party LLM router (`api.llmrouter.ru`), not Anthropic directly — API key lives in `.env` → bundled into the built JS at compile time (browser-direct, no proxy)~~. A Cloudflare Worker key-proxy (`worker/`, deployed at `https://english-quest-llm-proxy.leto99999.workers.dev`) now holds the real key server-side only; the browser bundle no longer contains it. See `03-CONTEXT.md` D-03 (archived) — exposure closed structurally and confirmed live.
 - [v1.0, diagnosed 2026-07-04, resolved+confirmed-live 2026-07-06 in quick task 260705-rl5] ~~Live LLM router calls from the browser fail with a **CORS preflight rejection**~~ — the deployed Worker answers the `OPTIONS` preflight itself and forwards `POST /v1/messages` server-to-server. **Confirmed working end-to-end via live browser test**: a real Answer Checker agent response (`errorType: spelling_ing_form`, a genuine hint for a "workin"→"working" typo) was observed for the first time in this project, not the deterministic fallback. One follow-up fix was needed post-deploy: the `@anthropic-ai/sdk`'s `anthropic-dangerous-direct-browser-access` header (sent automatically when `dangerouslyAllowBrowser: true`) was missing from the Worker's `Access-Control-Allow-Headers` list, which silently blocked the real POST client-side as a CORS violation even though `curl`/manual fetch worked and the OPTIONS preflight returned 204. Fixed via `/gsd-fast` (commit `36ea10e`) and redeployed.
+- [v1.0, found+fixed 2026-07-06 in quick task 260706-nxg] ~~A full live 19-exercise lesson smoke-test walkthrough (first ever full run against the deployed Worker) found: (1) raw internal snake_case topic-ids leaking into user/parent-facing Russian text in `SessionEndScreen.ts` and `parentReportGenerator.ts`'s fallback template; (2) `callAgent.ts`'s 8s per-attempt timeout was too tight against real observed Worker/router latency (~6.4s+/call), causing frequent avoidable fallbacks and a 40-60s session-end wait (Reward Advisor fell back 88/19 exercises, Answer Checker 24, Theory Tutor 24, Parent Report Generator 8 — Progress Advisor 0); (3) TheoryScreen's explanation text was one dense paragraph with no per-sentence breaks~~. All 3 fixed: new `src/core/topics/topicLabels.ts` maps all 8 topic-ids to Russian display names (safe raw-id fallback on miss) used at both leak points; `TIMEOUT_MS` raised 8000→12000; `TheoryScreen.ts` now splits rule/explanation text into per-sentence `<p>` elements. 258/258 tests passing, `tsc --noEmit` clean, `Lesson-1A.json` unchanged.
 
 ### Quick Tasks Completed
 
 | # | Description | Date | Commit | Directory |
 |---|-------------|------|--------|-----------|
 | 260705-rl5 | Build a Cloudflare Workers proxy for the Anthropic API key so agent calls go through a server-to-server proxy instead of direct browser calls to api.llmrouter.ru | 2026-07-05 | b376335 | [260705-rl5-build-a-cloudflare-workers-proxy-for-the](./quick/260705-rl5-build-a-cloudflare-workers-proxy-for-the/) |
+| 260706-nxg | Fix 3 issues found during a live smoke-test walkthrough: topic-id leak, callAgent timeout too tight, TheoryScreen dense paragraph | 2026-07-06 | acfa0ac | [260706-nxg-fix-3-issues-found-during-a-live-smoke-t](./quick/260706-nxg-fix-3-issues-found-during-a-live-smoke-t/) |
 
 ## Deferred Items
 
