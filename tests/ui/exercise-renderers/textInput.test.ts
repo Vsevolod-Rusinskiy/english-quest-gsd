@@ -41,9 +41,9 @@ describe("renderTextInput", () => {
     expect(source).not.toMatch(/innerHTML/);
   });
 
-  it("single-blank exercise renders exactly one input and submits its raw value verbatim", () => {
-    // The fixture's first text-input (ex001, single blank) exercises the
-    // unchanged single-input path.
+  it("single-blank exercise renders exactly one INLINE input, no separate box, no leftover blank marker, submits verbatim (UX-INLINE-02)", () => {
+    // The fixture's first text-input (ex001, single blank) now uses the
+    // SAME inline-per-blank path as multi-blank exercises.
     let submitted: string | null = null;
     const el = renderTextInput({
       exercise,
@@ -55,8 +55,15 @@ describe("renderTextInput", () => {
     });
     const inputs = el.querySelectorAll<HTMLInputElement>('input[type="text"]');
     expect(inputs).toHaveLength(1);
-    // No inline-blank inputs on the single-blank path.
-    expect(el.querySelectorAll(".inline-blank")).toHaveLength(0);
+    // The single blank IS an inline-blank input now.
+    expect(el.querySelectorAll(".inline-blank")).toHaveLength(1);
+    expect(inputs[0].classList.contains("inline-blank")).toBe(true);
+
+    // No literal "___" marker left anywhere in the prompt paragraph.
+    const prompt = Array.from(el.querySelectorAll("p")).find((p) =>
+      p.textContent?.includes(exercise.prompt.split("___")[0]),
+    )!;
+    expect(prompt.textContent).not.toContain("___");
 
     inputs[0].value = "is working";
     inputs[0].dispatchEvent(new Event("input"));
@@ -65,6 +72,32 @@ describe("renderTextInput", () => {
     )!;
     submit.click();
     expect(submitted).toBe("is working");
+  });
+
+  it("a prompt with ZERO blank markers still renders a single (non-inline) input and never crashes", () => {
+    const noBlankExercise = { ...exercise, prompt: "No blank marker here." };
+    let submitted: string | null = null;
+    expect(() => {
+      const el = renderTextInput({
+        exercise: noBlankExercise,
+        instructionRu,
+        instructionEn,
+        onSubmit: (raw) => {
+          submitted = raw;
+        },
+      });
+      const inputs = el.querySelectorAll<HTMLInputElement>('input[type="text"]');
+      expect(inputs).toHaveLength(1);
+      expect(el.querySelectorAll(".inline-blank")).toHaveLength(0);
+
+      inputs[0].value = "anything";
+      inputs[0].dispatchEvent(new Event("input"));
+      const submit = Array.from(el.querySelectorAll("button")).find(
+        (b) => b.textContent === "Проверить",
+      )!;
+      submit.click();
+    }).not.toThrow();
+    expect(submitted).toBe("anything");
   });
 });
 
