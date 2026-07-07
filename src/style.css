@@ -222,8 +222,16 @@ button:disabled {
   border-radius: 14px;
 }
 
-.submit-row {
-  margin-top: var(--space-lg);
+/* Multi-blank exercises (260707-hby): one input per "___" flows INLINE inside
+   the sentence so it reads "Do [ ] you usually [ ] late?" on one line instead
+   of full-width stacked boxes. Higher specificity ([type].class) overrides the
+   full-width block rule above. */
+.task-card input[type="text"].inline-blank {
+  display: inline-block;
+  width: auto;
+  min-width: 96px;
+  margin: var(--space-xs) 6px;
+  vertical-align: middle;
 }
 
 /* Chip/option-specific chunky styling (D-04) — unselected state for the
