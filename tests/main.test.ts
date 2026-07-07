@@ -189,6 +189,23 @@ describe("main.ts render()/onSubmit (Phase 5 Plan 01)", () => {
     expect(chip?.textContent).toBe("0 ₽");
   });
 
+  // Test C2 (260707-pu4): top-bar two-row DOM structure — row1 holds title +
+  // ruble chip; .topic-mastery must be ABSENT at exercise-start (before any
+  // answer, topicStats empty), proving Task 1's null-return + Task 2's guard
+  // are wired end-to-end. jsdom doesn't compute real layout, so this asserts
+  // DOM structure/presence, not pixel width, per the plan's stated scope.
+  it("renders the top bar as two rows and hides .topic-mastery when topicStats is empty", async () => {
+    await mountApp(root);
+    await advanceThroughTheory();
+
+    const row1 = root.querySelector(".top-bar .top-bar-row-1");
+    expect(row1).toBeTruthy();
+    expect(row1?.querySelector(".heading")).toBeTruthy();
+    expect(row1?.querySelector(".ruble-balance")).toBeTruthy();
+
+    expect(root.querySelector(".topic-mastery")).toBeNull();
+  });
+
   // Test D: thinking-indicator wiring at the exercise-submit call site —
   // uses a deliberately delayed callAnswerChecker mock (triggered by an
   // incorrect deterministic answer, so the agent gateway is actually

@@ -78,14 +78,30 @@ body {
   line-height: 1.2;
 }
 
-/* Top bar */
+/* Top bar (260707-pu4: two-row layout — a single flex row with no wrap
+   collapsed .progress-bar to width:0 once 6 elements shared it). */
 .top-bar {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  padding: var(--space-md);
+  background: var(--color-bg-secondary);
+}
+
+/* Row 1: identity/reward — title left, ruble + streak chips right. Carries
+   forward .top-bar's old justify-content/align-items behavior. */
+.top-bar-row-1 {
   display: flex;
   justify-content: space-between;
   align-items: center;
   gap: var(--space-md);
-  padding: var(--space-md);
-  background: var(--color-bg-secondary);
+}
+
+/* Row 2: progress — indicator text, progress bar, topic-mastery summary. */
+.top-bar-row-2 {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
 }
 
 /* Ruble balance chip (UI-02, NEW) */
@@ -106,6 +122,10 @@ body {
    against the track: --color-accent-dark (#1e5fc7) on --color-bg-secondary
    (#dceeff) computes to 5.04:1. */
 .progress-bar {
+  /* 260707-pu4: real width as a flex item in .top-bar-row-2 — without this
+     the bar had no explicit width/flex-basis and content-collapsed to 0,
+     making it invisible (the layout regression this fix addresses). */
+  flex: 1 1 auto;
   height: 10px;
   border-radius: 6px;
   background: var(--color-bg-secondary-dark);
@@ -135,14 +155,13 @@ body {
 }
 
 /* Compact topic-mastery summary line (UX-PROGRESS-04) — slim, muted, sits
-   under the progress bar in the top bar. --color-muted (#6b6b6b) on
-   --color-bg (#fff8e7) computes to 5.03:1, passes WCAG AA (already verified
-   for the instruction-ru line, reused here). */
+   inline at the end of .top-bar-row-2 (260707-pu4: sizes to content in the
+   flex row, no longer forces a wrap under the bar). --color-muted (#6b6b6b)
+   on --color-bg (#fff8e7) computes to 5.03:1, passes WCAG AA (already
+   verified for the instruction-ru line, reused here). */
 .topic-mastery {
   font-size: 13px;
   color: var(--color-muted);
-  width: 100%;
-  margin-top: var(--space-xs);
 }
 
 /* Lesson title block */
