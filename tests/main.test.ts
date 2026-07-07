@@ -282,4 +282,135 @@ describe("main.ts render()/onSubmit (Phase 5 Plan 01)", () => {
     expect(praise).toBeTruthy();
     expect(praise?.textContent).toBe("Отличная работа с первой попытки!");
   });
+
+  // Tests G/H/I (UX-HINT-03): escalating authored hints on wrong text-input
+  // answers, replacing the old result.hintRu-first priority. The agent's
+  // Answer Checker is mocked to keep these tests offline/fast (its own
+  // behavior is covered by answerChecker's own tests) — a deliberately-wrong
+  // answer always routes through it (D-10) since the deterministic check
+  // fails first.
+  describe("escalating authored hints on wrong text-input answers (UX-HINT-03)", () => {
+    let answerCheckerSpy: ReturnType<typeof vi.spyOn>;
+
+    beforeEach(() => {
+      answerCheckerSpy = vi.spyOn(answerCheckerModule, "callAnswerChecker").mockResolvedValue({
+        isCorrect: false,
+        source: "agent",
+        errorType: "unknown",
+        confidence: 0.9,
+        hintRu: "Агентская подсказка, которая не должна заменять авторскую.",
+      });
+    });
+
+    afterEach(() => {
+      answerCheckerSpy.mockRestore();
+    });
+
+    it("shows exercise.hint.firstError on the 1st wrong attempt (ex001 has secondError)", async () => {
+      await mountApp(root);
+      await advanceThroughTheory();
+
+      const ex001 = allExercises.find(
+        (e: { exerciseId: string }) => e.exerciseId === "eq-1a-ex001",
+      );
+
+      const input = root.querySelector('input[type="text"]') as HTMLInputElement;
+      input.value = "wrong answer";
+      input.dispatchEvent(new Event("input"));
+      submitButton().click();
+
+      await vi.waitFor(() => expect(root.textContent).toContain("Не совсем"));
+
+      const banner = root.querySelector(".feedback-banner");
+      expect(banner?.textContent).toContain(ex001.hint.firstError);
+      expect(banner?.textContent).not.toContain(ex001.hint.secondError);
+      // Agent hintRu no longer replaces the authored hint.
+      expect(banner?.textContent).not.toContain("Агентская подсказка");
+    });
+
+    it("escalates to exercise.hint.secondError on the 2nd+ wrong attempt on the SAME exercise", async () => {
+      await mountApp(root);
+      await advanceThroughTheory();
+
+      const ex001 = allExercises.find(
+        (e: { exerciseId: string }) => e.exerciseId === "eq-1a-ex001",
+      );
+
+      const input = root.querySelector('input[type="text"]') as HTMLInputElement;
+
+      // 1st wrong attempt.
+      input.value = "wrong answer one";
+      input.dispatchEvent(new Event("input"));
+      submitButton().click();
+      await vi.waitFor(() => expect(root.textContent).toContain("Не совсем"));
+
+      // 2nd wrong attempt on the same, still-current exercise (WR-03: the
+      // field is not cleared/advanced on an incorrect main-pass answer).
+      input.value = "wrong answer two";
+      input.dispatchEvent(new Event("input"));
+      submitButton().click();
+      await vi.waitFor(() =>
+        expect(root.querySelector(".feedback-banner")?.textContent).toContain(
+          ex001.hint.secondError,
+        ),
+      );
+
+      const banner = root.querySelector(".feedback-banner");
+      expect(banner?.textContent).toContain(ex001.hint.secondError);
+    });
+
+    it("falls back to firstError on the 2nd+ wrong attempt when secondError is absent (ex010)", async () => {
+      await mountApp(root);
+      await advanceThroughTheory();
+
+      const ex010 = allExercises.find(
+        (e: { exerciseId: string }) => e.exerciseId === "eq-1a-ex010",
+      );
+      expect(ex010.hint.secondError).toBeUndefined();
+
+      // Advance to ex010 (the 10th exercise) with correct answers, mocking
+      // the deterministic path each time (no agent call needed for correct
+      // answers).
+      answerCheckerSpy.mockRestore();
+      for (let i = 0; i < 9; i++) {
+        const exercise = allExercises[i];
+        fillCorrectTextAnswer(root, exercise.exerciseId, exercise.answerCheck.correctAnswers[0]);
+        const btn = submitButton();
+        btn.click();
+        await vi.waitFor(() => expect(btn.disabled).toBe(false));
+      }
+      await vi.waitFor(() => expect(root.textContent).toContain("Задание 10 из 19"));
+
+      // Re-stub the agent for the two wrong attempts on ex010.
+      answerCheckerSpy = vi.spyOn(answerCheckerModule, "callAnswerChecker").mockResolvedValue({
+        isCorrect: false,
+        source: "agent",
+        errorType: "unknown",
+        confidence: 0.9,
+        hintRu: "Агентская подсказка, которая не должна заменять авторскую.",
+      });
+
+      const input = root.querySelector('input[type="text"]') as HTMLInputElement;
+      input.value = "wrong one";
+      input.dispatchEvent(new Event("input"));
+      submitButton().click();
+      await vi.waitFor(() => expect(root.textContent).toContain("Не совсем"));
+      expect(root.querySelector(".feedback-banner")?.textContent).toContain(
+        ex010.hint.firstError,
+      );
+
+      input.value = "wrong two";
+      input.dispatchEvent(new Event("input"));
+      submitButton().click();
+      await vi.waitFor(() =>
+        expect(root.querySelector(".feedback-banner")?.textContent).toContain(
+          ex010.hint.firstError,
+        ),
+      );
+
+      // Never blank — firstError still shown, not an undefined/absent hint.
+      const banner = root.querySelector(".feedback-banner");
+      expect(banner?.textContent).toContain(ex010.hint.firstError);
+    });
+  });
 });
