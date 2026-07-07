@@ -14,6 +14,7 @@ import {
 import { renderSessionEndScreen } from "./ui/screens/SessionEndScreen";
 import { renderThinkingIndicator } from "./ui/components/ThinkingIndicator";
 import { renderRewardToast } from "./ui/components/RewardToast";
+import { playCoinSound } from "./ui/sound/coin";
 
 export async function mountApp(root: HTMLElement): Promise<void> {
   // Halt on failure per D-06 — loadLesson renders the FatalError state itself.
@@ -209,6 +210,9 @@ export async function mountApp(root: HTMLElement): Promise<void> {
 
               const rewardsDelta = store.getState().currentRewards - rewardsBefore;
               if (rewardsDelta > 0) {
+                // UX-COIN-01: synthesized cling alongside the visual toast —
+                // fire-and-forget, synchronous, never throws (see coin.ts).
+                playCoinSound();
                 const toastEl = renderRewardToast(rewardsDelta);
                 document.body.appendChild(toastEl);
                 setTimeout(() => toastEl.remove(), 1950);

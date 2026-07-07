@@ -1,31 +1,44 @@
 import { describe, it, expect, afterEach, vi } from "vitest";
-import { playCoinSound } from "../../../src/ui/sound/coin";
 
 // UX-COIN-01: synthesized coin-clink on ruble award. jsdom has NO
 // AudioContext at all, so the "absent constructor" path is exercised by
 // every test in this file unless we stub one in — matching the real-browser
 // "unavailable/blocked" degrade-silently requirement (T-krq-01).
+//
+// coin.ts keeps a module-scoped lazily-created AudioContext singleton by
+// design (verified by the "reuses across calls" test below) — that means
+// each test must get a FRESH module instance so one test's stubbed
+// AudioContext can't leak its already-constructed `ctx` into the next.
+// vi.resetModules() + a dynamic re-import per test achieves that isolation.
 describe("playCoinSound", () => {
   afterEach(() => {
     vi.unstubAllGlobals();
   });
 
-  it("never throws when window.AudioContext is absent (jsdom default)", () => {
+  async function freshPlayCoinSound(): Promise<() => void> {
+    vi.resetModules();
+    const mod = await import("../../../src/ui/sound/coin");
+    return mod.playCoinSound;
+  }
+
+  it("never throws when window.AudioContext is absent (jsdom default)", async () => {
+    const playCoinSound = await freshPlayCoinSound();
     expect(() => playCoinSound()).not.toThrow();
   });
 
-  it("never throws when constructing AudioContext throws (autoplay-blocked / SecurityError)", () => {
+  it("never throws when constructing AudioContext throws (autoplay-blocked / SecurityError)", async () => {
     class ThrowingAudioContext {
       constructor() {
         throw new DOMException("blocked by autoplay policy", "SecurityError");
       }
     }
     vi.stubGlobal("AudioContext", ThrowingAudioContext);
+    const playCoinSound = await freshPlayCoinSound();
 
     expect(() => playCoinSound()).not.toThrow();
   });
 
-  it("never throws when a working stub's node methods throw mid-graph", () => {
+  it("never throws when a working stub's node methods throw mid-graph", async () => {
     class PartlyBrokenAudioContext {
       state = "running";
       destination = {};
@@ -37,11 +50,12 @@ describe("playCoinSound", () => {
       }
     }
     vi.stubGlobal("AudioContext", PartlyBrokenAudioContext);
+    const playCoinSound = await freshPlayCoinSound();
 
     expect(() => playCoinSound()).not.toThrow();
   });
 
-  it("wires oscillator + gain nodes, connects them, and calls start/stop when a working stub is supplied", () => {
+  it("wires oscillator + gain nodes, connects them, and calls start/stop when a working stub is supplied", async () => {
     const oscInstances: Array<{
       type: string;
       frequency: { setValueAtTime: ReturnType<typeof vi.fn> };
@@ -87,6 +101,7 @@ describe("playCoinSound", () => {
       }
     }
     vi.stubGlobal("AudioContext", WorkingAudioContext);
+    const playCoinSound = await freshPlayCoinSound();
 
     expect(() => playCoinSound()).not.toThrow();
 
@@ -103,7 +118,7 @@ describe("playCoinSound", () => {
     }
   });
 
-  it("lazily creates ONE AudioContext and reuses it across calls (not re-created every call)", () => {
+  it("lazily creates ONE AudioContext and reuses it across calls (not re-created every call)", async () => {
     let constructCount = 0;
     class CountingAudioContext {
       state = "running";
@@ -133,6 +148,7 @@ describe("playCoinSound", () => {
       }
     }
     vi.stubGlobal("AudioContext", CountingAudioContext);
+    const playCoinSound = await freshPlayCoinSound();
 
     playCoinSound();
     playCoinSound();
