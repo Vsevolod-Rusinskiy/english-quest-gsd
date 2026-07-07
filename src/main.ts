@@ -223,8 +223,23 @@ export async function mountApp(root: HTMLElement): Promise<void> {
               if (submitButton) submitButton.disabled = false;
             }
 
+            // UX-HINT-03: authored hint (from lesson data) is now the
+            // PRIMARY hint, escalating by attempt count — 1st wrong attempt
+            // -> firstError, 2nd+ -> secondError (falling back to
+            // firstError when absent, only 9/19 exercises define it). The
+            // agent's result.hintRu is supplementary only and, per
+            // CONTEXT.md #3's recommendation, dropped from the banner
+            // entirely this pass rather than risk a confusing agent hint
+            // replacing the reliable authored one. Read AFTER
+            // engine.handleAnswer resolves so the just-recorded attempt is
+            // reflected.
+            const attempts = store.getState().exerciseStats[exercise.exerciseId]?.attempts ?? 0;
             const hint =
-              result.hintRu ?? ("hint" in exercise ? exercise.hint.firstError : undefined);
+              "hint" in exercise
+                ? attempts >= 2
+                  ? (exercise.hint.secondError ?? exercise.hint.firstError)
+                  : exercise.hint.firstError
+                : undefined;
             feedback = {
               atIndex: index,
               exerciseId: feedbackKey,
