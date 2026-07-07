@@ -134,6 +134,17 @@ body {
   color: var(--color-text);
 }
 
+/* Compact topic-mastery summary line (UX-PROGRESS-04) — slim, muted, sits
+   under the progress bar in the top bar. --color-muted (#6b6b6b) on
+   --color-bg (#fff8e7) computes to 5.03:1, passes WCAG AA (already verified
+   for the instruction-ru line, reused here). */
+.topic-mastery {
+  font-size: 13px;
+  color: var(--color-muted);
+  width: 100%;
+  margin-top: var(--space-xs);
+}
+
 /* Lesson title block */
 .lesson-title-block {
   padding: var(--space-lg) var(--space-md) 0;

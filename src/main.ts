@@ -17,6 +17,7 @@ import { renderRewardToast } from "./ui/components/RewardToast";
 import { playCoinSound } from "./ui/sound/coin";
 import { renderProgressBar } from "./ui/components/ProgressBar";
 import { renderStreakChip } from "./ui/components/StreakChip";
+import { renderTopicMasterySummary } from "./ui/components/TopicMasterySummary";
 
 export async function mountApp(root: HTMLElement): Promise<void> {
   // Halt on failure per D-06 — loadLesson renders the FatalError state itself.
@@ -125,6 +126,11 @@ export async function mountApp(root: HTMLElement): Promise<void> {
           );
         }
       }
+
+      // UX-PROGRESS-04: compact topic-mastery summary, mounted once in the
+      // top-bar region (below the progress bar), for main/review/complete
+      // alike — reads state.topicStats only, no new state.
+      topBar.appendChild(renderTopicMasterySummary(state.topicStats));
     }
     root.appendChild(topBar);
 
