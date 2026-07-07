@@ -4,16 +4,15 @@ milestone: v1.0
 milestone_name: milestone
 current_phase: 0
 status: Awaiting next milestone
-stopped_at: "Completed quick task 260707-hby (multi-blank inline inputs + gray RU hint)"
-last_updated: "2026-07-07T12:50:00.000Z"
+stopped_at: "Completed quick task 260707-krq (coin sound, unified inline blanks, escalating hints, progress surfacing)"
+last_updated: "2026-07-07T12:12:39.000Z"
 last_activity: 2026-07-07
-last_activity_desc: "Quick task 260707-hby: one inline input per blank for multi-blank exercises (fixes false rejection of correct blank-only answers) + gray Russian instruction hint across all 4 renderers"
+last_activity_desc: "Quick task 260707-krq: batch of 4 UX improvements from live testing — coin-clink sound on reward, all text-input exercises unified to inline blanks, escalating authored hints (firstError/secondError), and a top-bar progress bar + streak chip + topic-mastery summary"
 progress:
-  total_phases: 5
-  completed_phases: 5
-  total_plans: 14
-  completed_plans: 14
-  percent: 100
+  total_phases: 0
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
 current_phase_name: kid-friendly-visual-design
 ---
 
@@ -63,6 +62,7 @@ Last activity: 2026-07-04 — Milestone v1.0 completed and archived
 | Phase 05 P01 | 12min | 2 tasks | 9 files |
 | Phase 05 P02 | 22min | 3 tasks | 7 files |
 | Phase 05 P03 | 25min | 2 tasks | 9 files |
+| Phase 260707-krq P01 | 9min | 5 tasks | 15 files |
 
 ## Accumulated Context
 
@@ -87,13 +87,17 @@ Recent decisions affecting current work:
 - [Phase ?]: During Task 3's mandatory human-verify checkpoint (live browser walkthrough), 2 real gaps were found and fixed in-flight: Reward Advisor's praiseRu was computed/cross-checked but never rendered anywhere in the UI (wired into FeedbackBanner), and SessionEndScreen had zero visual treatment (added .child-section/.parent-section card styling)
 - [Phase ?]: Chip/option unselected-state styling (.option/.match-left/.match-right/.bank-chip/.sequence-chip) is CSS-only - no exercise-renderer TS changes needed since selection/pairing already applies Plan 01's shared button.accent/.selected rule
 - [Phase ?]: 05-03: getCurrentSection() built as a thin wrapper on getCurrentExerciseId(), keeping exactly one place that resolves current-exercise identity across main/review pass
+- [Phase ?]: 260707-krq: Agent hintRu dropped entirely from the feedback banner (not kept as a secondary line); authored escalating hint (firstError/secondError) is now the sole hint shown — CONTEXT.md #3 explicitly recommended dropping the agent hint as cleanest, since the original live-test issue was a confusing agent hint replacing the reliable authored one
+- [Phase ?]: 260707-krq: All text-input exercises (single AND multi-blank) now render inline blanks (blankCount >= 1), unifying the previously-inconsistent single-blank separate-box layout — Live-testing on ex005 found the old single-blank layout jarring next to the already-inline multi-blank exercises
 
 ### Pending Todos
 
 - [UX finding, 2026-07-06, manual test] Theory screen "Не понятно" 3rd-tap transition feels abrupt: after `maxSimplifyRounds` (3) the soft transition (`theoryUnderstood = nextCount >= maxSimplifyRounds` in `handleTheoryStep`, [lessonEngine.ts](src/core/lessonEngine.ts:183)) auto-advances the child straight to the first exercise even though they just tapped "Не понятно" again — with no explanatory cue (e.g. "Давай попробуем на практике"). Behavior is intentional (prevents an infinite "не понятно" loop), but the jump can read as unexpected to a child. **Not yet fixed — to discuss how to address (add a transition message? a visible "последнее объяснение" hint on round 3?).**
-- [Feature request, 2026-07-06, manual test] Add a "cash register" (ka-ching) sound effect when rubles are awarded — play it at the same point the reward balance increases / `RewardToast` fires (before/after `state.currentRewards` diff in `main.ts`). **Not yet implemented — to discuss (sound asset source, mute toggle for classroom use, autoplay-policy handling).**
-- [Content/UX finding, 2026-07-06, RESOLVED 2026-07-07 in quick-260707-hby] ~~Multi-blank text-input answer format is ambiguous. Exercises like `eq-1a-ex002` ("___ you usually ___ late?") have TWO blanks but ONE input box; the expected answer bundles in the already-printed "you usually", so a child who fills only the blanks ("don't have" for ex003) was FALSELY REJECTED.~~ Fixed: multi-blank exercises now render ONE inline input per blank (the printed words like "usually" stay visible between them), the renderer reconstructs the answer for the unchanged deterministic checker, and ex004's acceptedAnswers gained its blank-only form. Verified live on all 3 two-blank exercises (ex002/003/004).
+- [Feature request, 2026-07-06, RESOLVED 2026-07-07 in quick-260707-krq] ~~Add a "cash register" (ka-ching) sound effect when rubles are awarded — play it at the same point the reward balance increases / `RewardToast` fires (before/after `state.currentRewards` diff in `main.ts`). Not yet implemented — to discuss (sound asset source, mute toggle for classroom use, autoplay-policy handling).~~ Fixed: `src/ui/sound/coin.ts` synthesizes a short two-note bell-like "cling" via the Web Audio API (no external asset, no mute toggle this pass), lazily creates/reuses one `AudioContext`, and degrades silently (try/catch, never throws) when the API is unavailable or blocked. Wired into the existing `rewardsDelta > 0` branch in `main.ts`.
+- [Content/UX finding, 2026-07-06, RESOLVED 2026-07-07 in quick-260707-hby + quick-260707-krq] ~~Multi-blank text-input answer format is ambiguous. Exercises like `eq-1a-ex002` ("___ you usually ___ late?") have TWO blanks but ONE input box; the expected answer bundles in the already-printed "you usually", so a child who fills only the blanks ("don't have" for ex003) was FALSELY REJECTED.~~ Fixed in two steps: 260707-hby rendered multi-blank exercises inline; 260707-krq (UX-INLINE-02) unified SINGLE-blank exercises to the same inline path too (e.g. ex005 "I ___ going out to restaurants" now shows one inline input in the sentence, not a separate box below with a leftover "___"). All 18 text-input exercises now render consistently. Verified live on all 3 two-blank exercises (ex002/003/004) in 260707-hby; single-blank inline covered by unit tests in 260707-krq, pending a live look.
 - [UX decision, 2026-07-06, manual test] On an INCORRECT text-input answer the input field is intentionally NOT cleared — the same exercise stays on screen with the child's text preserved so they can edit rather than retype (WR-03, by design in `main.ts`). Verified: CORRECT answers (exact-match AND agent-judged) DO advance to the next exercise and clear the field. Flagged by the user as a possible "old answer not cleared" bug; confirmed it only happens on the same-exercise incorrect path, never on a genuine advance to a new exercise. **To discuss whether to keep (edit-in-place) or clear the field on a wrong answer.**
+- [UX finding, 2026-07-07, RESOLVED 2026-07-07 in quick-260707-krq] ~~Wrong-answer hint relied only on `hint.firstError` (never escalated to the authored `hint.secondError` on repeated mistakes) and could be overridden by a confusing agent-generated hint (e.g. "add usually between don't and have" when "usually" was already printed).~~ Fixed: `main.ts` now shows the AUTHORED hint escalating by attempt count — `firstError` on attempt 1, `secondError` on attempt 2+ (falling back to `firstError` when a given exercise has no `secondError`, true for 9/19 exercises). Agent `hintRu` dropped from the banner entirely.
+- [Feature request, 2026-07-07, RESOLVED 2026-07-07 in quick-260707-krq] ~~Progress data (session correct-streak, per-topic mastery status) was tracked in state but never surfaced in the UI beyond the "Задание N из 19" text and ruble chip.~~ Added to the top bar: a visual clamped progress bar (no overshoot across main/review/complete, mirrors `ProgressIndicator`'s 3-variant guarding), a "🔥 N" streak chip (shown only when `currentCorrectStreak >= 2`), and a compact "освоено N / M тем" topic-mastery summary line (`topicLabel()` names, first-pass minimal per design decision — no per-topic chip row yet).
 
 ### Blockers/Concerns
 
@@ -111,6 +115,7 @@ Recent decisions affecting current work:
 | 260706-nxg | Fix 3 issues found during a live smoke-test walkthrough: topic-id leak, callAgent timeout too tight, TheoryScreen dense paragraph | 2026-07-06 | acfa0ac | [260706-nxg-fix-3-issues-found-during-a-live-smoke-t](./quick/260706-nxg-fix-3-issues-found-during-a-live-smoke-t/) |
 | 260706-ogs | Add core-side trust gate (applyRecommendedFocusGuardrail) for Progress Advisor's unconstrained recommendedFocus field | 2026-07-06 | 34a4249 | [260706-ogs-fix-missing-core-side-trust-gate-progres](./quick/260706-ogs-fix-missing-core-side-trust-gate-progres/) |
 | 260707-hby | Multi-blank exercises: one inline input per blank (fixes false rejection of correct blank-only answers) + gray RU instruction hint | 2026-07-07 | 43c64cb | [260707-hby-multi-blank-text-input-exercises-render-](./quick/260707-hby-multi-blank-text-input-exercises-render-/) |
+| 260707-krq | Batch of 4 UX improvements from live testing: synthesized coin-clink sound, unified inline text-input blanks, escalating authored hints, progress bar + streak chip + topic-mastery summary | 2026-07-07 | 265995e | [260707-krq-batch-of-4-ux-improvements-from-live-tes](./quick/260707-krq-batch-of-4-ux-improvements-from-live-tes/) |
 
 ## Deferred Items
 
@@ -123,7 +128,7 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-07-05T17:01:30.000Z
+Last session: 2026-07-07T12:13:51.085Z
 Stopped at: Completed quick task 260705-rl5 (Cloudflare Workers LLM key-proxy)
 Resume file: None
 
