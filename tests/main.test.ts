@@ -6,6 +6,7 @@ import * as rewardAdvisorModule from "../src/core/agents/rewardAdvisor";
 import * as answerCheckerModule from "../src/core/agents/answerChecker";
 import * as progressAdvisorModule from "../src/core/agents/progressAdvisor";
 import * as parentReportGeneratorModule from "../src/core/agents/parentReportGenerator";
+import { fillCorrectTextAnswer } from "./helpers/multiBlankAnswers";
 
 // Phase 5 Plan 01: main.ts's render()/onSubmit branching logic has zero
 // direct unit-test coverage before this phase (per 05-RESEARCH.md Wave 0
@@ -104,9 +105,7 @@ describe("main.ts render()/onSubmit (Phase 5 Plan 01)", () => {
     for (let i = 0; i < allExercises.length; i++) {
       const exercise = allExercises[i];
       if (exercise.type === "text-input") {
-        const input = root.querySelector('input[type="text"]') as HTMLInputElement;
-        input.value = correctAnswerFor(exercise.exerciseId);
-        input.dispatchEvent(new Event("input"));
+        fillCorrectTextAnswer(root, exercise.exerciseId, correctAnswerFor(exercise.exerciseId));
       } else if (exercise.type === "matching") {
         const leftButtons = Array.from(root.querySelectorAll<HTMLButtonElement>("button.match-left"));
         const rightButtons = Array.from(root.querySelectorAll<HTMLButtonElement>("button.match-right"));
@@ -147,9 +146,7 @@ describe("main.ts render()/onSubmit (Phase 5 Plan 01)", () => {
 
     for (const exercise of allExercises) {
       if (exercise.type === "text-input") {
-        const input = root.querySelector('input[type="text"]') as HTMLInputElement;
-        input.value = exercise.answerCheck.correctAnswers[0];
-        input.dispatchEvent(new Event("input"));
+        fillCorrectTextAnswer(root, exercise.exerciseId, exercise.answerCheck.correctAnswers[0]);
       } else if (exercise.type === "matching") {
         const leftButtons = Array.from(
           root.querySelectorAll<HTMLButtonElement>("button.match-left"),

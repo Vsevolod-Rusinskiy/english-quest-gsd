@@ -5,6 +5,7 @@ import { mountApp } from "../../src/main";
 import { PROGRESS_KEY } from "../../src/core/state/persistence";
 import * as answerCheckerModule from "../../src/core/agents/answerChecker";
 import * as rewardAdvisorModule from "../../src/core/agents/rewardAdvisor";
+import { fillCorrectTextAnswer, fillRawTextAnswer } from "../helpers/multiBlankAnswers";
 
 // Plan 04-01: handleAnswer now awaits an additional Reward Advisor call
 // before its dispatch(es) — this widens the async gap between
@@ -39,16 +40,25 @@ function correctAnswerFor(exerciseId: string): string {
   return ex.answerCheck.correctAnswers[0];
 }
 
-function submitTextAnswer(root: HTMLElement, value: string): void {
-  const input = root.querySelector('input[type="text"]') as HTMLInputElement;
-  expect(input).toBeTruthy();
-  input.value = value;
-  input.dispatchEvent(new Event("input"));
+function clickSubmit(root: HTMLElement): void {
   const submitButton = Array.from(root.querySelectorAll("button")).find(
     (btn) => btn.textContent === "Проверить",
   ) as HTMLButtonElement;
   expect(submitButton.disabled).toBe(false);
   submitButton.click();
+}
+
+// Correct answer keyed by exerciseId — handles single-input AND multi-blank
+// (one input per blank) layouts (260707-hby).
+function submitCorrectAnswer(root: HTMLElement, exerciseId: string): void {
+  fillCorrectTextAnswer(root, exerciseId, correctAnswerFor(exerciseId));
+  clickSubmit(root);
+}
+
+// Deliberately-wrong answer filled into every present text input.
+function submitWrongAnswer(root: HTMLElement, value: string): void {
+  fillRawTextAnswer(root, value);
+  clickSubmit(root);
 }
 
 describe("review-pass feedback banner visibility (e2e, WR-02)", () => {
@@ -95,7 +105,7 @@ describe("review-pass feedback banner visibility (e2e, WR-02)", () => {
 
     // ex001-ex009: correct, no review trigger.
     for (let i = 1; i <= 9; i++) {
-      submitTextAnswer(root, correctAnswerFor(`eq-1a-ex00${i}`));
+      submitCorrectAnswer(root, `eq-1a-ex00${i}`);
       await waitForPersistedIndex(i);
     }
     expect(root.textContent).toContain("Верно!");
@@ -103,17 +113,17 @@ describe("review-pass feedback banner visibility (e2e, WR-02)", () => {
     // ex010 (food_vocabulary): wrong twice -> 2nd error flips topic to
     // needs_review and enqueues the whole food_vocabulary set, including
     // ex010 itself. Then answer it correctly a 3rd time to advance past it.
-    submitTextAnswer(root, "definitely-wrong-answer");
+    submitWrongAnswer(root, "definitely-wrong-answer");
     await vi.waitFor(() => expect(root.textContent).toContain("Не совсем"));
-    submitTextAnswer(root, "definitely-wrong-answer");
+    submitWrongAnswer(root, "definitely-wrong-answer");
     await vi.waitFor(() => expect(root.textContent).toContain("Не совсем"));
-    submitTextAnswer(root, correctAnswerFor("eq-1a-ex010"));
+    submitCorrectAnswer(root, "eq-1a-ex010");
     await waitForPersistedIndex(10);
     expect(root.textContent).toContain("Верно!");
 
     // ex011-ex018: correct, advances main sequence.
     for (let i = 11; i <= 18; i++) {
-      submitTextAnswer(root, correctAnswerFor(`eq-1a-ex0${i}`));
+      submitCorrectAnswer(root, `eq-1a-ex0${i}`);
       await waitForPersistedIndex(i);
     }
     expect(root.textContent).toContain("Верно!");
@@ -140,7 +150,7 @@ describe("review-pass feedback banner visibility (e2e, WR-02)", () => {
     const beforeInput = root.querySelector('input[type="text"]');
     expect(beforeInput).toBeTruthy();
 
-    submitTextAnswer(root, "definitely-wrong-answer");
+    submitWrongAnswer(root, "definitely-wrong-answer");
 
     // The incorrect banner must be visible NOW, before any advance.
     await vi.waitFor(() => expect(root.textContent).toContain("Не совсем"));

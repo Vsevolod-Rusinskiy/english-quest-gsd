@@ -10,6 +10,7 @@ import { LessonSchema } from "../../src/core/lesson/lessonSchema";
 import { LessonEngine } from "../../src/core/lessonEngine";
 import { StateStore } from "../../src/core/state/store";
 import { initialState } from "../../src/core/state/initialState";
+import { fillCorrectTextAnswer } from "../helpers/multiBlankAnswers";
 
 // Full-lesson traversal e2e (Task 3, EXERCISE-05 headline proof): boots the real app
 // against the real public/Lesson-1A.json, answers all 18 text-input + 1 matching
@@ -68,10 +69,7 @@ describe("full lesson traversal (e2e)", () => {
       expect(root.textContent).toContain(`Задание ${i + 1} из 19`);
 
       if (exercise.type === "text-input") {
-        const input = root.querySelector('input[type="text"]') as HTMLInputElement;
-        expect(input).toBeTruthy();
-        input.value = exercise.answerCheck.correctAnswers[0];
-        input.dispatchEvent(new Event("input"));
+        fillCorrectTextAnswer(root, exercise.exerciseId, exercise.answerCheck.correctAnswers[0]);
       } else if (exercise.type === "matching") {
         const leftButtons = Array.from(
           root.querySelectorAll<HTMLButtonElement>("button.match-left"),
