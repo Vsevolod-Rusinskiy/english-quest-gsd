@@ -17,15 +17,19 @@ describe("renderTopicMasterySummary", () => {
       restaurant_vocabulary: makeStat("not_started"),
     };
     const el = renderTopicMasterySummary(topicStats);
-    expect(el.textContent).toContain("освоено 2 / 4 тем");
+    expect(el).toBeTruthy();
+    expect(el?.textContent).toContain("освоено 2 / 4 тем");
   });
 
-  it("never throws and shows a zero-state for an empty topicStats", () => {
-    let el: HTMLElement;
+  // 260707-pu4: renderTopicMasterySummary now returns null for an empty
+  // topicStats instead of an always-rendered "освоено 0 / 0 тем" zero-state —
+  // that line must never appear before any topic has been touched.
+  it("returns null (never throws) for an empty topicStats", () => {
+    let el: HTMLElement | null = null;
     expect(() => {
       el = renderTopicMasterySummary({});
     }).not.toThrow();
-    expect(el!.textContent).toContain("освоено 0 / 0 тем");
+    expect(el).toBeNull();
   });
 
   it("uses topicLabel() RU display names, never raw snake_case ids, when rendering per-topic labels", () => {
@@ -33,7 +37,8 @@ describe("renderTopicMasterySummary", () => {
       food_vocabulary: makeStat("mastered"),
     };
     const el = renderTopicMasterySummary(topicStats);
+    expect(el).toBeTruthy();
     // If per-topic chips are rendered, they must use RU labels not raw ids.
-    expect(el.textContent).not.toContain("food_vocabulary");
+    expect(el?.textContent).not.toContain("food_vocabulary");
   });
 });
