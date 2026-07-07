@@ -99,6 +99,41 @@ body {
   font-weight: 700;
 }
 
+/* Visual progress bar (UX-PROGRESS-04) — slim track + clamped fill (the
+   overshoot guard lives in ProgressBar.ts, mirroring ProgressIndicator's
+   3-variant guarding). No text on the bar itself, so no WCAG text-contrast
+   requirement applies to the fill color, but it is still clearly visible
+   against the track: --color-accent-dark (#1e5fc7) on --color-bg-secondary
+   (#dceeff) computes to 5.04:1. */
+.progress-bar {
+  height: 10px;
+  border-radius: 6px;
+  background: var(--color-bg-secondary-dark);
+  overflow: hidden;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  background: var(--color-accent-dark);
+  border-radius: 6px;
+  transition: width 200ms ease-out;
+}
+
+/* Correct-answer streak chip (UX-PROGRESS-04) — styled like the sibling
+   .ruble-balance chip but visually distinct via an error-toned (fire/orange)
+   border. Computed contrast: --color-text (#111827) on --color-highlight
+   (#ffc93c) = 11.55:1, passes WCAG AA comfortably. */
+.streak-chip {
+  display: inline-flex;
+  align-items: center;
+  background: var(--color-highlight);
+  border: 3px solid var(--color-error-dark);
+  border-radius: 14px;
+  padding: var(--space-xs) var(--space-sm);
+  font-weight: 700;
+  color: var(--color-text);
+}
+
 /* Lesson title block */
 .lesson-title-block {
   padding: var(--space-lg) var(--space-md) 0;

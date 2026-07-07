@@ -15,6 +15,8 @@ import { renderSessionEndScreen } from "./ui/screens/SessionEndScreen";
 import { renderThinkingIndicator } from "./ui/components/ThinkingIndicator";
 import { renderRewardToast } from "./ui/components/RewardToast";
 import { playCoinSound } from "./ui/sound/coin";
+import { renderProgressBar } from "./ui/components/ProgressBar";
+import { renderStreakChip } from "./ui/components/StreakChip";
 
 export async function mountApp(root: HTMLElement): Promise<void> {
   // Halt on failure per D-06 — loadLesson renders the FatalError state itself.
@@ -74,6 +76,14 @@ export async function mountApp(root: HTMLElement): Promise<void> {
     rubleChip.textContent = `${state.currentRewards} ₽`;
     topBar.appendChild(rubleChip);
 
+    // Streak chip (UX-PROGRESS-04): only mounted when renderStreakChip
+    // returns non-null (streak >= 2) — reads state.currentCorrectStreak,
+    // no new state.
+    const streakChip = renderStreakChip(state.currentCorrectStreak);
+    if (streakChip) {
+      topBar.appendChild(streakChip);
+    }
+
     if (state.currentPosition.theoryUnderstood) {
       if (engine.isReviewPass()) {
         // Capture the review-pass total the first time it's observed, before
@@ -84,6 +94,9 @@ export async function mountApp(root: HTMLElement): Promise<void> {
         }
         const consumed = reviewPassTotal - state.reviewQueue.length;
         topBar.appendChild(renderReviewProgressIndicator(consumed + 1, reviewPassTotal));
+        // UX-PROGRESS-04: review-pass progress bar, same consumed+1/total
+        // pair as the text indicator above — clamp guarantees no overshoot.
+        topBar.appendChild(renderProgressBar(consumed + 1, reviewPassTotal));
       } else {
         // D-12 Gap 2 fix: reuse engine.getCurrentExercise() — the SAME
         // completion signal the main-content block computes below — as the
@@ -94,9 +107,18 @@ export async function mountApp(root: HTMLElement): Promise<void> {
         const topBarExercise = engine.getCurrentExercise();
         if (!topBarExercise) {
           topBar.appendChild(renderProgressIndicatorComplete(engine.totalExercises));
+          // UX-PROGRESS-04: complete state — full bar, no overshoot risk by
+          // construction (current === total).
+          topBar.appendChild(renderProgressBar(engine.totalExercises, engine.totalExercises));
         } else {
           topBar.appendChild(
             renderProgressIndicator(
+              state.currentPosition.currentExerciseIndex + 1,
+              engine.totalExercises,
+            ),
+          );
+          topBar.appendChild(
+            renderProgressBar(
               state.currentPosition.currentExerciseIndex + 1,
               engine.totalExercises,
             ),
