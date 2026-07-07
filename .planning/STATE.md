@@ -4,10 +4,10 @@ milestone: v1.0
 milestone_name: milestone
 current_phase: 0
 status: Awaiting next milestone
-stopped_at: "Completed quick task 260706-ogs (recommendedFocus core-side trust gate)"
-last_updated: "2026-07-06T17:43:21.000Z"
-last_activity: 2026-07-06
-last_activity_desc: "Quick task 260706-ogs: added applyRecommendedFocusGuardrail() to close the missing core-side validation gap for Progress Advisor's recommendedFocus, found during re-verification of quick-260706-nxg's fixes"
+stopped_at: "Completed quick task 260707-hby (multi-blank inline inputs + gray RU hint)"
+last_updated: "2026-07-07T12:50:00.000Z"
+last_activity: 2026-07-07
+last_activity_desc: "Quick task 260707-hby: one inline input per blank for multi-blank exercises (fixes false rejection of correct blank-only answers) + gray Russian instruction hint across all 4 renderers"
 progress:
   total_phases: 5
   completed_phases: 5
@@ -90,7 +90,10 @@ Recent decisions affecting current work:
 
 ### Pending Todos
 
-None yet.
+- [UX finding, 2026-07-06, manual test] Theory screen "Не понятно" 3rd-tap transition feels abrupt: after `maxSimplifyRounds` (3) the soft transition (`theoryUnderstood = nextCount >= maxSimplifyRounds` in `handleTheoryStep`, [lessonEngine.ts](src/core/lessonEngine.ts:183)) auto-advances the child straight to the first exercise even though they just tapped "Не понятно" again — with no explanatory cue (e.g. "Давай попробуем на практике"). Behavior is intentional (prevents an infinite "не понятно" loop), but the jump can read as unexpected to a child. **Not yet fixed — to discuss how to address (add a transition message? a visible "последнее объяснение" hint on round 3?).**
+- [Feature request, 2026-07-06, manual test] Add a "cash register" (ka-ching) sound effect when rubles are awarded — play it at the same point the reward balance increases / `RewardToast` fires (before/after `state.currentRewards` diff in `main.ts`). **Not yet implemented — to discuss (sound asset source, mute toggle for classroom use, autoplay-policy handling).**
+- [Content/UX finding, 2026-07-06, RESOLVED 2026-07-07 in quick-260707-hby] ~~Multi-blank text-input answer format is ambiguous. Exercises like `eq-1a-ex002` ("___ you usually ___ late?") have TWO blanks but ONE input box; the expected answer bundles in the already-printed "you usually", so a child who fills only the blanks ("don't have" for ex003) was FALSELY REJECTED.~~ Fixed: multi-blank exercises now render ONE inline input per blank (the printed words like "usually" stay visible between them), the renderer reconstructs the answer for the unchanged deterministic checker, and ex004's acceptedAnswers gained its blank-only form. Verified live on all 3 two-blank exercises (ex002/003/004).
+- [UX decision, 2026-07-06, manual test] On an INCORRECT text-input answer the input field is intentionally NOT cleared — the same exercise stays on screen with the child's text preserved so they can edit rather than retype (WR-03, by design in `main.ts`). Verified: CORRECT answers (exact-match AND agent-judged) DO advance to the next exercise and clear the field. Flagged by the user as a possible "old answer not cleared" bug; confirmed it only happens on the same-exercise incorrect path, never on a genuine advance to a new exercise. **To discuss whether to keep (edit-in-place) or clear the field on a wrong answer.**
 
 ### Blockers/Concerns
 
@@ -107,6 +110,7 @@ None yet.
 | 260705-rl5 | Build a Cloudflare Workers proxy for the Anthropic API key so agent calls go through a server-to-server proxy instead of direct browser calls to api.llmrouter.ru | 2026-07-05 | b376335 | [260705-rl5-build-a-cloudflare-workers-proxy-for-the](./quick/260705-rl5-build-a-cloudflare-workers-proxy-for-the/) |
 | 260706-nxg | Fix 3 issues found during a live smoke-test walkthrough: topic-id leak, callAgent timeout too tight, TheoryScreen dense paragraph | 2026-07-06 | acfa0ac | [260706-nxg-fix-3-issues-found-during-a-live-smoke-t](./quick/260706-nxg-fix-3-issues-found-during-a-live-smoke-t/) |
 | 260706-ogs | Add core-side trust gate (applyRecommendedFocusGuardrail) for Progress Advisor's unconstrained recommendedFocus field | 2026-07-06 | 34a4249 | [260706-ogs-fix-missing-core-side-trust-gate-progres](./quick/260706-ogs-fix-missing-core-side-trust-gate-progres/) |
+| 260707-hby | Multi-blank exercises: one inline input per blank (fixes false rejection of correct blank-only answers) + gray RU instruction hint | 2026-07-07 | 43c64cb | [260707-hby-multi-blank-text-input-exercises-render-](./quick/260707-hby-multi-blank-text-input-exercises-render-/) |
 
 ## Deferred Items
 
