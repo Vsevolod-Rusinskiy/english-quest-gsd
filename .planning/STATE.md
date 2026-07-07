@@ -4,10 +4,10 @@ milestone: v1.0
 milestone_name: milestone
 current_phase: 0
 status: Awaiting next milestone
-stopped_at: "Completed quick task 260707-krq (coin sound, unified inline blanks, escalating hints, progress surfacing)"
-last_updated: "2026-07-07T12:12:39.000Z"
+stopped_at: "Completed quick task 260707-pu4 (top-bar two-row layout fix)"
+last_updated: "2026-07-07T15:45:00.000Z"
 last_activity: 2026-07-07
-last_activity_desc: "Quick task 260707-krq: batch of 4 UX improvements from live testing — coin-clink sound on reward, all text-input exercises unified to inline blanks, escalating authored hints (firstError/secondError), and a top-bar progress bar + streak chip + topic-mastery summary"
+last_activity_desc: "Quick task 260707-pu4: fixed a top-bar layout regression found live-testing 260707-krq — the progress bar was rendering with zero visible width and the 6-element top-bar was cramped; restructured into two rows (identity/reward row + progress row) and hid the topic-mastery summary at 0 topics tracked"
 progress:
   total_phases: 0
   completed_phases: 0
@@ -116,6 +116,7 @@ Recent decisions affecting current work:
 | 260706-ogs | Add core-side trust gate (applyRecommendedFocusGuardrail) for Progress Advisor's unconstrained recommendedFocus field | 2026-07-06 | 34a4249 | [260706-ogs-fix-missing-core-side-trust-gate-progres](./quick/260706-ogs-fix-missing-core-side-trust-gate-progres/) |
 | 260707-hby | Multi-blank exercises: one inline input per blank (fixes false rejection of correct blank-only answers) + gray RU instruction hint | 2026-07-07 | 43c64cb | [260707-hby-multi-blank-text-input-exercises-render-](./quick/260707-hby-multi-blank-text-input-exercises-render-/) |
 | 260707-krq | Batch of 4 UX improvements from live testing: synthesized coin-clink sound, unified inline text-input blanks, escalating authored hints, progress bar + streak chip + topic-mastery summary | 2026-07-07 | 265995e | [260707-krq-batch-of-4-ux-improvements-from-live-tes](./quick/260707-krq-batch-of-4-ux-improvements-from-live-tes/) |
+| 260707-pu4 | Fix top-bar layout regression from 260707-krq: progress bar had zero visible width, top-bar was cramped — two-row restructure + hide topic-mastery at 0 topics | 2026-07-07 | 60d0bd1 | [260707-pu4-fix-top-bar-layout-regression-found-live](./quick/260707-pu4-fix-top-bar-layout-regression-found-live/) |
 
 ## Deferred Items
 
