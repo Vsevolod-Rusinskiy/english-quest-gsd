@@ -24,7 +24,7 @@ export function renderMatching(options: MatchingOptions): HTMLElement {
   container.className = "task-card";
 
   const instructionRuLine = document.createElement("p");
-  instructionRuLine.className = "instruction-line";
+  instructionRuLine.className = "instruction-line instruction-ru";
   instructionRuLine.textContent = instructionRu;
   container.appendChild(instructionRuLine);
 

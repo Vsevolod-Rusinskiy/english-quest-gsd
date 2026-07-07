@@ -29,6 +29,9 @@
   --color-highlight-dark: #d9a615;
   --color-text: #111827;
   --color-bg-secondary-dark: #b8d9f5;
+  /* Muted gray for the Russian instruction line rendered as a subtle hint
+     (260707-hby). 5.03:1 on --color-bg (#fff8e7) — passes WCAG AA (>=4.5:1). */
+  --color-muted: #6b6b6b;
 }
 
 * {
@@ -196,6 +199,16 @@ button:disabled {
   font-weight: 400;
   line-height: 1.5;
   margin: 0 0 var(--space-sm) 0;
+}
+
+/* Russian instruction line rendered as a subtle translation hint above the
+   English task line (260707-hby): smaller + muted gray so it reads as a
+   helper subtitle, not equal-weight body text. Gray meets WCAG AA on
+   --color-bg (see --color-muted). */
+.instruction-ru {
+  font-size: 14px;
+  color: var(--color-muted);
+  margin-bottom: 2px;
 }
 
 .task-card input[type="text"] {

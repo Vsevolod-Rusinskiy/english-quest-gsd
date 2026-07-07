@@ -109,7 +109,7 @@
           "prompt": "What ___ you ___ tonight? (do)",
           "targetWords": [],
           "targetGrammar": ["present_continuous"],
-          "answerCheck": { "mode": "normalizedText", "correctAnswers": ["What are you doing"], "acceptedAnswers": ["what are you doing"] },
+          "answerCheck": { "mode": "normalizedText", "correctAnswers": ["What are you doing"], "acceptedAnswers": ["what are you doing", "are you doing"] },
           "hint": { "firstError": "Договорённость на вечер. Какое время для планов?", "secondError": "Будущая договорённость - present continuous: are you doing.", "parentExplanation": "Проверяет present continuous для запланированного будущего." },
           "topicImpact": ["present_continuous_future_arrangement"]
         },
