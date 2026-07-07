@@ -64,10 +64,17 @@ export async function mountApp(root: HTMLElement): Promise<void> {
 
     const topBar = document.createElement("div");
     topBar.className = "top-bar";
+
+    // 260707-pu4: row1 (identity/reward) always renders regardless of
+    // theoryUnderstood — title + chips show on every screen, same as before
+    // the two-row restructure.
+    const row1 = document.createElement("div");
+    row1.className = "top-bar-row-1";
+
     const title = document.createElement("span");
     title.className = "heading";
     title.textContent = lesson.unitTitle;
-    topBar.appendChild(title);
+    row1.appendChild(title);
 
     // Ruble balance chip (UI-02): live top-bar read of state.currentRewards —
     // same field SessionEndScreen already reads (line ~263 below), a second
@@ -75,17 +82,23 @@ export async function mountApp(root: HTMLElement): Promise<void> {
     const rubleChip = document.createElement("span");
     rubleChip.className = "ruble-balance";
     rubleChip.textContent = `${state.currentRewards} ₽`;
-    topBar.appendChild(rubleChip);
+    row1.appendChild(rubleChip);
 
     // Streak chip (UX-PROGRESS-04): only mounted when renderStreakChip
     // returns non-null (streak >= 2) — reads state.currentCorrectStreak,
     // no new state.
     const streakChip = renderStreakChip(state.currentCorrectStreak);
     if (streakChip) {
-      topBar.appendChild(streakChip);
+      row1.appendChild(streakChip);
     }
+    topBar.appendChild(row1);
 
     if (state.currentPosition.theoryUnderstood) {
+      // 260707-pu4: row2 (progress) — progress-indicator text, progress
+      // bar, and topic-mastery summary, for main/review/complete alike.
+      const row2 = document.createElement("div");
+      row2.className = "top-bar-row-2";
+
       if (engine.isReviewPass()) {
         // Capture the review-pass total the first time it's observed, before
         // any dequeue shrinks reviewQueue — avoids the Gap-2-style overshoot
@@ -94,10 +107,10 @@ export async function mountApp(root: HTMLElement): Promise<void> {
           reviewPassTotal = state.reviewQueue.length;
         }
         const consumed = reviewPassTotal - state.reviewQueue.length;
-        topBar.appendChild(renderReviewProgressIndicator(consumed + 1, reviewPassTotal));
+        row2.appendChild(renderReviewProgressIndicator(consumed + 1, reviewPassTotal));
         // UX-PROGRESS-04: review-pass progress bar, same consumed+1/total
         // pair as the text indicator above — clamp guarantees no overshoot.
-        topBar.appendChild(renderProgressBar(consumed + 1, reviewPassTotal));
+        row2.appendChild(renderProgressBar(consumed + 1, reviewPassTotal));
       } else {
         // D-12 Gap 2 fix: reuse engine.getCurrentExercise() — the SAME
         // completion signal the main-content block computes below — as the
@@ -107,18 +120,18 @@ export async function mountApp(root: HTMLElement): Promise<void> {
         // advanced past the last exercise on the final correct answer).
         const topBarExercise = engine.getCurrentExercise();
         if (!topBarExercise) {
-          topBar.appendChild(renderProgressIndicatorComplete(engine.totalExercises));
+          row2.appendChild(renderProgressIndicatorComplete(engine.totalExercises));
           // UX-PROGRESS-04: complete state — full bar, no overshoot risk by
           // construction (current === total).
-          topBar.appendChild(renderProgressBar(engine.totalExercises, engine.totalExercises));
+          row2.appendChild(renderProgressBar(engine.totalExercises, engine.totalExercises));
         } else {
-          topBar.appendChild(
+          row2.appendChild(
             renderProgressIndicator(
               state.currentPosition.currentExerciseIndex + 1,
               engine.totalExercises,
             ),
           );
-          topBar.appendChild(
+          row2.appendChild(
             renderProgressBar(
               state.currentPosition.currentExerciseIndex + 1,
               engine.totalExercises,
@@ -127,10 +140,16 @@ export async function mountApp(root: HTMLElement): Promise<void> {
         }
       }
 
-      // UX-PROGRESS-04: compact topic-mastery summary, mounted once in the
-      // top-bar region (below the progress bar), for main/review/complete
-      // alike — reads state.topicStats only, no new state.
-      topBar.appendChild(renderTopicMasterySummary(state.topicStats));
+      // UX-PROGRESS-04 / 260707-pu4: compact topic-mastery summary, mounted
+      // once in row2, for main/review/complete alike — reads
+      // state.topicStats only, no new state. Guarded like streakChip since
+      // renderTopicMasterySummary now returns null for empty topicStats.
+      const masteryEl = renderTopicMasterySummary(state.topicStats);
+      if (masteryEl) {
+        row2.appendChild(masteryEl);
+      }
+
+      topBar.appendChild(row2);
     }
     root.appendChild(topBar);
 
