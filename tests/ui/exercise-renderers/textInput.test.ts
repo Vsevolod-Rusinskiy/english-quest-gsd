@@ -24,7 +24,12 @@ describe("renderTextInput", () => {
     const el = renderTextInput({ exercise, instructionRu, instructionEn, onSubmit: () => {} });
     const children = Array.from(el.children);
     const instructionLines = Array.from(el.querySelectorAll(".instruction-line"));
-    const promptIndex = children.findIndex((c) => c.textContent === exercise.prompt);
+    // UX-INLINE-02: the prompt paragraph now contains an inline blank input
+    // in place of "___", so its textContent no longer strictly equals the
+    // raw exercise.prompt string. Find it by its leading text segment
+    // (parts[0], the text before the first blank) instead.
+    const leadingSegment = exercise.prompt.split("___")[0];
+    const promptIndex = children.findIndex((c) => c.textContent?.startsWith(leadingSegment));
 
     expect(instructionLines).toHaveLength(2);
     expect(instructionLines[0].textContent).toBe(instructionRu);

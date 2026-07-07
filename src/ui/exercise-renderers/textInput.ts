@@ -37,17 +37,20 @@ export function renderTextInput(options: TextInputOptions): HTMLElement {
   submitButton.textContent = "Проверить";
   submitButton.disabled = true;
 
-  // Split on the "___" blank marker. blankCount<=1 keeps the original
-  // single-input-below-prompt layout byte-for-byte (15/18 exercises).
-  // blankCount>=2 renders one inline input per blank, interleaved with the
-  // printed interior words, and reconstructs a single answer string on
-  // submit — the deterministic checkTextInput/normalize/onSubmit contract
-  // never changes shape, only how the raw string is assembled (bug fix for
-  // false-rejection on multi-blank exercises, see PLAN 260707-hby).
+  // Split on the "___" blank marker. blankCount===0 keeps the original
+  // single-input-below-prompt layout as a no-blank fallback (shouldn't occur
+  // in current lesson data, but must never crash). blankCount>=1 renders one
+  // inline input per blank, interleaved with the printed interior words, and
+  // reconstructs a single answer string on submit — the deterministic
+  // checkTextInput/normalize/onSubmit contract never changes shape, only how
+  // the raw string is assembled. Unified to blankCount>=1 (was >=2) so
+  // single-blank exercises ALSO render inline instead of the old
+  // inconsistent separate-box layout (UX-INLINE-02, live-test finding on
+  // ex005).
   const parts = exercise.prompt.split("___");
   const blankCount = parts.length - 1;
 
-  if (blankCount <= 1) {
+  if (blankCount === 0) {
     prompt.textContent = exercise.prompt;
 
     const input = document.createElement("input");
@@ -71,9 +74,12 @@ export function renderTextInput(options: TextInputOptions): HTMLElement {
     return container;
   }
 
-  // Multi-blank (2+): interleave printed segments and inline inputs in
-  // reading order so interior words (e.g. "usually") stay visible between
-  // the inputs the child fills in.
+  // Inline path (1+ blanks): interleave printed segments and inline inputs
+  // in reading order so interior words (e.g. "usually") stay visible between
+  // the inputs the child fills in. For a single blank this degenerates to
+  // exactly one inline input with no interior segment — the general
+  // reconstruction loop below already yields blankInputs[0].value verbatim
+  // in that case, so no single-blank special-case is needed.
   const blankInputs: HTMLInputElement[] = [];
 
   prompt.appendChild(document.createTextNode(parts[0]));

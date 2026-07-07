@@ -12,16 +12,32 @@ export const MULTI_BLANK_ANSWERS: Record<string, string[]> = {
 };
 
 // Fill a text-input exercise's field(s) with a CORRECT answer, handling both
-// the single-input layout and the multi-blank (one input per blank) layout.
-// Does NOT click submit — callers keep their own submit/await logic.
+// the single-inline-blank layout and the multi-blank (2+ inputs, one per
+// blank) layout. Does NOT click submit — callers keep their own
+// submit/await logic.
+//
+// UX-INLINE-02: single-blank exercises now ALSO render one `.inline-blank`
+// input (previously only multi-blank exercises did), so ".inline-blank
+// present" alone no longer implies "multi-blank, needs a MULTI_BLANK_ANSWERS
+// entry". Branch on the ACTUAL blank count instead: exactly one inline-blank
+// with no MULTI_BLANK_ANSWERS entry -> fill it with fullAnswer (single-input
+// behavior); 2+ inline-blanks (or a known multi-blank id) -> the existing
+// per-blank fill path, unchanged.
 export function fillCorrectTextAnswer(
   root: HTMLElement,
   exerciseId: string,
   fullAnswer: string,
 ): void {
   const blankInputs = root.querySelectorAll<HTMLInputElement>("input.inline-blank");
+  const perBlank = MULTI_BLANK_ANSWERS[exerciseId];
+
+  if (blankInputs.length === 1 && !perBlank) {
+    blankInputs[0].value = fullAnswer;
+    blankInputs[0].dispatchEvent(new Event("input"));
+    return;
+  }
+
   if (blankInputs.length > 0) {
-    const perBlank = MULTI_BLANK_ANSWERS[exerciseId];
     expect(perBlank, `missing per-blank answers for ${exerciseId}`).toBeTruthy();
     expect(blankInputs).toHaveLength(perBlank.length);
     blankInputs.forEach((inp, i) => {
