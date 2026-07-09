@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>English Quest — механика, поток данных, агенты</title>
+<style>
+  :root {
+    --bg: #0f1115;
+    --panel: #171a21;
+    --panel-alt: #1d212b;
+    --border: #2b3040;
+    --text: #e6e8ee;
+    --text-dim: #9aa1b2;
+    --accent: #6ea8fe;
+    --accent-2: #7ee2b8;
+    --warn: #f2b155;
+    --code-bg: #10131a;
+    --shadow: 0 2px 10px rgba(0,0,0,0.35);
+    --radius: 10px;
+  }
+
+  * { box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    margin: 0;
+    padding: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    line-height: 1.6;
+    font-size: 16px;
+  }
+
+  code, .mono {
+    font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace;
+    font-size: 0.92em;
+  }
+
+  code {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 0.1em 0.4em;
+    color: var(--accent-2);
+    white-space: nowrap;
+  }
+
+  header.page-header {
+    padding: 40px 24px 24px;
+    max-width: 980px;
+    margin: 0 auto;
+    text-align: center;
+  }
+
+  header.page-header h1 {
+    font-size: 1.9rem;
+    margin: 0 0 8px;
+    letter-spacing: -0.01em;
+  }
+
+  header.page-header p.subtitle {
+    color: var(--text-dim);
+    font-size: 1rem;
+    margin: 0;
+  }
+
+  nav.toc {
+    max-width: 980px;
+    margin: 0 auto 32px;
+    padding: 16px 20px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+  }
+
+  nav.toc h2 {
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-dim);
+    margin: 0 0 10px;
+  }
+
+  nav.toc ol {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 6px 16px;
+  }
+
+  nav.toc li { margin: 0; }
+
+  nav.toc a {
+    color: var(--accent);
+    text-decoration: none;
+    font-size: 0.95rem;
+  }
+
+  nav.toc a:hover { text-decoration: underline; }
+
+  #toggle-all-wrap {
+    max-width: 980px;
+    margin: 0 auto 8px;
+    padding: 0 20px;
+    text-align: right;
+  }
+
+  #toggle-all {
+    background: var(--panel-alt);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-size: 0.85rem;
+    cursor: pointer;
+  }
+
+  #toggle-all:hover { border-color: var(--accent); }
+
+  main {
+    max-width: 980px;
+    margin: 0 auto;
+    padding: 0 20px 60px;
+  }
+
+  section.doc-section {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    margin-bottom: 20px;
+    box-shadow: var(--shadow);
+    overflow: hidden;
+    scroll-margin-top: 16px;
+  }
+
+  section.doc-section .section-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 18px 22px;
+    cursor: pointer;
+    user-select: none;
+  }
+
+  section.doc-section .section-head:hover { background: var(--panel-alt); }
+
+  section.doc-section h2 {
+    margin: 0;
+    font-size: 1.25rem;
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+  }
+
+  section.doc-section h2 .section-num {
+    color: var(--text-dim);
+    font-size: 0.85rem;
+    font-weight: 400;
+  }
+
+  section.doc-section .chevron {
+    color: var(--text-dim);
+    font-size: 0.9rem;
+    transition: transform 0.15s ease;
+    flex-shrink: 0;
+  }
+
+  section.doc-section.collapsed .chevron { transform: rotate(-90deg); }
+
+  section.doc-section .section-body {
+    padding: 0 22px 24px;
+  }
+
+  section.doc-section.collapsed .section-body {
+    display: none;
+  }
+
+  h3 {
+    font-size: 1.02rem;
+    margin: 20px 0 8px;
+    color: var(--accent-2);
+  }
+
+  p { margin: 0 0 12px; }
+
+  p.hint {
+    color: var(--text-dim);
+    font-size: 0.88rem;
+  }
+
+  ul, ol.plain { margin: 0 0 12px; padding-left: 22px; }
+  ul li, ol.plain li { margin-bottom: 6px; }
+
+  /* Box-and-arrow diagram primitives */
+  .diagram {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+    margin: 16px 0;
+    padding: 16px;
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+  }
+
+  .diagram.vertical {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .dbox {
+    background: var(--panel-alt);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-size: 0.88rem;
+    text-align: center;
+    flex: 1 1 auto;
+    min-width: 140px;
+  }
+
+  .dbox.core {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  .dbox.agent {
+    border-color: var(--accent-2);
+    color: var(--accent-2);
+  }
+
+  .dbox.warn {
+    border-color: var(--warn);
+    color: var(--warn);
+  }
+
+  .darrow {
+    color: var(--text-dim);
+    font-size: 1.2rem;
+    flex: 0 0 auto;
+    padding: 0 2px;
+  }
+
+  .diagram.vertical .darrow {
+    text-align: center;
+    padding: 0;
+  }
+
+  .diagram.vertical .dbox { width: 100%; }
+
+  /* Agent cards */
+  .agent-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 16px;
+    margin: 16px 0;
+  }
+
+  .agent-card {
+    background: var(--panel-alt);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px 18px;
+  }
+
+  .agent-card h4 {
+    margin: 0 0 10px;
+    font-size: 1.05rem;
+    color: var(--accent);
+  }
+
+  .agent-card dl {
+    margin: 0;
+    display: grid;
+    grid-template-columns: max-content 1fr;
+    gap: 6px 14px;
+  }
+
+  .agent-card dt {
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--text-dim);
+    white-space: nowrap;
+    padding-top: 2px;
+  }
+
+  .agent-card dd {
+    margin: 0;
+    font-size: 0.92rem;
+  }
+
+  /* Table */
+  table.rewards {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 16px 0;
+    font-size: 0.92rem;
+  }
+
+  table.rewards th, table.rewards td {
+    border: 1px solid var(--border);
+    padding: 8px 12px;
+    text-align: left;
+  }
+
+  table.rewards th {
+    background: var(--panel-alt);
+    color: var(--text-dim);
+    font-weight: 600;
+    font-size: 0.82rem;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+  }
+
+  table.rewards td.num {
+    text-align: right;
+    color: var(--accent-2);
+    font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace;
+  }
+
+  /* Thesis callout */
+  .thesis-box {
+    background: linear-gradient(135deg, rgba(110,168,254,0.12), rgba(126,226,184,0.10));
+    border: 1px solid var(--accent);
+    border-radius: 10px;
+    padding: 20px 22px;
+  }
+
+  .thesis-box p:last-child { margin-bottom: 0; }
+
+  .bug-list {
+    margin-top: 14px;
+    padding: 12px 16px;
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+  }
+
+  .bug-list h4 {
+    margin: 0 0 8px;
+    font-size: 0.85rem;
+    color: var(--warn);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  footer.page-footer {
+    max-width: 980px;
+    margin: 0 auto;
+    padding: 20px 20px 60px;
+    color: var(--text-dim);
+    font-size: 0.85rem;
+    text-align: center;
+  }
+
+  @media (min-width: 640px) {
+    .agent-grid { grid-template-columns: 1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<header class="page-header">
+  <h1>English Quest — механика, поток данных, агенты</h1>
+  <p class="subtitle">Автономный документ (одиночный файл, без сборки, без сети) — актуальное описание архитектуры детерминированного ядра и 5 LLM-агентов</p>
+</header>
+
+<nav class="toc" aria-label="Оглавление">
+  <h2>Разделы</h2>
+  <ol>
+    <li><a href="#arch">1. Обзор архитектуры</a></li>
+    <li><a href="#gateway">2. Agent Gateway</a></li>
+    <li><a href="#proxy">3. Cloudflare Worker proxy</a></li>
+    <li><a href="#agents">4. Пять агентов</a></li>
+    <li><a href="#flow">5. Поток проверки ответа</a></li>
+    <li><a href="#fsm">6. Освоение тем / очередь повторения (FSM)</a></li>
+    <li><a href="#rewards">7. Механика наград</a></li>
+    <li><a href="#session-end">8. Поток завершения сессии</a></li>
+    <li><a href="#thesis">9. Почему такая архитектура</a></li>
+  </ol>
+</nav>
+
+<div id="toggle-all-wrap">
+  <button type="button" id="toggle-all" aria-label="Развернуть или свернуть все разделы">Свернуть всё</button>
+</div>
+
+<main>
+
+<section class="doc-section" id="arch">
+  <div class="section-head" data-toggle>
+    <h2><span class="section-num">1</span> Обзор архитектуры (core/agent split)</h2>
+    <span class="chevron" aria-hidden="true">▾</span>
+  </div>
+  <div class="section-body">
+    <p>Центральный тезис проекта (сформулирован в CLAUDE.md): <strong>агент предлагает — ядро проверяет перед использованием</strong>. Детерминированное ядро (core) — единственный писатель состояния и единственный владелец всех чисел в приложении. Ровно <strong>5 независимых LLM-агентов-функций</strong> — Answer Checker, Theory Tutor, Reward Advisor, Progress Advisor, Parent Report Generator — только <em>предлагают</em> текст или суждение (подсказку, похвалу, рекомендацию), но никогда не пишут состояние напрямую.</p>
+
+    <div class="diagram">
+      <div class="dbox core">Детерминированное ядро<br><span class="hint">единственный писатель состояния</span></div>
+      <div class="darrow">↔</div>
+      <div class="dbox">Agent Gateway<br><span class="hint">callAgent&lt;T&gt;()</span></div>
+      <div class="darrow">↔</div>
+      <div class="dbox agent">5 агентов<br><span class="hint">только предложения</span></div>
+    </div>
+
+    <p>Каждый из 5 агентов — узкий одноразовый (single-shot) вызов со строгой JSON-схемой ответа и обязательным детерминированным fallback на стороне ядра. Если агент недоступен, вернул невалидный ответ или "галлюцинирует" — урок не ломается: ядро либо отклоняет предложение агента, либо использует заранее определённый fallback.</p>
+  </div>
+</section>
+
+<section class="doc-section" id="gateway">
+  <div class="section-head" data-toggle>
+    <h2><span class="section-num">2</span> Agent Gateway (<code>src/core/agents/callAgent.ts</code>)</h2>
+    <span class="chevron" aria-hidden="true">▾</span>
+  </div>
+  <div class="section-body">
+    <p>Все 5 агентов используют <strong>одну и ту же общую generic-функцию <code>callAgent&lt;T&gt;()</code></strong> без изменений — это не 5 отдельных интеграций с LLM, а один переиспользуемый шлюз (gateway), через который проходит любой вызов агента.</p>
+
+    <div class="diagram vertical">
+      <div class="dbox">Собрать запрос (strict tool-use, <code>tool_choice</code> принудительно на единственный tool агента)</div>
+      <div class="darrow">↓</div>
+      <div class="dbox">Вызвать LLM — модель <code>claude-haiku-4-5</code>, <code>TIMEOUT_MS = 12000</code> мс на попытку, <code>max_tokens: 512</code></div>
+      <div class="darrow">↓</div>
+      <div class="dbox">Отфильтровать ровно 1 блок <code>tool_use</code></div>
+      <div class="darrow">↓</div>
+      <div class="dbox">Zod <code>safeParse</code> входных данных tool</div>
+      <div class="darrow">↓ при любой ошибке (сеть ИЛИ Zod)</div>
+      <div class="dbox warn">Ровно ОДИН повтор (без задержки/backoff)</div>
+      <div class="darrow">↓ при повторной ошибке</div>
+      <div class="dbox core">Детерминированный fallback агента — <code>source:"core"</code>, <code>failed:true</code></div>
+    </div>
+
+    <p>Успешный вызов возвращает <code>source:"agent"</code>, <code>failed:false</code>. <code>TIMEOUT_MS</code> был поднят с <code>8000</code> до <code>12000</code> после живого smoke-тестирования, показавшего реальную задержку Worker'а ~6.4–7 секунд — слишком близко к старому потолку в 8 секунд.</p>
+  </div>
+</section>
+
+<section class="doc-section" id="proxy">
+  <div class="section-head" data-toggle>
+    <h2><span class="section-num">3</span> Cloudflare Worker proxy (<code>worker/src/index.ts</code>)</h2>
+    <span class="chevron" aria-hidden="true">▾</span>
+  </div>
+  <div class="section-body">
+    <p>Браузер <strong>никогда</strong> не обращается к LLM-роутеру напрямую. Вместо этого он вызывает развёрнутый Cloudflare Worker по адресу (текстом, не как загружаемый ресурс):</p>
+    <p class="mono" style="text-align:center; color:var(--accent-2);">https://english-quest-llm-proxy.leto99999.workers.dev</p>
+    <p>Worker держит реальный API-ключ только на сервере (секрет платформы <code>env.LLM_API_KEY</code>) — ключ никогда не попадает в бандл браузера — и перенаправляет запрос дальше, на:</p>
+    <p class="mono" style="text-align:center; color:var(--accent-2);">https://api.llmrouter.ru</p>
+
+    <div class="diagram">
+      <div class="dbox">Браузер</div>
+      <div class="darrow">→</div>
+      <div class="dbox agent">Cloudflare Worker<br><span class="hint">хранит ключ, отвечает на OPTIONS</span></div>
+      <div class="darrow">→</div>
+      <div class="dbox">api.llmrouter.ru</div>
+    </div>
+
+    <p>Worker сам отвечает на CORS <code>OPTIONS</code> preflight запросом <code>204</code> без проверки авторизации — сам роутер отклонял preflight запросы с <code>401</code> (реальный найденный вживую баг: <code>curl</code> не отправляет preflight, а настоящие браузеры — да).</p>
+
+    <p>Две причины существования Worker'а:</p>
+    <ul>
+      <li>(a) <strong>безопасность</strong> — ключ не должен попадать в JS браузера ни при каких условиях;</li>
+      <li>(b) <strong>структурное решение CORS-проблемы</strong>.</li>
+    </ul>
+
+    <p>Worker — тонкий reverse-proxy: без системы авторизации, без rate limiting, без прикладной логики.</p>
+
+    <p class="hint">Дополнительный найденный вживую фикс: заголовок <code>anthropic-dangerous-direct-browser-access</code> (автоматически отправляемый SDK при <code>dangerouslyAllowBrowser: true</code>) пришлось добавить в <code>Access-Control-Allow-Headers</code> Worker'а — он молча блокировал реальный POST-запрос со стороны клиента, хотя OPTIONS возвращал 204 и curl работал.</p>
+  </div>
+</section>
+
+<!-- SECTIONS 4-9 APPENDED IN TASK 2 -->
+
+</main>
+
+<footer class="page-footer">
+  English Quest — диплом-проект. Документ сгенерирован для объяснения актуальной архитектуры (детерминированное ядро + 5 LLM-агентов). Открывается напрямую через file://, без сборки, без сети.
+</footer>
+
+</body>
+</html>
