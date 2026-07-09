@@ -118,6 +118,19 @@ export async function mountApp(root: HTMLElement): Promise<void> {
     title.textContent = lesson.unitTitle;
     row1.appendChild(title);
 
+    // Architecture explainer link: opens docs/MECHANICS.html (served from
+    // public/docs/ so it survives `vite build`, not just `vite dev`) in a
+    // NEW tab (target="_blank") so the child's in-progress lesson state in
+    // the current tab is never disturbed. Visible in every mode (not a dev
+    // tool) — this is real project documentation.
+    const mechanicsLink = document.createElement("a");
+    mechanicsLink.className = "mechanics-link";
+    mechanicsLink.href = "/docs/MECHANICS.html";
+    mechanicsLink.target = "_blank";
+    mechanicsLink.rel = "noopener";
+    mechanicsLink.textContent = "Как это работает?";
+    row1.appendChild(mechanicsLink);
+
     // Ruble balance chip (UI-02): live top-bar read of state.currentRewards —
     // same field SessionEndScreen already reads (line ~263 below), a second
     // read site, no new state.

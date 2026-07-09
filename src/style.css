@@ -502,3 +502,14 @@ button:disabled {
   background: #ffe6fb;
   color: #a0007a;
 }
+
+/* Architecture explainer link (top bar) — small, unobtrusive, never competes
+   with the child-facing chips. --color-accent-dark (#1e5fc7) on
+   --color-bg-secondary (#dceeff) = 5.97:1, already verified WCAG AA
+   elsewhere in this file (button.accent). */
+.mechanics-link {
+  font-size: 12px;
+  color: var(--color-accent-dark);
+  text-decoration: underline;
+  white-space: nowrap;
+}
