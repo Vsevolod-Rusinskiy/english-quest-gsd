@@ -354,12 +354,27 @@ export async function mountApp(root: HTMLElement): Promise<void> {
               // WR-03: incorrect main-pass answer keeps the SAME exercise on
               // screen (currentExerciseIndex is unchanged, no dispatch to
               // "advance_position"). Calling render() here would tear down and
-              // rebuild the exercise DOM from scratch, wiping any partial input
-              // the child already entered. Instead, only swap the feedback
-              // banner in place and leave the exercise subtree untouched.
+              // rebuild the exercise DOM from scratch. Instead, only swap the
+              // feedback banner in place and leave the exercise subtree
+              // otherwise untouched.
               const previousBanner = main.querySelector(".feedback-banner");
               previousBanner?.remove();
               main.appendChild(renderFeedbackBanner(feedback.isCorrect, feedback.hint, feedback.praiseRu));
+
+              // Clear the wrong answer rather than leaving it for the child to
+              // edit in place — the escalating authored hint (firstError then
+              // secondError) now guides the retry, so a fresh empty field is
+              // clearer than stale wrong text. Covers both the single
+              // inline-blank and multi-blank (UX-INLINE-02) layouts.
+              const blankInputs = exerciseNode.querySelectorAll<HTMLInputElement>(
+                'input[type="text"]',
+              );
+              blankInputs.forEach((inp) => (inp.value = ""));
+              const retrySubmit = Array.from(
+                exerciseNode.querySelectorAll<HTMLButtonElement>("button"),
+              ).find((btn) => btn.textContent === "Проверить");
+              if (retrySubmit) retrySubmit.disabled = true;
+              blankInputs[0]?.focus();
             }
           },
         });
