@@ -4,10 +4,10 @@ milestone: v1.0
 milestone_name: milestone
 current_phase: 0
 status: Awaiting next milestone
-stopped_at: "Capped the dev-mode lesson to 10 exercises for faster manual testing"
-last_updated: "2026-07-09T18:05:00.000Z"
+stopped_at: "Added a top-bar link to docs/MECHANICS.html, opens in a new tab"
+last_updated: "2026-07-09T18:19:00.000Z"
 last_activity: 2026-07-09
-last_activity_desc: "Added applyDevExerciseLimit() to main.ts, truncating the lesson to its first 10 exercises when import.meta.env.MODE === \"development\" (deliberately NOT plain DEV, which is also true under vitest — this keeps all 294 tests exercising the real 19-exercise lesson). Verified live: dev server now shows \"Задание 1 из 10\"."
+last_activity_desc: "Moved docs/MECHANICS.html to public/docs/MECHANICS.html so it survives `vite build` (only public/'s contents get copied into dist/), and added a \"Как это работает?\" link in the top bar (target=\"_blank\", visible in every mode, not DEV-gated). Verified live: link renders in the top bar, /docs/MECHANICS.html fetches 200."
 progress:
   total_phases: 0
   completed_phases: 0
@@ -122,6 +122,7 @@ Recent decisions affecting current work:
 | 260709-od7 | Create a standalone self-contained HTML architecture/mechanics/data-flow explainer (docs/MECHANICS.html), offline file://-openable | 2026-07-09 | 8f7d194 | [260709-od7-create-a-standalone-self-contained-html-](./quick/260709-od7-create-a-standalone-self-contained-html-/) |
 | 11 | Add DEV-only cheat button to auto-submit the correct answer for manual-testing speed, guarded by import.meta.env.DEV | 2026-07-09 | 18e2982 | — |
 | 12 | Cap dev-mode lesson to 10 exercises for faster manual testing, guarded by import.meta.env.MODE === "development" (not plain DEV, which vitest also sets) | 2026-07-09 | 8b6be8a | — |
+| 13 | Move docs/MECHANICS.html to public/docs/ (survives vite build) and add a top-bar link to it, opens in a new tab | 2026-07-09 | b13c550 | — |
 
 ## Deferred Items
 
