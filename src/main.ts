@@ -3,7 +3,7 @@ import { loadLesson } from "./core/lesson/lessonLoader";
 import { load as loadProgress } from "./core/state/persistence";
 import { StateStore } from "./core/state/store";
 import { LessonEngine, type SessionEndResult, type AnswerPayload } from "./core/lessonEngine";
-import type { Exercise } from "./core/lesson/lessonSchema";
+import type { Exercise, Lesson } from "./core/lesson/lessonSchema";
 import type { ProgressState } from "./core/state/progressSchema";
 import { renderTheoryScreen, type TheoryExplanation } from "./ui/screens/TheoryScreen";
 import { renderExerciseScreen, renderFeedbackBanner } from "./ui/screens/ExerciseScreen";
@@ -41,9 +41,29 @@ function correctAnswerForExercise(exercise: Exercise): AnswerPayload {
   }
 }
 
+// DEV-only manual-testing speed-up: cap the lesson to its first N exercises
+// (spanning sections in order) so a full run-through takes minutes, not the
+// full 19-exercise lesson. Guarded by import.meta.env.MODE === "development" — Vite dead-code-
+// eliminates this from production builds, the real lesson is never
+// truncated for an actual learner. Returns the SAME lesson object unchanged
+// outside dev.
+const DEV_MAX_EXERCISES = 10;
+function applyDevExerciseLimit(lesson: Lesson): Lesson {
+  if (import.meta.env.MODE !== "development") return lesson;
+  let remaining = DEV_MAX_EXERCISES;
+  const sections = lesson.sections
+    .map((section) => {
+      const kept = section.exercises.slice(0, Math.max(0, remaining));
+      remaining -= kept.length;
+      return { ...section, exercises: kept };
+    })
+    .filter((section) => section.exercises.length > 0);
+  return { ...lesson, sections };
+}
+
 export async function mountApp(root: HTMLElement): Promise<void> {
   // Halt on failure per D-06 — loadLesson renders the FatalError state itself.
-  const lesson = await loadLesson(root);
+  const lesson = applyDevExerciseLimit(await loadLesson(root));
 
   const progressState = loadProgress(lesson.lessonId);
   const store = new StateStore(progressState);
@@ -412,10 +432,10 @@ export async function mountApp(root: HTMLElement): Promise<void> {
 
         // DEV-only cheat button (manual-testing speed): fills+submits the
         // CORRECT answer for the exercise on screen, through the exact same
-        // handleSubmitAnswer path a real submit uses. import.meta.env.DEV is
+        // handleSubmitAnswer path a real submit uses. import.meta.env.MODE === "development" is
         // statically false in production builds, so Vite dead-code-eliminates
         // this entire block — never ships.
-        if (import.meta.env.DEV) {
+        if (import.meta.env.MODE === "development") {
           const cheatButton = document.createElement("button");
           cheatButton.type = "button";
           cheatButton.className = "dev-cheat-button";
