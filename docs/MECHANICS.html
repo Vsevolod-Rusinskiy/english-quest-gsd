@@ -473,7 +473,213 @@
   </div>
 </section>
 
-<!-- SECTIONS 4-9 APPENDED IN TASK 2 -->
+<section class="doc-section" id="agents">
+  <div class="section-head" data-toggle>
+    <h2><span class="section-num">4</span> Пять агентов</h2>
+    <span class="chevron" aria-hidden="true">▾</span>
+  </div>
+  <div class="section-body">
+    <p>Каждый агент — узкая одноразовая функция поверх общего Agent Gateway. Ниже — что каждый предлагает, что его триггерит, каков детерминированный fallback и какая проверка/guardrail стоит на стороне ядра.</p>
+
+    <div class="agent-grid">
+      <div class="agent-card">
+        <h4>Answer Checker</h4>
+        <dl>
+          <dt>Триггер</dt>
+          <dd>Только когда детерминированная точная проверка (exact-match) text-input упражнения провалилась. Никогда не вызывается для single-choice / matching / order-builder — там проверка всегда полностью детерминированная, без агента.</dd>
+          <dt>Предлагает</dt>
+          <dd><code>isCorrect</code>, <code>errorType</code>, <code>confidence</code>, <code>hintRu</code></dd>
+          <dt>Core-проверка</dt>
+          <dd>Trust gate: <code>CORRECT_CONFIDENCE_THRESHOLD = 0.8</code> — ядро принимает <code>isCorrect:true</code> от агента ТОЛЬКО при <code>confidence &gt;= 0.8</code>; ниже порога ответ понижается до <code>isCorrect:false</code> (подсказка всё равно передаётся).</dd>
+          <dt>Fallback</dt>
+          <dd><code>isCorrect:false</code>, общий <code>errorType:"unknown"</code>, без confidence/hint (агент "не говорил").</dd>
+        </dl>
+      </div>
+
+      <div class="agent-card">
+        <h4>Theory Tutor</h4>
+        <dl>
+          <dt>Триггер</dt>
+          <dd>Нажатие ребёнком "Не понятно" на экране теории.</dd>
+          <dt>Предлагает</dt>
+          <dd>Упрощённую формулировку объяснения теории.</dd>
+          <dt>Core-проверка</dt>
+          <dd><code>maxSimplifyRounds = 3</code> (из данных урока). Раунд 1 (<code>simplifyRoundCount === 0</code>) — ТОЛЬКО ядро, без вызова агента: отдаётся заранее написанный текст <code>explanationLevels[1]</code> ("простой"). Раунды 2–3 — вызов агента для ещё более простой переформулировки. Мягкий переход: когда счётчик раундов достигает <code>maxSimplifyRounds</code> (3), <code>theoryUnderstood</code> становится <code>true</code> независимо от последнего нажатия "Не понятно" — автоматический переход к первому упражнению (предотвращает бесконечный цикл). <span class="hint">У этого перехода пока нет поясняющей UI-подсказки — известный, ещё не закрытый UX-нюанс.</span></dd>
+          <dt>Fallback</dt>
+          <dd>Повторно отдаёт ТОТ ЖЕ заранее написанный простой текст дословно — никогда не выдумывает новый.</dd>
+        </dl>
+      </div>
+
+      <div class="agent-card">
+        <h4>Reward Advisor</h4>
+        <dl>
+          <dt>Триггер</dt>
+          <dd>Один раз на каждый ответ, ТОЛЬКО когда этот ответ уже принёс ≥1 награду (правила награды ядра уже решили, что рубли начислены).</dd>
+          <dt>Предлагает</dt>
+          <dd><code>celebrationRu</code> (похвала) и <code>suggestedReasons</code>. Агент НИКОГДА не решает сумму — у него нет поля <code>amount</code>.</dd>
+          <dt>Core-проверка</dt>
+          <dd>Анти-галлюцинационный gate: <code>suggestedReasons</code> агента пересекаются (пересечение множеств) с РЕАЛЬНО начисленными <code>delta.rewardEvents</code>. Если агент предложил причину, которой не было — <code>praiseRu</code> становится <code>undefined</code>, идентично сбою агента. <code>praiseRu</code> — временное значение (возвращается из <code>handleAnswer</code>, никогда не сохраняется).</dd>
+          <dt>Fallback</dt>
+          <dd>Без текста похвалы.</dd>
+        </dl>
+      </div>
+
+      <div class="agent-card">
+        <h4>Progress Advisor</h4>
+        <dl>
+          <dt>Триггер</dt>
+          <dd>Один вызов в конце сессии.</dd>
+          <dt>Предлагает</dt>
+          <dd><code>recommendedFocus</code>, <code>suggestedDifficulty</code>, <code>reviewSuggestions</code>, <code>motivationalMessageRu</code>, <code>sessionAdvice</code>.</dd>
+          <dt>Core-проверка</dt>
+          <dd>ДВА guardrail'а на стороне ядра (оба — реальные найденные вживую баги, случай "доверяй, но проверяй"): (a) <code>applyDifficultyGuardrails()</code> — единственный писатель <code>difficultyMode</code>; ограничивает прыжок ровно ОДНИМ шагом за вызов (без прямого easy↔challenge); повышение требует <code>correctStreak &gt;= 3</code>, понижение — <code>recentErrors &gt;= 2</code>, иначе без изменений. (b) <code>applyRecommendedFocusGuardrail()</code> — проверяет <code>recommendedFocus</code> по известному набору id тем из <code>topicLabels.ts</code>; при несовпадении откатывается на собственную вычисленную ядром самую слабую тему. Это закрыло реальный баг, когда агент вернул галлюцинированную строку на смеси языков вместо чистого id темы.</dd>
+          <dt>Fallback</dt>
+          <dd>Использует собственную самую слабую тему ядра (наивысшее отношение ошибок/наименьшее отношение верных в <code>topicStats</code>), сложность не меняется, фиксированное сообщение поддержки.</dd>
+        </dl>
+      </div>
+
+      <div class="agent-card" style="grid-column: 1 / -1;">
+        <h4>Parent Report Generator</h4>
+        <dl>
+          <dt>Триггер</dt>
+          <dd>Вызывается СРАЗУ ПОСЛЕ разрешения Progress Advisor — последовательно, явно НЕ <code>Promise.all</code> — чтобы безопасно использовать уже прошедший guardrail финальный <code>recommendedFocus</code> Progress Advisor'а.</dd>
+          <dt>Предлагает</dt>
+          <dd><code>parentReportRu</code>, <code>headlineRu</code>.</dd>
+          <dt>Fallback</dt>
+          <dd><code>buildTemplateReport()</code> — детерминированный русский шаблон из снимка сессии (пройденные упражнения, число верных ответов, темы для повторения/проблемные через <code>topicLabel()</code>, заработанные рубли, рекомендация). <span class="hint">Этот шаблон сам был местом реального бага (когда-то подставлял сырые id тем ещё до появления <code>topicLabels.ts</code>) — сейчас исправлено.</span></dd>
+        </dl>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="doc-section" id="flow">
+  <div class="section-head" data-toggle>
+    <h2><span class="section-num">5</span> Поток проверки ответа</h2>
+    <span class="chevron" aria-hidden="true">▾</span>
+  </div>
+  <div class="section-body">
+    <p>Самый частый поток в приложении — <code>lessonEngine.handleAnswer</code>.</p>
+
+    <div class="diagram vertical">
+      <div class="dbox">Детерминированная проверка по типу: <code>checkTextInput</code> / <code>checkSingleChoice</code> / <code>checkMatching</code> / <code>checkOrderBuilder</code></div>
+      <div class="darrow">↓</div>
+      <div class="dbox warn">Только text-input эскалирует к Answer Checker при промахе точного совпадения; остальные типы — полностью детерминированы, без агента</div>
+      <div class="darrow">↓</div>
+      <div class="dbox">Единый чистый проход <code>evaluateAttempt()</code>: считает всё производное состояние (статы по темам + FSM, очередь повторения, reward-события, статы слов/типов упражнений, серии)</div>
+      <div class="darrow">↓</div>
+      <div class="dbox agent">Reward Advisor вызывается условно (если ≥1 reward-событие)</div>
+      <div class="darrow">↓</div>
+      <div class="dbox">Один dispatch <code>exercise_attempt</code></div>
+      <div class="darrow">↓</div>
+      <div class="dbox core">Сохранение в <code>localStorage["english-quest-progress-v1"]</code></div>
+      <div class="darrow">↓</div>
+      <div class="dbox">UI перерисовывается (баннер обратной связи, чипы top-bar, прогресс-бар)</div>
+    </div>
+  </div>
+</section>
+
+<section class="doc-section" id="fsm">
+  <div class="section-head" data-toggle>
+    <h2><span class="section-num">6</span> Освоение тем / очередь повторения (FSM)</h2>
+    <span class="chevron" aria-hidden="true">▾</span>
+  </div>
+  <div class="section-body">
+    <p>Логика в <code>topicStatusMachine.ts</code> + <code>reviewQueue.ts</code> — чистая логика ядра, ноль участия агентов.</p>
+
+    <div class="diagram">
+      <div class="dbox">not_started</div>
+      <div class="darrow">→</div>
+      <div class="dbox">in_progress</div>
+      <div class="darrow">→</div>
+      <div class="dbox warn">needs_review<br><span class="hint">2 ошибки суммарно</span></div>
+    </div>
+    <div class="diagram">
+      <div class="dbox">любое состояние</div>
+      <div class="darrow">→</div>
+      <div class="dbox agent">mastered<br><span class="hint">3 верных ответа подряд</span></div>
+    </div>
+
+    <p>Упражнения темы в статусе <code>needs_review</code>, на которые не было недавнего верного ответа, добавляются в очередь повторения и повторно показываются позже В ТОЙ ЖЕ сессии урока (проход повторения после основного прохода). Ответ на проходе повторения убирает элемент из очереди независимо от правильности.</p>
+
+    <p class="hint">Строгое правило (важная оговорка): если тема хоть раз накопила ≥2 ошибок за всю историю, один последующий неверный ответ мгновенно возвращает её в <code>needs_review</code> даже после того, как она была освоена (<code>mastered</code>).</p>
+  </div>
+</section>
+
+<section class="doc-section" id="rewards">
+  <div class="section-head" data-toggle>
+    <h2><span class="section-num">7</span> Механика наград</h2>
+    <span class="chevron" aria-hidden="true">▾</span>
+  </div>
+  <div class="section-body">
+    <p>Фиксированная таблица сумм наград определена в ядре (<code>rewardEngine.ts</code>) — сумму никогда не выбирает агент:</p>
+
+    <table class="rewards">
+      <thead>
+        <tr><th>Событие</th><th>Сумма, ₽</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>honest_attempt</code></td><td class="num">1</td></tr>
+        <tr><td><code>correct_after_hint</code></td><td class="num">3</td></tr>
+        <tr><td><code>fixed_mistake</code></td><td class="num">4</td></tr>
+        <tr><td><code>first_try_correct</code></td><td class="num">5</td></tr>
+        <tr><td><code>streak_bonus</code></td><td class="num">10</td></tr>
+        <tr><td><code>weak_topic_closed</code></td><td class="num">15</td></tr>
+      </tbody>
+    </table>
+
+    <p><code>streak_bonus</code> (+10) срабатывает, когда сессионная серия верных ответов подряд достигает <code>&gt;= 5</code> (затем сбрасывается).</p>
+
+    <p>Синтезированный звук "звона монет" (<code>src/ui/sound/coin.ts</code>, Web Audio API, без внешнего аудиофайла — две колокольчик-подобные ноты: B5 ~988 Гц, затем E6 ~1319 Гц) проигрывается при увеличении баланса рублей; деградирует бесшумно (никогда не выбрасывает исключение), если AudioContext недоступен/заблокирован.</p>
+
+    <p>Чип серии "🔥 N" отображается только когда <code>currentCorrectStreak &gt;= 2</code>.</p>
+  </div>
+</section>
+
+<section class="doc-section" id="session-end">
+  <div class="section-head" data-toggle>
+    <h2><span class="section-num">8</span> Поток завершения сессии</h2>
+    <span class="chevron" aria-hidden="true">▾</span>
+  </div>
+  <div class="section-body">
+    <div class="diagram vertical">
+      <div class="dbox">Урок завершён → нажатие "Показать итоги"</div>
+      <div class="darrow">↓</div>
+      <div class="dbox agent">Вызов Progress Advisor</div>
+      <div class="darrow">↓</div>
+      <div class="dbox core">Guardrail'ы применены (сложность + recommendedFocus)</div>
+      <div class="darrow">↓</div>
+      <div class="dbox agent">Вызов Parent Report Generator (последовательно, не параллельно)</div>
+      <div class="darrow">↓</div>
+      <div class="dbox">Один dispatch <code>session_end</code></div>
+      <div class="darrow">↓</div>
+      <div class="dbox">Общий экран итогов: ребёнку — мотивация + следующий фокус + рубли; родителю — отчёт</div>
+    </div>
+  </div>
+</section>
+
+<section class="doc-section" id="thesis">
+  <div class="section-head" data-toggle>
+    <h2><span class="section-num">9</span> Почему такая архитектура</h2>
+    <span class="chevron" aria-hidden="true">▾</span>
+  </div>
+  <div class="section-body">
+    <div class="thesis-box">
+      <p><strong>Цель диплома</strong> — доказать механику обучения целиком: детерминированная проверка ответов + LLM-интерпретация там, где она действительно нужна + персонализация по прогрессу + повторение слабых тем + начисление рублей — без единого «сломанного» состояния, даже когда агент недоступен.</p>
+      <p>У каждого из 5 агентов есть рабочий детерминированный fallback, проверенный вживую: таймауты, сбои CORS и галлюцинации наблюдались на практике и обрабатывались без падения урока.</p>
+
+      <div class="bug-list">
+        <h4>Поймано вживую</h4>
+        <ul>
+          <li>CORS preflight 401 → исправлено: Worker сам отвечает на OPTIONS (+ фикс заголовка <code>anthropic-dangerous-direct-browser-access</code>).</li>
+          <li>Сырой snake_case id темы утекал в текст для ребёнка/родителя → исправлено через <code>topicLabels.ts</code>.</li>
+          <li>Отсутствовал core-side guardrail на <code>recommendedFocus</code> (агент вернул галлюцинированную строку на смеси языков) → исправлено через <code>applyRecommendedFocusGuardrail()</code>.</li>
+          <li>Таймаут 8с был слишком тесным против реальной задержки ~6.4с+ → поднят до 12с (<code>TIMEOUT_MS</code>).</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
 
 </main>
 
