@@ -687,5 +687,60 @@
   English Quest — диплом-проект. Документ сгенерирован для объяснения актуальной архитектуры (детерминированное ядро + 5 LLM-агентов). Открывается напрямую через file://, без сборки, без сети.
 </footer>
 
+<script>
+(function () {
+  "use strict";
+  try {
+    if (typeof document === "undefined" || !document.querySelectorAll) return;
+
+    var sections = document.querySelectorAll("section.doc-section");
+    if (!sections || sections.length === 0) return;
+
+    // Progressive enhancement only: sections render fully expanded in the
+    // static markup. JS adds a collapsed initial state + click-to-toggle.
+    sections.forEach(function (section) {
+      var head = section.querySelector("[data-toggle]");
+      if (!head) return;
+      head.setAttribute("role", "button");
+      head.setAttribute("tabindex", "0");
+      var expanded = !section.classList.contains("collapsed");
+      head.setAttribute("aria-expanded", String(expanded));
+
+      function toggle() {
+        section.classList.toggle("collapsed");
+        head.setAttribute("aria-expanded", String(!section.classList.contains("collapsed")));
+      }
+
+      head.addEventListener("click", toggle);
+      head.addEventListener("keydown", function (e) {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          toggle();
+        }
+      });
+    });
+
+    var toggleAllBtn = document.getElementById("toggle-all");
+    if (toggleAllBtn) {
+      var allCollapsed = false;
+      toggleAllBtn.addEventListener("click", function () {
+        allCollapsed = !allCollapsed;
+        sections.forEach(function (section) {
+          section.classList.toggle("collapsed", allCollapsed);
+          var head = section.querySelector("[data-toggle]");
+          if (head) head.setAttribute("aria-expanded", String(!allCollapsed));
+        });
+        toggleAllBtn.textContent = allCollapsed ? "Развернуть всё" : "Свернуть всё";
+      });
+    }
+  } catch (err) {
+    // Never let a script failure blank the static content.
+    if (typeof console !== "undefined" && console.warn) {
+      console.warn("MECHANICS.html: interactivity layer failed to init", err);
+    }
+  }
+})();
+</script>
+
 </body>
 </html>
