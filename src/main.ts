@@ -2,7 +2,8 @@
 import { loadLesson } from "./core/lesson/lessonLoader";
 import { load as loadProgress } from "./core/state/persistence";
 import { StateStore } from "./core/state/store";
-import { LessonEngine, type SessionEndResult } from "./core/lessonEngine";
+import { LessonEngine, type SessionEndResult, type AnswerPayload } from "./core/lessonEngine";
+import type { Exercise } from "./core/lesson/lessonSchema";
 import type { ProgressState } from "./core/state/progressSchema";
 import { renderTheoryScreen, type TheoryExplanation } from "./ui/screens/TheoryScreen";
 import { renderExerciseScreen, renderFeedbackBanner } from "./ui/screens/ExerciseScreen";
@@ -18,6 +19,27 @@ import { playCoinSound } from "./ui/sound/coin";
 import { renderProgressBar } from "./ui/components/ProgressBar";
 import { renderStreakChip } from "./ui/components/StreakChip";
 import { renderTopicMasterySummary } from "./ui/components/TopicMasterySummary";
+
+// DEV-only cheat-button helper: the correct AnswerPayload for `exercise`,
+// read straight from its own authored answerCheck data (never fabricated) —
+// exactly what checkTextInput/checkSingleChoice/checkMatching/checkOrderBuilder
+// already accept as correct, so it goes through the real check, not a bypass.
+function correctAnswerForExercise(exercise: Exercise): AnswerPayload {
+  switch (exercise.type) {
+    case "text-input":
+      return exercise.answerCheck.correctAnswers[0];
+    case "single-choice":
+      return exercise.answerCheck.correctOptionId;
+    case "matching":
+      return exercise.answerCheck.pairs;
+    case "order-builder":
+      return exercise.answerCheck.correctOrder;
+    default: {
+      const _exhaustive: never = exercise;
+      throw new Error(`Unhandled exercise type: ${JSON.stringify(_exhaustive)}`);
+    }
+  }
+}
 
 export async function mountApp(root: HTMLElement): Promise<void> {
   // Halt on failure per D-06 — loadLesson renders the FatalError state itself.
@@ -213,11 +235,14 @@ export async function mountApp(root: HTMLElement): Promise<void> {
         // covers both the main pass and the review pass (same
         // getCurrentExercise()-derived exercise above).
         const section = engine.getCurrentSection();
-        const exerciseNode = renderExerciseScreen({
-          exercise,
-          instructionRu: section?.instructionRu ?? "",
-          instructionEn: section?.instructionEn ?? "",
-          onSubmit: async (answer) => {
+        // Named (not inline) so a DEV-only cheat button below can invoke the
+        // EXACT same submit path (agent calls, rewards, feedback,
+        // persistence) a real submit uses — never a parallel shortcut that
+        // could drift from real behavior. References `exerciseNode` by
+        // closure before its `const` below is assigned; safe because this
+        // function is only ever CALLED later (on click), after
+        // `exerciseNode` is bound.
+        const handleSubmitAnswer = async (answer: AnswerPayload): Promise<void> => {
             // Plan 03 (RESEARCH.md Pitfall 2): handleAnswer is now async (it
             // may await callAnswerChecker over the network). "Thinking" cue —
             // disable the submit button THE INSTANT submit begins, before the
@@ -376,8 +401,30 @@ export async function mountApp(root: HTMLElement): Promise<void> {
               if (retrySubmit) retrySubmit.disabled = true;
               blankInputs[0]?.focus();
             }
-          },
+        };
+
+        const exerciseNode = renderExerciseScreen({
+          exercise,
+          instructionRu: section?.instructionRu ?? "",
+          instructionEn: section?.instructionEn ?? "",
+          onSubmit: handleSubmitAnswer,
         });
+
+        // DEV-only cheat button (manual-testing speed): fills+submits the
+        // CORRECT answer for the exercise on screen, through the exact same
+        // handleSubmitAnswer path a real submit uses. import.meta.env.DEV is
+        // statically false in production builds, so Vite dead-code-eliminates
+        // this entire block — never ships.
+        if (import.meta.env.DEV) {
+          const cheatButton = document.createElement("button");
+          cheatButton.type = "button";
+          cheatButton.className = "dev-cheat-button";
+          cheatButton.textContent = "DEV: верный ответ";
+          cheatButton.addEventListener("click", () => {
+            void handleSubmitAnswer(correctAnswerForExercise(exercise));
+          });
+          exerciseNode.appendChild(cheatButton);
+        }
         main.appendChild(exerciseNode);
 
         // Show the banner if it belongs to the exercise currently on screen

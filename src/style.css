@@ -488,3 +488,17 @@ button:disabled {
   font-weight: 700;
   color: var(--color-error);
 }
+
+/* DEV-only cheat button (manual-testing speed) — deliberately loud/ugly
+   (dashed magenta) so it reads as a dev tool, never mistaken for real UI.
+   Never ships: guarded by import.meta.env.DEV in main.ts, dead-code-eliminated
+   from production builds. */
+.dev-cheat-button {
+  display: block;
+  margin-top: var(--space-sm);
+  min-height: 32px;
+  font-size: 12px;
+  border: 2px dashed magenta;
+  background: #ffe6fb;
+  color: #a0007a;
+}
