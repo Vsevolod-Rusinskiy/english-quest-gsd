@@ -4,10 +4,10 @@ milestone: v1.0
 milestone_name: milestone
 current_phase: 0
 status: Awaiting next milestone
-stopped_at: "Completed quick task 260709-od7 (docs/MECHANICS.html standalone architecture explainer) + a fix commit clearing text inputs on wrong answers"
-last_updated: "2026-07-09T14:45:00.000Z"
+stopped_at: "Added a DEV-only cheat button (auto-submit correct answer) for manual-testing speed"
+last_updated: "2026-07-09T17:55:00.000Z"
 last_activity: 2026-07-09
-last_activity_desc: "Quick task 260709-od7: created docs/MECHANICS.html, a self-contained offline HTML page documenting the real current architecture (core/5-agent split, Agent Gateway, Cloudflare Worker proxy, all 5 agents' triggers/fallbacks/guardrails, answer-check data flow, topic/review FSM, reward mechanics, session-end flow, thesis framing) — requested by the user for a permanent, openable, iterable project artifact (not the earlier in-chat visual)"
+last_activity_desc: "Added a DEV-only cheat button to main.ts that fills+submits the correct answer for the on-screen exercise via the real handleSubmitAnswer path (all 4 exercise types), guarded by import.meta.env.DEV so it never ships to production. Verified live: cleared all 19 real exercises end to end via the button alone."
 progress:
   total_phases: 0
   completed_phases: 0
@@ -120,6 +120,7 @@ Recent decisions affecting current work:
 | 260707-pu4 | Fix top-bar layout regression from 260707-krq: progress bar had zero visible width, top-bar was cramped — two-row restructure + hide topic-mastery at 0 topics | 2026-07-07 | 60d0bd1 | [260707-pu4-fix-top-bar-layout-regression-found-live](./quick/260707-pu4-fix-top-bar-layout-regression-found-live/) |
 | 10 | Clear text input(s) and re-disable submit on incorrect main-pass answer, instead of preserving the wrong text | 2026-07-07 | d0d40f8 | — |
 | 260709-od7 | Create a standalone self-contained HTML architecture/mechanics/data-flow explainer (docs/MECHANICS.html), offline file://-openable | 2026-07-09 | 8f7d194 | [260709-od7-create-a-standalone-self-contained-html-](./quick/260709-od7-create-a-standalone-self-contained-html-/) |
+| 11 | Add DEV-only cheat button to auto-submit the correct answer for manual-testing speed, guarded by import.meta.env.DEV | 2026-07-09 | 18e2982 | — |
 
 ## Deferred Items
 
