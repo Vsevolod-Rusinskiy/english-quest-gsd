@@ -4,10 +4,10 @@ milestone: v1.0
 milestone_name: milestone
 current_phase: 0
 status: Awaiting next milestone
-stopped_at: "Added a top-bar link to docs/MECHANICS.html, opens in a new tab"
-last_updated: "2026-07-09T18:19:00.000Z"
-last_activity: 2026-07-09
-last_activity_desc: "Moved docs/MECHANICS.html to public/docs/MECHANICS.html so it survives `vite build` (only public/'s contents get copied into dist/), and added a \"Как это работает?\" link in the top bar (target=\"_blank\", visible in every mode, not DEV-gated). Verified live: link renders in the top bar, /docs/MECHANICS.html fetches 200."
+stopped_at: "Fast-mode UX/design batch (2026-07-18): two-section theory, per-exercise RU translations, local Ollama backend, unified screen design system — 3 commits + docs sync"
+last_updated: "2026-07-18T00:00:00.000Z"
+last_activity: 2026-07-18
+last_activity_desc: "Fast-mode manual-testing batch (GSD bypass authorised by user for speed, documented here at end): (1) theory initial view split into Present Simple / Present Continuous sections (data-driven theory.parts) via taste-skill; (2) added promptRu Russian translation above the English fill-in for all 18 text-input exercises; (3) added a local Ollama backend (Variant B) behind VITE_LLM_BACKEND=ollama for running the 5 agents on qwen3.5:4b while the hosted provider is down — verified all 5 agents return source:agent live; (4) unified the screen design system (shared .section-title / .highlight-chip vocabulary generalised from theory, SessionEnd restyled). 303/303 tests, tsc clean. Commits 20f7981, cdafa5f, e61d7cf. Visual verification done by user (no browser checks by assistant this batch, per user request)."
 progress:
   total_phases: 0
   completed_phases: 0
@@ -98,7 +98,9 @@ Recent decisions affecting current work:
 - [UX decision, 2026-07-06, RESOLVED 2026-07-07] ~~On an INCORRECT text-input answer the input field was intentionally NOT cleared — the same exercise stayed on screen with the child's text preserved so they could edit rather than retype (WR-03, by design in `main.ts`).~~ Changed per user decision: the field now clears and the submit button re-disables on an incorrect main-pass answer (commit `d0d40f8`), relying on the escalating authored hint (firstError/secondError, 260707-krq) to guide the retry instead of edit-in-place. Verified live: field empties, button disables, first input refocuses, banner shows the correct-attempt-count hint. Review-pass incorrect path (WR-02, explicit "Продолжить" step) untouched.
 - [UX finding, 2026-07-07, RESOLVED 2026-07-07 in quick-260707-krq] ~~Wrong-answer hint relied only on `hint.firstError` (never escalated to the authored `hint.secondError` on repeated mistakes) and could be overridden by a confusing agent-generated hint (e.g. "add usually between don't and have" when "usually" was already printed).~~ Fixed: `main.ts` now shows the AUTHORED hint escalating by attempt count — `firstError` on attempt 1, `secondError` on attempt 2+ (falling back to `firstError` when a given exercise has no `secondError`, true for 9/19 exercises). Agent `hintRu` dropped from the banner entirely.
 - [Feature request, 2026-07-07, RESOLVED 2026-07-07 in quick-260707-krq] ~~Progress data (session correct-streak, per-topic mastery status) was tracked in state but never surfaced in the UI beyond the "Задание N из 19" text and ruble chip.~~ Added to the top bar: a visual clamped progress bar (no overshoot across main/review/complete, mirrors `ProgressIndicator`'s 3-variant guarding), a "🔥 N" streak chip (shown only when `currentCorrectStreak >= 2`), and a compact "освоено N / M тем" topic-mastery summary line (`topicLabel()` names, first-pass minimal per design decision — no per-topic chip row yet).
-- [Feature request, 2026-07-07, manual test] Show the exercise sentence's Russian translation ABOVE the English fill-in-the-blank version (e.g. above "He ___ at home today. (work)", show something like "Он ___ дома сегодня. (работать)") — user's reasoning: helps the child understand the sentence before attempting the blanks. **Not yet implemented — needs content authoring first**: `Lesson-1A.json`'s exercises currently have NO Russian translation field for `prompt` (confirmed via schema check — only `exerciseId/catalogRef/catalogItemRef/sourceRef/type/skill/prompt/targetWords/targetGrammar/answerCheck/hint/topicImpact`), so this needs (a) a new `promptRu` field added to the text-input exercise schema + all 18 exercises' data authored (translation, not just structure), then (b) a renderer change in `textInput.ts` to display it above the inline-blank sentence, styled like the existing `.instruction-ru` gray-hint pattern. To discuss: translate all 18 by hand, or have an agent assist with translation review (still authored/reviewed data, not a live per-render agent call — translations are static and should ship in `Lesson-1A.json`, never generated at runtime).
+- [Feature request, 2026-07-07, RESOLVED 2026-07-18 fast-mode, commit cdafa5f] ~~Show the exercise sentence's Russian translation ABOVE the English fill-in-the-blank version (e.g. above "He ___ at home today. (work)", show "Он ___ дома сегодня. (работать)") — helps the child understand the sentence before attempting the blanks.~~ Done: optional `promptRu` added to `TextInputExerciseSchema`; all 18 text-input exercises authored by hand (translation with the `___` blank kept at the verb position + translated verb hint in parens); `textInput.ts` renders it as a muted `.prompt-ru` line directly above the English `.prompt-en` line (styled like `.instruction-ru`), purely presentational and never in the answer/submit path (unit-tested: render/position/omission/non-submission). Static data in `Lesson-1A.json`, never runtime-generated.
+
+- [UX/design, 2026-07-18 fast-mode, commits cdafa5f + e61d7cf] Theory initial view restructured into two labelled sections (Present Simple / Present Continuous) with all authored content distributed, via a new data-driven `theory.parts` array (simplify "Не понятно" rounds untouched). Then the taste-skill design language was generalised into a shared vocabulary (`.section-title` accent-centered heading, `.highlight-chip` accent-edged callout) and applied across screens; SessionEnd restyled onto it (removed the `p:first-child` hack + one-off `.headline`). taste-skill (leonxlnx/design-taste-frontend) installed GLOBALLY at `~/.claude/skills/` — deliberately NOT in this repo, so it is not in git history. Note: skill self-scopes to landing pages / "not multi-step product UI", so only its principles (typography, one-accent lock, anti-slop, contrast) were applied; its React/Tailwind/Motion stack assumptions were ignored (conflict with the project's vanilla-TS + plain-CSS constraint).
 
 ### Blockers/Concerns
 
@@ -123,6 +125,9 @@ Recent decisions affecting current work:
 | 11 | Add DEV-only cheat button to auto-submit the correct answer for manual-testing speed, guarded by import.meta.env.DEV | 2026-07-09 | 18e2982 | — |
 | 12 | Cap dev-mode lesson to 10 exercises for faster manual testing, guarded by import.meta.env.MODE === "development" (not plain DEV, which vitest also sets) | 2026-07-09 | 8b6be8a | — |
 | 13 | Move docs/MECHANICS.html to public/docs/ (survives vite build) and add a top-bar link to it, opens in a new tab | 2026-07-09 | b13c550 | — |
+| 14 | Local Ollama backend (Variant B) behind VITE_LLM_BACKEND=ollama — run the 5 agents on qwen3.5:4b via structured outputs while the hosted provider is down; verified all 5 return source:agent live | 2026-07-18 | 20f7981 | — |
+| 15 | Two-section theory (Present Simple / Present Continuous, data-driven theory.parts) + per-exercise Russian translation (promptRu) above the English fill-in for all 18 text-input exercises | 2026-07-18 | cdafa5f | — |
+| 16 | Unified screen design system (shared .section-title / .highlight-chip vocabulary from taste-skill, SessionEnd restyled) | 2026-07-18 | e61d7cf | — |
 
 ## Deferred Items
 
@@ -135,8 +140,8 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-07-07T12:13:51.085Z
-Stopped at: Completed quick task 260705-rl5 (Cloudflare Workers LLM key-proxy)
+Last session: 2026-07-18
+Stopped at: Fast-mode UX/design batch committed (Ollama backend 20f7981, lesson content cdafa5f, unified design system e61d7cf) + STATE.md synced. Provider outage worked around via local Ollama (qwen3.5:4b). Assistant did no browser visual checks this batch (per user request — user verifies visually).
 Resume file: None
 
 ## Operator Next Steps
