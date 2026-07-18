@@ -26,6 +26,9 @@ export function renderSessionEndScreen(props: SessionEndScreenProps): HTMLElemen
   childSection.className = "child-section";
 
   const motivational = document.createElement("p");
+  // Unified design system: the celebratory line uses the shared accent
+  // .section-title, matching TheoryScreen's heading language.
+  motivational.className = "section-title";
   motivational.textContent = props.motivationalMessageRu;
   childSection.appendChild(motivational);
 
@@ -43,11 +46,13 @@ export function renderSessionEndScreen(props: SessionEndScreenProps): HTMLElemen
   parentSection.className = "parent-section";
 
   const headline = document.createElement("p");
-  headline.className = "headline";
+  // Same shared accent .section-title as the child section and TheoryScreen.
+  headline.className = "section-title";
   headline.textContent = props.headlineRu;
   parentSection.appendChild(headline);
 
   const report = document.createElement("p");
+  report.className = "report-body";
   report.textContent = props.parentReportRu;
   parentSection.appendChild(report);
 

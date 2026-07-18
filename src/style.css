@@ -181,6 +181,51 @@ body {
   border-radius: 14px;
 }
 
+/* ==========================================================================
+   UNIFIED DESIGN SYSTEM (taste-skill pass, kids/trust-first, dials 3/2/4)
+   Two reusable primitives shared across every screen so the app reads as one
+   system rather than per-screen one-offs. First proven on TheoryScreen, now
+   the canonical vocabulary for SessionEnd / FatalError / future screens.
+   ========================================================================== */
+
+/* .section-title — the single heading treatment: centered, weight 700, and the
+   page's ONE accent (--color-accent-dark). 5.04:1 on --color-bg-secondary and
+   5.97:1 on --color-bg — both pass WCAG AA, comfortably >3:1 for 22px large
+   text. Replaces the scattered 22px/700 per-screen headings. .theory-part-title
+   is kept as an alias so TheoryScreen markup/tests are unchanged. */
+.section-title,
+.theory-part-title {
+  text-align: center;
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1.2;
+  margin: 0 0 var(--space-sm);
+  color: var(--color-accent-dark);
+}
+
+/* .highlight-chip — the single callout treatment: a light warm strip with an
+   accent left edge, for a "sample / key line" that should stand apart from
+   surrounding body text (theory example sentences, and reusable elsewhere).
+   Warm --color-bg reads as a chip against a --color-bg-secondary panel.
+   .theory-part-example kept as an alias for existing markup. */
+.highlight-chip,
+.theory-part-example {
+  margin: var(--space-sm) 0 0;
+  padding: var(--space-sm) var(--space-md);
+  background: var(--color-bg);
+  border-left: 4px solid var(--color-accent);
+  border-radius: 10px;
+  font-weight: 500;
+}
+
+/* Second theory section separated by a hairline rule rather than nested cards
+   (taste: group with a divider, not extra elevation). */
+.theory-part + .theory-part {
+  margin-top: var(--space-lg);
+  padding-top: var(--space-lg);
+  border-top: 2px solid var(--color-bg-secondary-dark);
+}
+
 .theory-buttons {
   display: flex;
   gap: var(--space-sm);
@@ -274,6 +319,22 @@ button:disabled {
   font-size: 14px;
   color: var(--color-muted);
   margin-bottom: 2px;
+}
+
+/* Per-sentence Russian translation of the exercise prompt — helps the child
+   grasp the sentence before filling the English blank. Muted gray hint sitting
+   directly above the English fill-in line (--color-muted is 5.03:1 on
+   --color-bg, WCAG AA). Top margin groups the RU+EN sentence pair apart from
+   the task-instruction lines above; the 2px bottom keeps RU tight to EN. */
+.prompt-ru {
+  font-size: 14px;
+  color: var(--color-muted);
+  margin: var(--space-md) 0 2px;
+}
+
+.prompt-en {
+  font-size: 16px;
+  margin: 0 0 var(--space-md);
 }
 
 .task-card input[type="text"] {
@@ -457,10 +518,11 @@ button:disabled {
   text-align: center;
 }
 
-.session-end-screen .child-section p:first-child {
-  font-size: 22px;
-  font-weight: 700;
-  line-height: 1.2;
+/* Child recommendation/rubles lines sit under the accent .section-title as
+   calm centered body — the title carries the accent, these stay neutral so
+   the moment has one focal point (taste: one accent per surface). */
+.session-end-screen .child-section p {
+  margin: var(--space-sm) 0 0;
 }
 
 .session-end-screen .parent-section {
@@ -470,11 +532,11 @@ button:disabled {
   margin-top: var(--space-2xl);
 }
 
-.session-end-screen .headline {
-  font-size: 22px;
-  font-weight: 700;
-  line-height: 1.2;
-  margin-top: 0;
+/* Parent report body under its .section-title — left-aligned reading text
+   (this block is for the adult, so normal prose, not centered). */
+.session-end-screen .parent-section .report-body {
+  text-align: left;
+  margin: var(--space-sm) 0 0;
 }
 
 /* Fatal error screen (D-06) */
