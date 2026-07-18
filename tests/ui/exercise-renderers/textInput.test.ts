@@ -106,6 +106,51 @@ describe("renderTextInput", () => {
   });
 });
 
+// Per-sentence Russian translation hint (promptRu): a muted .prompt-ru line
+// shown directly above the English .prompt-en fill-in line, purely
+// presentational (never part of the answer/submit path).
+describe("renderTextInput — promptRu translation hint", () => {
+  it("renders promptRu as a .prompt-ru line positioned before the English .prompt-en line", () => {
+    const withRu = { ...exercise, promptRu: "Он сегодня ___ дома. (работать)" };
+    const el = renderTextInput({ exercise: withRu, instructionRu, instructionEn, onSubmit: () => {} });
+
+    const ru = el.querySelector(".prompt-ru");
+    const en = el.querySelector(".prompt-en");
+    expect(ru?.textContent).toBe("Он сегодня ___ дома. (работать)");
+    expect(en).not.toBeNull();
+
+    const children = Array.from(el.children);
+    expect(children.indexOf(ru!)).toBeLessThan(children.indexOf(en!));
+  });
+
+  it("omits the .prompt-ru line entirely when the exercise has no promptRu", () => {
+    const { promptRu: _omit, ...withoutRu } = exercise;
+    const el = renderTextInput({ exercise: withoutRu, instructionRu, instructionEn, onSubmit: () => {} });
+    expect(el.querySelector(".prompt-ru")).toBeNull();
+    expect(el.querySelector(".prompt-en")).not.toBeNull();
+  });
+
+  it("promptRu is never included in the submitted answer string", () => {
+    let submitted: string | null = null;
+    const withRu = { ...exercise, promptRu: "Он сегодня ___ дома. (работать)" };
+    const el = renderTextInput({
+      exercise: withRu,
+      instructionRu,
+      instructionEn,
+      onSubmit: (raw) => {
+        submitted = raw;
+      },
+    });
+    const input = el.querySelector<HTMLInputElement>('input[type="text"]')!;
+    input.value = "is working";
+    input.dispatchEvent(new Event("input"));
+    Array.from(el.querySelectorAll("button"))
+      .find((b) => b.textContent === "Проверить")!
+      .click();
+    expect(submitted).toBe("is working");
+  });
+});
+
 // 260707-hby: multi-blank text-input exercises render one inline input per
 // blank; the child fills only the missing words and the renderer reconstructs
 // the single answer string (blank values interleaved with the INTERIOR

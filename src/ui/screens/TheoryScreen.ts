@@ -51,24 +51,56 @@ function appendSentenceParagraphs(
   });
 }
 
+// Renders the authored two-section split (Present Simple / Present Continuous)
+// for the initial theory view. Each part gets a centered heading, its
+// per-sentence explanation paragraphs, and a visually-distinct example line.
+function appendTheoryParts(container: HTMLElement, parts: Theory["parts"]): void {
+  parts!.forEach((part) => {
+    const section = document.createElement("section");
+    section.className = "theory-part";
+
+    const heading = document.createElement("h2");
+    heading.className = "theory-part-title";
+    heading.textContent = part.titleRu;
+    section.appendChild(heading);
+
+    appendSentenceParagraphs(section, part.textRu);
+
+    const example = document.createElement("p");
+    example.className = "theory-part-example";
+    example.textContent = part.exampleRu;
+    section.appendChild(example);
+
+    container.appendChild(section);
+  });
+}
+
 export function renderTheoryScreen(options: TheoryScreenOptions): HTMLElement {
   const { theory, onUnderstoodChoice, currentExplanation } = options;
   const container = document.createElement("div");
   container.className = "theory-screen";
 
-  appendSentenceParagraphs(container, theory.rule, "display");
+  // Initial view: if the lesson authored a structured two-section split, show
+  // it. Simplify rounds ("Не понятно") set currentExplanation and always fall
+  // through to the flat rule/explanation layout below (the agent/fallback text
+  // is a single re-teach blob, not tense-structured).
+  if (!currentExplanation && theory.parts && theory.parts.length > 0) {
+    appendTheoryParts(container, theory.parts);
+  } else {
+    appendSentenceParagraphs(container, theory.rule, "display");
 
-  const firstLevel = theory.explanationLevels[0];
-  const activeExplanation: TheoryExplanation | null =
-    currentExplanation ??
-    (firstLevel ? { textRu: firstLevel.textRu, exampleRu: firstLevel.exampleRu } : null);
+    const firstLevel = theory.explanationLevels[0];
+    const activeExplanation: TheoryExplanation | null =
+      currentExplanation ??
+      (firstLevel ? { textRu: firstLevel.textRu, exampleRu: firstLevel.exampleRu } : null);
 
-  if (activeExplanation) {
-    appendSentenceParagraphs(container, activeExplanation.textRu);
+    if (activeExplanation) {
+      appendSentenceParagraphs(container, activeExplanation.textRu);
 
-    const example = document.createElement("p");
-    example.textContent = activeExplanation.exampleRu;
-    container.appendChild(example);
+      const example = document.createElement("p");
+      example.textContent = activeExplanation.exampleRu;
+      container.appendChild(example);
+    }
   }
 
   const buttonRow = document.createElement("div");

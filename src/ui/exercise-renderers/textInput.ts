@@ -25,7 +25,18 @@ export function renderTextInput(options: TextInputOptions): HTMLElement {
   instructionEnLine.textContent = instructionEn;
   container.appendChild(instructionEnLine);
 
+  // Russian translation of the sentence, shown as a muted hint directly above
+  // the English fill-in line so the child can grasp the meaning first. Purely
+  // presentational — never part of the answer/normalize/onSubmit path.
+  if (exercise.promptRu) {
+    const promptRuLine = document.createElement("p");
+    promptRuLine.className = "prompt-ru";
+    promptRuLine.textContent = exercise.promptRu;
+    container.appendChild(promptRuLine);
+  }
+
   const prompt = document.createElement("p");
+  prompt.className = "prompt-en";
   container.appendChild(prompt);
 
   const submitRow = document.createElement("div");

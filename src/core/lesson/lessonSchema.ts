@@ -55,6 +55,11 @@ export const TextInputExerciseSchema = z.object({
   ...BaseExerciseFields,
   type: z.literal("text-input"),
   answerCheck: NormalizedTextCheckSchema,
+  // Optional Russian translation of the prompt sentence, shown as a muted
+  // comprehension hint above the English fill-in line. Keeps the "___" blank
+  // marker at the verb position so the child sees the parallel structure.
+  // Additive/optional: absent on any exercise that predates the field.
+  promptRu: z.string().optional(),
 });
 
 export const MatchingExerciseSchema = z.object({
@@ -102,6 +107,17 @@ export const ExplanationLevelSchema = z.object({
   exampleRu: z.string(),
 });
 
+// A single tense section of the initial theory view (Present Simple /
+// Present Continuous), distributing the authored theory content into two
+// labeled parts. Optional + additive: absent on any lesson that predates the
+// field, in which case the renderer falls back to the flat rule/explanation
+// layout.
+export const TheoryPartSchema = z.object({
+  titleRu: z.string(),
+  textRu: z.string(),
+  exampleRu: z.string(),
+});
+
 export const TheorySchema = z.object({
   theoryRef: z.string(),
   topicId: z.string(),
@@ -109,6 +125,10 @@ export const TheorySchema = z.object({
   rule: z.string(),
   explanationLevels: z.array(ExplanationLevelSchema),
   maxSimplifyRounds: z.number(),
+  // Structured two-section split of the initial theory view. Simplify rounds
+  // ("Не понятно") still use rule/explanationLevels, so this is initial-view
+  // only.
+  parts: z.array(TheoryPartSchema).optional(),
 });
 
 export const LessonSchema = z.object({
@@ -139,3 +159,4 @@ export type MatchingExercise = z.infer<typeof MatchingExerciseSchema>;
 export type SingleChoiceExercise = z.infer<typeof SingleChoiceExerciseSchema>;
 export type OrderBuilderExercise = z.infer<typeof OrderBuilderExerciseSchema>;
 export type Theory = z.infer<typeof TheorySchema>;
+export type TheoryPart = z.infer<typeof TheoryPartSchema>;

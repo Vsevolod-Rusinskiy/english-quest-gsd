@@ -15,18 +15,40 @@ function splitSentencesForTest(text: string): string[] {
 }
 
 describe("TheoryScreen", () => {
-  it("renders theory.rule and explanationLevels[0].exampleRu (each sentence recoverable) and both buttons via textContent", () => {
+  it("initial view renders the authored two-section split (Present Simple / Present Continuous) with each part's content and both buttons", () => {
     const onUnderstoodChoice = vi.fn();
     const el = renderTheoryScreen({ theory: lesson.theory, onUnderstoodChoice });
+
+    const parts = lesson.theory.parts ?? [];
+    expect(parts.length).toBeGreaterThan(0);
+
+    const sections = Array.from(el.querySelectorAll(".theory-part"));
+    expect(sections).toHaveLength(parts.length);
+
+    const titles = Array.from(el.querySelectorAll(".theory-part-title")).map((h) => h.textContent);
+    for (const part of parts) {
+      expect(titles).toContain(part.titleRu);
+      for (const sentence of splitSentencesForTest(part.textRu)) {
+        expect(el.textContent).toContain(sentence);
+      }
+      expect(el.textContent).toContain(part.exampleRu);
+    }
+
+    const buttonTexts = Array.from(el.querySelectorAll("button")).map((b) => b.textContent);
+    expect(buttonTexts).toContain("Понятно");
+    expect(buttonTexts).toContain("Не понятно");
+  });
+
+  it("falls back to the flat rule/explanation layout when the lesson has no parts", () => {
+    const onUnderstoodChoice = vi.fn();
+    const { parts: _omit, ...theoryWithoutParts } = lesson.theory;
+    const el = renderTheoryScreen({ theory: theoryWithoutParts, onUnderstoodChoice });
 
     for (const sentence of splitSentencesForTest(lesson.theory.rule)) {
       expect(el.textContent).toContain(sentence);
     }
     expect(el.textContent).toContain(lesson.theory.explanationLevels[0].exampleRu);
-
-    const buttonTexts = Array.from(el.querySelectorAll("button")).map((b) => b.textContent);
-    expect(buttonTexts).toContain("Понятно");
-    expect(buttonTexts).toContain("Не понятно");
+    expect(el.querySelectorAll(".theory-part")).toHaveLength(0);
   });
 
   it("renders a multi-sentence explanation as more than one <p>, with the full text recoverable from textContent", () => {
