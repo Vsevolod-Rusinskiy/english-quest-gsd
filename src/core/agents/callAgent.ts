@@ -5,7 +5,7 @@
 // (lessonEngine) decides what to do with the result, this module has zero
 // knowledge of exercises, topics, or state writes.
 import * as z from "zod";
-import { anthropicClient } from "./anthropicClient";
+import { defaultAgentClient } from "./agentClient";
 
 // Minimal shape of the Anthropic client this gateway depends on — lets tests
 // inject a plain stubbed object ({ messages: { create: vi.fn() } }) instead
@@ -73,7 +73,7 @@ export async function callAgent<T>(
   // messages.create(params, options) -> {content} shape, never the SDK's
   // full typed surface (which is what causes overload-resolution mismatches
   // against a dynamically-built z.toJSONSchema() input_schema).
-  const client: AgentClient = opts.client ?? (anthropicClient as unknown as AgentClient);
+  const client: AgentClient = opts.client ?? defaultAgentClient;
 
   const attempt = async (): Promise<T> => {
     const response = await client.messages.create(

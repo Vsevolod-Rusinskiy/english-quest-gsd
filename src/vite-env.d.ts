@@ -12,6 +12,13 @@ interface ImportMetaEnv {
   // optional placeholder only for the SDK constructor's non-empty apiKey
   // requirement.
   readonly VITE_LLM_API_KEY?: string;
+  // Agent Gateway backend selector (Variant B). Unset/anything-but-"ollama"
+  // => Anthropic via the Worker proxy (default). "ollama" => local Ollama
+  // structured-outputs client (dev-only; see ollamaClient.ts / agentClient.ts).
+  readonly VITE_LLM_BACKEND?: string;
+  // Ollama backend config (only read when VITE_LLM_BACKEND=ollama).
+  readonly VITE_OLLAMA_BASE_URL?: string;
+  readonly VITE_OLLAMA_MODEL?: string;
 }
 
 interface ImportMeta {
