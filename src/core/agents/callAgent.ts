@@ -52,6 +52,11 @@ export interface CallAgentOptions<T> {
   systemPrompt: string;
   userContent: string;
   fallback: T;
+  // Optional per-call sampling temperature. Most agents want deterministic
+  // JSON (omit -> backend default: 0 for Ollama). Theory Tutor opts into a
+  // higher value so repeated "Не понятно" rounds yield genuinely different
+  // re-explanations instead of the same text.
+  temperature?: number;
   // DI (RESEARCH.md Pattern 3/4) — defaults to the real anthropicClient;
   // tests inject a stub so no real network path is ever exercised.
   client?: AgentClient;
@@ -79,6 +84,7 @@ export async function callAgent<T>(
     const response = await client.messages.create(
       {
         model: MODEL,
+        ...(opts.temperature !== undefined ? { temperature: opts.temperature } : {}),
         max_tokens: 512, // narrow single-shot JSON output (RESEARCH.md A2) — well
         // above the largest of the 2 Phase 3 contracts (a few short fields +
         // one Russian hint sentence), sized for headroom without being

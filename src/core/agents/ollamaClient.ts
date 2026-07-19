@@ -36,6 +36,7 @@ interface OllamaCreateParams {
   system?: string;
   messages?: OllamaChatMessage[];
   tools?: Array<{ name: string; input_schema?: unknown }>;
+  temperature?: number;
 }
 
 interface OllamaCreateOptions {
@@ -96,7 +97,9 @@ export function createOllamaClient(config: OllamaClientConfig): AgentClient {
           format: tool.input_schema,
           stream: false,
           think: false, // suppress Qwen3 <think> reasoning in the output
-          options: { temperature: 0 },
+          // Deterministic by default (0); callers that want variety (Theory
+          // Tutor's repeated re-explanations) pass a higher temperature.
+          options: { temperature: params.temperature ?? 0 },
         }),
         signal: controller.signal,
       });

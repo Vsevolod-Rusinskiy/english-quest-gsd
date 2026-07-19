@@ -131,9 +131,9 @@ describe("LessonEngine", () => {
     expect(localStorage.getItem("english-quest-progress-v1")).toBeTruthy();
   });
 
-  // Plan 02 (THEORY-03, D-11): round sequencing — round 1 is core-only,
-  // rounds 2-3 call Theory Tutor via the gateway, reaching maxSimplifyRounds
-  // soft-transitions to practice regardless of the last answer.
+  // Plan 02 (THEORY-03, D-11); UNCAPPED 2026-07-18: round 1 is core-only,
+  // rounds 2+ call Theory Tutor via the gateway. There is no cap — "не понятно"
+  // NEVER auto-advances to practice; only an explicit "понятно" does.
   describe("Plan 02: Theory Tutor round sequencing (THEORY-03, D-11)", () => {
     it("round 1 (simplifyRoundCount 0 -> 1): handleTheoryStep(false) does NOT call the agent; count becomes 1; theoryUnderstood stays false", async () => {
       const store = new StateStore(initialState());
@@ -165,7 +165,7 @@ describe("LessonEngine", () => {
       expect(store.getState().currentPosition.theoryUnderstood).toBe(false);
     });
 
-    it("round 3 (simplifyRoundCount 2 -> 3, = maxSimplifyRounds): handleTheoryStep(false) calls callTheoryTutor; count becomes 3; soft transition sets theoryUnderstood true", async () => {
+    it("round 3 (simplifyRoundCount 2 -> 3): handleTheoryStep(false) calls callTheoryTutor; count becomes 3; NO cap — theoryUnderstood stays false", async () => {
       const store = new StateStore({
         ...initialState(),
         currentPosition: {
@@ -181,9 +181,53 @@ describe("LessonEngine", () => {
 
       expect(theoryTutorSpy).toHaveBeenCalledTimes(1);
       expect(store.getState().currentPosition.simplifyRoundCount).toBe(3);
-      // Soft transition: reaching maxSimplifyRounds (3) advances to practice
-      // regardless of the last answer being "не понятно".
-      expect(store.getState().currentPosition.theoryUnderstood).toBe(true);
+      // No cap (2026-07-18): "не понятно" never auto-advances to practice.
+      expect(store.getState().currentPosition.theoryUnderstood).toBe(false);
+    });
+
+    it("high round (e.g. simplifyRoundCount 9 -> 10): still calls the agent for a new variant and never auto-transitions", async () => {
+      const store = new StateStore({
+        ...initialState(),
+        currentPosition: {
+          theoryUnderstood: false,
+          currentExerciseIndex: 0,
+          reviewPassIndex: 0,
+          simplifyRoundCount: 9,
+        },
+      });
+      const engine = new LessonEngine(lesson, store);
+
+      await engine.handleTheoryStep(false);
+
+      expect(theoryTutorSpy).toHaveBeenCalledTimes(1);
+      expect(store.getState().currentPosition.simplifyRoundCount).toBe(10);
+      expect(store.getState().currentPosition.theoryUnderstood).toBe(false);
+    });
+
+    it("feeds the previous on-screen explanation to the tutor as currentLevelText (fresh variant each round)", async () => {
+      const store = new StateStore({
+        ...initialState(),
+        currentPosition: {
+          theoryUnderstood: false,
+          currentExerciseIndex: 0,
+          reviewPassIndex: 0,
+          simplifyRoundCount: 2,
+        },
+      });
+      const engine = new LessonEngine(lesson, store);
+
+      await engine.handleTheoryStep(false, {
+        textRu: "Предыдущее объяснение с экрана.",
+        exampleRu: "Previous example.",
+      });
+
+      expect(theoryTutorSpy).toHaveBeenCalledTimes(1);
+      const arg = theoryTutorSpy.mock.calls[0][0];
+      expect(arg.currentLevelText).toBe("Предыдущее объяснение с экрана.");
+      expect(arg.fallbackLevel).toEqual({
+        textRu: "Предыдущее объяснение с экрана.",
+        exampleRu: "Previous example.",
+      });
     });
 
     it("agent-failure round (Theory Tutor fallback): the round still counts, source:'core'/agentFailed:true, lesson never stalls", async () => {

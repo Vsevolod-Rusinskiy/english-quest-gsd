@@ -145,7 +145,7 @@ describe("lesson walking skeleton (e2e)", () => {
       expect(root.textContent).toContain("Не понятно");
     });
 
-    it("rounds 2-3 call the (mocked) Theory Tutor and show its returned text, then soft-transition to the first exercise at the cap", async () => {
+    it("rounds 2+ call the (mocked) Theory Tutor for a new variant each time, with NO cap — 'Не понятно' never auto-transitions", async () => {
       await mountApp(root);
 
       const notUnderstoodButton = () =>
@@ -167,10 +167,25 @@ describe("lesson walking skeleton (e2e)", () => {
       expect(theoryTutorSpy).toHaveBeenCalledTimes(1);
       expect(root.textContent).toContain("Не понятно");
 
-      notUnderstoodButton().click(); // round 3: agent-backed, reaches cap -> soft transition
-      await vi.waitFor(() => expect(root.textContent).toContain("Задание 1 из 19"));
-      expect(theoryTutorSpy).toHaveBeenCalledTimes(2);
-      expect(root.textContent).not.toContain("Не понятно");
+      // Round 3 (previously the cap): still calls the agent, still on theory,
+      // still shows the buttons — no transition to exercises. Wait for the
+      // re-rendered button to be enabled again before the next click.
+      notUnderstoodButton().click();
+      await vi.waitFor(() => {
+        expect(theoryTutorSpy).toHaveBeenCalledTimes(2);
+        expect(notUnderstoodButton()?.disabled).toBe(false);
+      });
+      expect(root.textContent).toContain("Не понятно");
+      expect(root.textContent).not.toContain("Задание 1 из 19");
+
+      // Round 4+ keeps going indefinitely — one more to prove it is unbounded.
+      notUnderstoodButton().click();
+      await vi.waitFor(() => {
+        expect(theoryTutorSpy).toHaveBeenCalledTimes(3);
+        expect(notUnderstoodButton()?.disabled).toBe(false);
+      });
+      expect(root.textContent).toContain("Не понятно");
+      expect(root.textContent).not.toContain("Задание 1 из 19");
     });
 
     it("'Понятно' at any point renders the first exercise immediately", async () => {

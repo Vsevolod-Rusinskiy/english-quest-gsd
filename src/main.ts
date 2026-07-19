@@ -234,7 +234,10 @@ export async function mountApp(root: HTMLElement): Promise<void> {
           let result;
           try {
             unsubscribeRender();
-            result = await engine.handleTheoryStep(understood);
+            // Pass the explanation currently on screen so each "не понятно"
+            // round builds a genuinely different re-explanation (and re-serves
+            // this text verbatim on agent failure).
+            result = await engine.handleTheoryStep(understood, currentExplanation);
           } finally {
             thinkingEl.remove();
             unsubscribeRender = store.subscribe(render);

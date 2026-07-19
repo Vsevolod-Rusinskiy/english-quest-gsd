@@ -118,19 +118,26 @@ export class LessonEngine {
     return this.lesson.sections.find((s) => s.exercises.some((e) => e.exerciseId === id)) ?? null;
   }
 
-  // Phase 3 Plan 02 (THEORY-03, D-11): full round-sequencing implementation.
-  // "понятно" exits immediately (THEORY-01/02, unchanged). "не понятно"
-  // branches by simplifyRoundCount:
+  // Phase 3 Plan 02 (THEORY-03, D-11); UNCAPPED 2026-07-18. "понятно" exits
+  // immediately (THEORY-01/02, unchanged). "не понятно" branches by
+  // simplifyRoundCount:
   //   - count === 0 (round 1): CORE-ONLY, no agent call — the caller-visible
   //     text is theory.explanationLevels[1] ("simple"); count -> 1.
-  //   - count is 1 or 2 (rounds 2-3): await callTheoryTutor via the shared
-  //     gateway; count -> count+1; source/agentFailed recorded from the
-  //     gateway's result.
-  //   - once the incremented count reaches theory.maxSimplifyRounds (3):
-  //     SOFT TRANSITION — theoryUnderstood becomes true regardless of the
-  //     last answer, the first exercise renders next.
+  //   - count >= 1 (rounds 2+): await callTheoryTutor via the shared gateway
+  //     for a FRESH, different re-explanation; count -> count+1. There is NO
+  //     LONGER a cap — the child can tap "не понятно" indefinitely and keeps
+  //     getting new LLM-generated variants. theory.maxSimplifyRounds is no
+  //     longer consulted (the soft auto-transition to exercises was removed at
+  //     user request). Only an explicit "понятно" advances to practice.
+  //   - previousExplanation (the text currently on screen, threaded from the
+  //     caller) is fed to the tutor as currentLevelText so each round builds a
+  //     genuinely different explanation, and is re-served verbatim on agent
+  //     failure (never fabricated, D-11 spirit).
   // Exactly one theory_step dispatch per call (single-dispatch invariant).
-  async handleTheoryStep(understood: boolean): Promise<TheoryStepResult> {
+  async handleTheoryStep(
+    understood: boolean,
+    previousExplanation?: { textRu: string; exampleRu: string } | null,
+  ): Promise<TheoryStepResult> {
     if (understood) {
       this.store.dispatch({
         type: "theory_step",
@@ -144,7 +151,7 @@ export class LessonEngine {
 
     const state = this.store.getState();
     const { simplifyRoundCount } = state.currentPosition;
-    const { explanationLevels, maxSimplifyRounds, rule } = this.lesson.theory;
+    const { explanationLevels, rule } = this.lesson.theory;
     const simpleLevel = explanationLevels[1];
 
     let nextCount: number;
@@ -161,16 +168,20 @@ export class LessonEngine {
       // Round 1: core-only, no agent call (D-11) — pre-written "simple" level.
       nextCount = 1;
     } else {
-      // Rounds 2-3: call Theory Tutor via the shared gateway. On failure the
-      // gateway's fallback re-serves simpleLevel verbatim (never fabricated).
-      const currentLevelText = simpleLevel?.textRu ?? this.lesson.theory.rule;
+      // Rounds 2+: call Theory Tutor via the shared gateway for a fresh
+      // variant, unbounded. currentLevelText / fallbackLevel prefer the text
+      // currently on screen (previousExplanation) so each round differs and a
+      // failure re-serves the last-shown text verbatim; they fall back to the
+      // pre-written simple level on the first agent round.
+      const lastShown = {
+        textRu: previousExplanation?.textRu ?? simpleLevel?.textRu ?? "",
+        exampleRu: previousExplanation?.exampleRu ?? simpleLevel?.exampleRu ?? "",
+      };
+      const currentLevelText = lastShown.textRu || this.lesson.theory.rule;
       const tutorResult = await callTheoryTutor({
         rule,
         currentLevelText,
-        fallbackLevel: {
-          textRu: simpleLevel?.textRu ?? "",
-          exampleRu: simpleLevel?.exampleRu ?? "",
-        },
+        fallbackLevel: lastShown,
         roundNumber: simplifyRoundCount + 1,
       });
       nextCount = simplifyRoundCount + 1;
@@ -179,19 +190,17 @@ export class LessonEngine {
       explanation = { textRu: tutorResult.explanationRu, exampleRu: tutorResult.exampleRu };
     }
 
-    // Soft transition: reaching maxSimplifyRounds advances to practice
-    // regardless of the last answer being "не понятно".
-    const theoryUnderstood = nextCount >= maxSimplifyRounds;
-
+    // No cap: "не понятно" never auto-advances to practice — only an explicit
+    // "понятно" does. The child keeps getting new LLM variants indefinitely.
     this.store.dispatch({
       type: "theory_step",
-      theoryUnderstood,
+      theoryUnderstood: false,
       simplifyRoundCount: nextCount,
       source,
       agentFailed,
     });
 
-    return { explanation: theoryUnderstood ? null : explanation };
+    return { explanation };
   }
 
   async handleAnswer(exerciseId: string, answer: AnswerPayload): Promise<HandleAnswerResult> {
